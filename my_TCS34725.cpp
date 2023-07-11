@@ -432,3 +432,32 @@ void my_TCS34725::setIntLimits(uint16_t low, uint16_t high) {
   write8(0x06, high & 0xFF);
   write8(0x07, high >> 8);
 }
+
+my_TCS34725 tcs = my_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
+float my_tcs(char rgb)
+  {
+    float red, green, blue;
+    uint16_t r, g, b, c;
+    tcs.getRawData(&r, &g, &b, &c);
+    float averag = (r+g+b)/3;
+    red = r/averag; ;
+    green = g/averag; ;
+    blue = b/averag;;
+    if(rgb == 'r')
+      {
+        return red;
+      }
+    else if(rgb == 'g')
+      {
+        return green;
+      }
+    else if(rgb == 'b')
+      {
+        return blue;
+      }
+    else  
+      {
+        return 1;
+      }
+  }
+
