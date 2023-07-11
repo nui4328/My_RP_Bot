@@ -24,19 +24,19 @@ void read_me()
       fline(40,40,0.2,0,'c','p',80, "a4", 5);  //--------->>> คำสั่ง หุ่นยนต์เดินตามเส้นไปข้างหน้า
       bline(40,40,0.2,0,'c','p',80, "a4", 5);  //--------->>> คำสั่ง หุ่นยนต์เดินตามเส้นเดินถอยหลัง
 
-      PID_output = (1 * error_F()) + (0.00015 * I) + (1 * D);
-      Motor(30 - PID_output, 30 + PID_output); 
+    //  PID_output = (1 * error_F()) + (0.00015 * I) + (1 * D);
+    //  Motor(30 - PID_output, 30 + PID_output); 
  
       ////-------------------------------****
       #include <my_TCS34725.h>     
-        my_tcs('r'),   อ่านค่า r
-        my_tcs('g'),   อ่านค่า g
-        my_tcs('b')    อ่านค่า b
+       // my_tcs('r'),   อ่านค่า r
+       // my_tcs('g'),   อ่านค่า g
+       // my_tcs('b')    อ่านค่า b
       ////-------------------------------****
       
       #include <my_mpu6050.h>
-      setup_mpu();               //  ก๊อปไปวางใน void setup
-      error_Yaw()                // ส่งค่า error ออกมา
-      calibration_Yak();         // สำหรับคาริเบลท ให้ค่า error_Yaw() เป็น 0
+    //  setup_mpu();               //  ก๊อปไปวางใน void setup
+    //  error_Yaw()                // ส่งค่า error ออกมา
+    //  calibration_Yak();         // สำหรับคาริเบลท ให้ค่า error_Yaw() เป็น 0
 
     }
