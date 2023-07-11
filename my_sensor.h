@@ -711,7 +711,7 @@ void add_sensor_B()
       EEPROM.commit(); // save changes to EEPROM
     
       int readData_sensor_B[DATA_sensor_SIZE_B];
-      EEPROM.get(1, readData_sensor_B); // read data from EEPROM address 0
+      EEPROM.get(80, readData_sensor_B); // read data from EEPROM address 0
       Serial.print("data -> EEPROM : ");
       for (int i = 0; i < 16; i ++) 
         {
