@@ -29,10 +29,9 @@ void read_me()
  
       ////-------------------------------****
       #include <my_TCS34725.h>     
-      my_TCS34725 tcs = my_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
-      float red, green, blue;
-
-      setup_tcs();//  ก๊อปไปวางใน void setup
+        my_tcs('r'),   อ่านค่า r
+        my_tcs('g'),   อ่านค่า g
+        my_tcs('b')    อ่านค่า b
       ////-------------------------------****
       
       #include <my_mpu6050.h>
