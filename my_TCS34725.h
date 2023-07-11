@@ -187,6 +187,7 @@ public:
   void setIntLimits(uint16_t l, uint16_t h);
   void enable();
   void disable();
+  
 
 private:
   my_I2CDevice *i2c_dev = NULL; ///< Pointer to I2C bus interface
@@ -194,5 +195,5 @@ private:
   tcs34725Gain_t _tcs34725Gain;
   uint8_t _tcs34725IntegrationTime;
 };
-
+float my_tcs(char rgb);
 #endif
