@@ -886,7 +886,7 @@ uint16_t max_mcp_b(int sensor)
 uint16_t min_mcp_b(int sensor)
     {     
       int readData_sensor_B[DATA_sensor_SIZE_B];
-      EEPROM.get(1, readData_sensor_B); // read data from EEPROM address 0
+      EEPROM.get(80, readData_sensor_B); // read data from EEPROM address 0
        if(sensor == 0)
           {
              return readData_sensor_B[8];
