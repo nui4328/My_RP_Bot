@@ -367,7 +367,7 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
           else
             {
               Motor(-((clml*power)/100),-((clmr*power)/100));delay(endt); 
-              Motor(0,0);delay(2);                
+              Motor(0,0);delay(10);                
             }
         }
       else if (splr == 'r')
@@ -445,7 +445,7 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
             {
               Motor(-((crml*power)/100),-((crmr*power)/100)); delay(endt);  
               //Motor(1,1);delay(5);
-              Motor(0,0);delay(5);
+              Motor(0,0);delay(10);
             } 
         }
       else{}
@@ -477,8 +477,10 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
             Motor(-(spl + PID_output), -(spr - PID_output)); 
             if( (mcp_b(2)<md_mcp_b(2) && mcp_b(3)<md_mcp_b(3) && mcp_b(4)<md_mcp_b(4)&& mcp_b(5)<md_mcp_b(5))
                      ||(mcp_b(0)<md_mcp_b(0) && mcp_b(1)<md_mcp_b(1) && mcp_b(3)<md_mcp_b(3))
+                     ||(mcp_b(0)<md_mcp_b(0) && mcp_b(1)<md_mcp_b(1) && mcp_b(3)>md_mcp_b(3))
                      ||(mcp_b(0)<md_mcp_b(0) && mcp_b(1)<md_mcp_b(1) && mcp_b(2)<md_mcp_b(2))
                      || (mcp_b(7)<md_mcp_b(7) && mcp_b(6)<md_mcp_b(6) && mcp_b(4)<md_mcp_b(4))
+                     || (mcp_b(7)<md_mcp_b(7) && mcp_b(6)<md_mcp_b(6) && mcp_b(4)>md_mcp_b(4))
                      || (mcp_b(7)<md_mcp_b(7) && mcp_b(6)<md_mcp_b(6) && mcp_b(5)<md_mcp_b(5))
                      )
                         {
@@ -528,8 +530,8 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
               {                   
                 PID_output = (kp_slow * error_B()) + (0.00015 * I) + (ki_slow* D);
                 Motor(-(slmotor + PID_output), -(srmotor - PID_output));    
-                if( analogRead(26) <= md_adc(26)-50 
-                      || analogRead(27) <= md_adc(27)-50 
+                if( analogRead(26) <= md_adc(26)
+                      || analogRead(27) <= md_adc(27)
                       )
                           {
                           break;
@@ -550,8 +552,8 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
                   {                     
                     PID_output = (kp_slow * error_B()) + (0.00015 * I) + (ki_slow* D);
                     Motor(-(slmotor + PID_output), -(srmotor - PID_output)); 
-                    if( analogRead(26) <= md_adc(26)-50 
-                      || analogRead(27) <= md_adc(27)-50 
+                    if( analogRead(26) <= md_adc(26)
+                      || analogRead(27) <= md_adc(27)
                       )
                           {
                           break;
@@ -573,18 +575,35 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
           }
         else
           {
-            while(1)
-              {                     
-                PID_output = (kp_slow * error_B()) + (0.00015 * I) + (ki_slow * D);
-                Motor(-(slmotor + PID_output), -(srmotor - PID_output));
-                if( analogRead(26) <= md_adc(26)-50 
-                      || analogRead(27) <= md_adc(27)-50 
-                      )
+            if(kp == 0)
+              {
+                  while(1)
+                    { 
+                      Motor(-(slmotor ), -(srmotor));
+                      if( analogRead(26) <= md_adc(26)
+                          || analogRead(27) <= md_adc(27)
+                        )
                           {
-                          break;
-                          }     
-                                     
+                            break;
+                          }                                              
+                    }
               }
+            else  
+              {
+                 while(1)
+                    {                     
+                      PID_output = (kp_slow * error_B()) + (0.00015 * I) + (ki_slow * D);
+                      Motor(-(slmotor + PID_output), -(srmotor - PID_output));
+                      if( analogRead(26) <= md_adc(26)
+                            || analogRead(27) <= md_adc(27)
+                            )
+                                {
+                                break;
+                                }     
+                                          
+                    }
+              }
+           
           }          
       }
     //else{}
