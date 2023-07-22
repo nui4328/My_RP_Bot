@@ -29,13 +29,13 @@ void read_me()
     //  Motor(30 - PID_output, 30 + PID_output); 
  
       ////-------------------------------****
-      #include <my_TCS34725.h>     
+     // #include <my_TCS34725.h>     
        // my_tcs('r'),   อ่านค่า r
        // my_tcs('g'),   อ่านค่า g
        // my_tcs('b')    อ่านค่า b
       ////-------------------------------****
       
-      #include <my_mpu6050.h>
+   //   #include <my_mpu6050.h>
     //  setup_mpu();               //  ก๊อปไปวางใน void setup
     //  error_Yaw()                // ส่งค่า error ออกมา
     //  calibration_Yak();         // สำหรับคาริเบลท ให้ค่า error_Yaw() เป็น 0
