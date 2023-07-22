@@ -14,7 +14,7 @@
 Servo servo_pico23;
 Servo servo_pico8;
 Servo servo_pico7;
-Servo servo_pico29;
+//Servo servo_pico29;
 //Servo servo_pico28;
 
 void servo(int servo,int angle)
@@ -41,12 +41,13 @@ void servo(int servo,int angle)
         servo_pico28.attach(sevopico28,500, 2500);
         servo_pico28.write(angle);       
     }
-*/
+
   else if (servo==29)
     {
         servo_pico29.attach(sevopico29,500, 2500);
         servo_pico29.write(angle);       
     }
+  */
 }
 
 
