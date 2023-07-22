@@ -829,7 +829,7 @@ void fline_2sensor(int sl, int sr, float kp, int tm, String line,int sensor, cha
                               break;
                           }
                   }
-              else if(sensor == 7)
+            else if(sensor == 7)
                   {
                       if(mcp_f(7)<md_mcp_f(7))
                           {
@@ -878,10 +878,20 @@ void fline_2sensor(int sl, int sr, float kp, int tm, String line,int sensor, cha
 
             Motor(sl + PID_output, sr - PID_output);
             //Serial.println(errors);
-            if(mcp_f(sensor) > md_mcp_f(sensor))
+            if(sensor==0 || sensor==7 )
+              {
+                if(mcp_f(sensor) > md_mcp_f(sensor))
                   {
                     break;
                   }
+              }
+            if(sensor==26 || sensor==27 )
+              {
+                if(analogRead(sensor)>md_adc(sensor))
+                  {
+                    break;
+                  }
+              }
               
           }
           
