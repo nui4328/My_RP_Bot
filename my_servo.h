@@ -8,7 +8,7 @@
 #define sevopico23 23
 #define sevopico8 8
 #define sevopico7 7
-#define sevopico29 29
+//#define sevopico29 29
 //#define sevopico28 28
 
 Servo servo_pico23;
