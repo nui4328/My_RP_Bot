@@ -55,8 +55,10 @@ uint32_t _lastPosition;
 
 void sensor_set()
    {
+      pinMode(20,OUTPUT);
       EEPROM.begin(512); // initialize EEPROM with 512 bytes
       analogReadResolution(12);
+      analogWrite(20,0);
    }
 void bz(int dl)
   {
@@ -707,11 +709,11 @@ void add_sensor_B()
 
       int Data_sensor_B[DATA_sensor_SIZE_B] = {sensor_maxB[0], sensor_maxB[1], sensor_maxB[2], sensor_maxB[3], sensor_maxB[4], sensor_maxB[5], sensor_maxB[6], sensor_maxB[7]
                              ,sensor_minB[0], sensor_minB[1], sensor_minB[2], sensor_minB[3], sensor_minB[4], sensor_minB[5], sensor_minB[6], sensor_minB[7]};
-      EEPROM.put(80, Data_sensor_B); // write data to EEPROM address 0
+      EEPROM.put(50, Data_sensor_B); // write data to EEPROM address 0
       EEPROM.commit(); // save changes to EEPROM
     
       int readData_sensor_B[DATA_sensor_SIZE_B];
-      EEPROM.get(80, readData_sensor_B); // read data from EEPROM address 0
+      EEPROM.get(50, readData_sensor_B); // read data from EEPROM address 0
       Serial.print("data -> EEPROM : ");
       for (int i = 0; i < 16; i ++) 
         {
@@ -847,7 +849,7 @@ uint16_t md_mcp_f(int sensor)
 uint16_t max_mcp_b(int sensor)
     {     
       int readData_sensor_B[DATA_sensor_SIZE_B];
-      EEPROM.get(80, readData_sensor_B); // read data from EEPROM address 0
+      EEPROM.get(50, readData_sensor_B); // read data from EEPROM address 0
        if(sensor == 0)
           {
              return readData_sensor_B[0];
@@ -886,7 +888,7 @@ uint16_t max_mcp_b(int sensor)
 uint16_t min_mcp_b(int sensor)
     {     
       int readData_sensor_B[DATA_sensor_SIZE_B];
-      EEPROM.get(80, readData_sensor_B); // read data from EEPROM address 0
+      EEPROM.get(50, readData_sensor_B); // read data from EEPROM address 0
        if(sensor == 0)
           {
              return readData_sensor_B[8];
