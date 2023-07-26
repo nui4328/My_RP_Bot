@@ -773,7 +773,7 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
 
   }
 
-void fline_2sensor(int sl, int sr, float kp, int tm, String line,int sensor, char sp, int ofset)
+void fline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, char sp, int ofset)
   {
     char sensors[4];  // Declare a char array to store the converted string
     line.toCharArray(sensors, sizeof(sensors));
@@ -822,34 +822,49 @@ void fline_2sensor(int sl, int sr, float kp, int tm, String line,int sensor, cha
 
             Motor(sl + PID_output, sr - PID_output);
             //Serial.println(errors);
-            if(sensor == 0)
+             if(sensor == "a0")
                   {
                       if(mcp_f(0)<md_mcp_f(0))
                           {
                               break;
                           }
                   }
-            else if(sensor == 7)
+              else if(sensor == "a7")
                   {
                       if(mcp_f(7)<md_mcp_f(7))
                           {
                               break;
                           }
                   }
-             if(sensor == 26)
+             else if(sensor == "b0")
+                  {
+                      if(mcp_b(0) < md_mcp_b(0))
+                          {
+                              break;
+                          }
+                  }
+              else if(sensor == "b7")
+                  {
+                      if(mcp_b(7) < md_mcp_b(7))
+                          {
+                              break;
+                          }
+                  }
+             else if(sensor == "26")
                   {
                       if(analogRead(26)<md_adc(26))
                           {
                               break;
                           }
                   }
-              else if(sensor == 27)
+              else if(sensor == "27")
                   {
                       if(analogRead(27)<md_adc(27))
                           {
                               break;
                           }
                   }
+
 
           }
       }
@@ -878,20 +893,48 @@ void fline_2sensor(int sl, int sr, float kp, int tm, String line,int sensor, cha
 
             Motor(sl + PID_output, sr - PID_output);
             //Serial.println(errors);
-            if(sensor==0 || sensor==7 )
-              {
-                if(mcp_f(sensor) > md_mcp_f(sensor))
+            if(sensor == "a0")
                   {
-                    break;
+                      if(mcp_f(0)>md_mcp_f(0))
+                          {
+                              break;
+                          }
                   }
-              }
-            if(sensor==26 || sensor==27 )
-              {
-                if(analogRead(sensor)>md_adc(sensor))
+              else if(sensor == "a7")
                   {
-                    break;
+                      if(mcp_f(7)>md_mcp_f(7))
+                          {
+                              break;
+                          }
                   }
-              }
+             else if(sensor == "b0")
+                  {
+                      if(mcp_b(0) > md_mcp_b(0))
+                          {
+                              break;
+                          }
+                  }
+              else if(sensor == "b7")
+                  {
+                      if(mcp_b(7) > md_mcp_b(7))
+                          {
+                              break;
+                          }
+                  }
+             else if(sensor == "26")
+                  {
+                      if(analogRead(26)>md_adc(26))
+                          {
+                              break;
+                          }
+                  }
+              else if(sensor == "27")
+                  {
+                      if(analogRead(27)>md_adc(27))
+                          {
+                              break;
+                          }
+                  }
               
           }
           
