@@ -60,7 +60,7 @@ void sensor_set()
       tft.fillScreen(ST77XX_WHITE);
       delay(50);
    }
-void testdrawtext(String text, int x, int y, int size_text, uint16_t color, uint16_t led_color) {
+void mydisplay(String text, int x, int y, int size_text, uint16_t color, uint16_t led_color) {
   tft.fillScreen(led_color);
   tft.setCursor(x, y);
   tft.setTextSize(size_text);
