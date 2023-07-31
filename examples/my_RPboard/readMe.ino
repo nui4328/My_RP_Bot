@@ -18,13 +18,13 @@ void read_me()
                                       //--------->>>  พารามิเตอร์ ตัวที่ 2 ใส่ค่าตั้งแต่  0 -180
 
       mydisplay("MY-MAKERS", 40, 40, 3, black, white );  /// red   yello   green    black   white 
-            #include <my_TCS34725.h>     
+           // #include <my_TCS34725.h>     
        // my_tcs('r'),   อ่านค่า r
        // my_tcs('g'),   อ่านค่า g
        // my_tcs('b')    อ่านค่า b
       ////-------------------------------****
       
-      #include <my_mpu6050.h>
+     // #include <my_mpu6050.h>
     //  setup_mpu();               //  ก๊อปไปวางใน void setup
     //  error_Yaw()                // ส่งค่า error ออกมา
     //  calibration_Yak();         // สำหรับคาริเบลท ให้ค่า error_Yaw() เป็น 0
