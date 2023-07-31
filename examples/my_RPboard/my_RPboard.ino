@@ -7,12 +7,12 @@ void setup()
     sensor_set();
     //setup_mpu();
     //calibration_Yak();
-    testdrawtext("MY-MAKERS", 20, 30, 2, white, black);
+    mydisplay("MY-MAKERS", 20, 30, 2, white, black);
     
     sw();
     
     //calibration_Yak();
-    testdrawtext("MY-MAKERS", 20, 30, 2, white, black);
+    mydisplay("MY-MAKERS", 20, 30, 2, white, black);
   }
 
 void loop() 
