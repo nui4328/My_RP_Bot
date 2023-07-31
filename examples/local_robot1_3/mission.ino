@@ -41,8 +41,8 @@ void fl()
           servo_store();
           tll = 0; 
         }
-     bline(40,40, 0.1, 0, 'f', 'p',50, "a5", 10); 
-     do{Motor(-40, -40);}while(analogRead(27) > md_adc(27));
+     bline(50,50, 0.1, 0, 'f', 'p',50, "a5", 10); 
+     do{Motor(-50, -50);}while(analogRead(27) > md_adc(27));
      Motor(20, 20); delay(10); 
      Motor(0, 0); delay(10); 
       
@@ -85,8 +85,8 @@ void fl()
           trr = 0; 
         }
      
-     bline(40,40, 0.1, 0, 'f', 'p',50, "a5", 10); 
-     do{Motor(-40, -40);}while(analogRead(26) > md_adc(26));
+     bline(50,50, 0.1, 0, 'f', 'p',50, "a5", 10); 
+     do{Motor(-50, -50);}while(analogRead(26) > md_adc(26));
      Motor(20, 20); delay(10); 
      Motor(0, 0); delay(10);
        
