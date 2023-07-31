@@ -17,7 +17,7 @@ void read_me()
       //servo(23,90);                   //--------->>> คำสั่งควบคุมการทำงาน servo servo(23,90);  พารามิเตอร์ ตัวที่ 1 ประกอบด้วย 23, 10, 11, 12
                                       //--------->>>  พารามิเตอร์ ตัวที่ 2 ใส่ค่าตั้งแต่  0 -180
 
-      testdrawtext("MY-MAKERS", 40, 40, 3, black, white );  /// red   yello   green    black   white 
+      mydisplay("MY-MAKERS", 40, 40, 3, black, white );  /// red   yello   green    black   white 
             #include <my_TCS34725.h>     
        // my_tcs('r'),   อ่านค่า r
        // my_tcs('g'),   อ่านค่า g
