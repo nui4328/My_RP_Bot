@@ -97,7 +97,7 @@ void sw()
       bz(100);
       while(digitalRead(9) == 1)
          {
-            testdrawtext("MY-MAKERS", 30, 20, 2,white,black);
+            mydisplay("MY-MAKERS", 30, 20, 2,white,black);
          }
         
          end_sw:
