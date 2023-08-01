@@ -10,6 +10,9 @@
 #define DATA_sensor_SIZE 20
 #define DATA_sensor_SIZE_B 16
 
+int eep_f = 0;
+int eep_b = 100;
+
 my_MCP3008 adc;
 int cal_motor_l, cal_motor_r, delay_cal;
 
@@ -460,13 +463,13 @@ void add_sensor_F()
       int Data_sensor[DATA_sensor_SIZE] = {maxVal26, minVal26, maxVal27, minVal27,
                              maxVal0, maxVal1, maxVal2, maxVal3, maxVal4, maxVal5, maxVal6, maxVal7
                              ,minVal0, minVal1, minVal2, minVal3, minVal4, minVal5, minVal6, minVal7};
-      EEPROM.put(0, Data_sensor); // write data to EEPROM address 0
+      EEPROM.put(eep_f, Data_sensor); // write data to EEPROM address 0
       EEPROM.commit(); // save changes to EEPROM
     
       int readData_sensor[DATA_sensor_SIZE];
-      EEPROM.get(0, readData_sensor); // read data from EEPROM address 0
+      EEPROM.get(eep_f, readData_sensor); // read data from EEPROM address 0
       Serial.print("data26 -> EEPROM : ");
-      for (int i = 0; i < 20; i ++) 
+      for (int i = 0; i < DATA_sensor_SIZE; i ++) 
         {
          Serial.print(readData_sensor[i]);Serial.print("  ");
         }
@@ -709,13 +712,13 @@ void add_sensor_B()
 
       int Data_sensor_B[DATA_sensor_SIZE_B] = {sensor_maxB[0], sensor_maxB[1], sensor_maxB[2], sensor_maxB[3], sensor_maxB[4], sensor_maxB[5], sensor_maxB[6], sensor_maxB[7]
                              ,sensor_minB[0], sensor_minB[1], sensor_minB[2], sensor_minB[3], sensor_minB[4], sensor_minB[5], sensor_minB[6], sensor_minB[7]};
-      EEPROM.put(50, Data_sensor_B); // write data to EEPROM address 0
+      EEPROM.put(eep_b, Data_sensor_B); // write data to EEPROM address 0
       EEPROM.commit(); // save changes to EEPROM
     
       int readData_sensor_B[DATA_sensor_SIZE_B];
-      EEPROM.get(50, readData_sensor_B); // read data from EEPROM address 0
+      EEPROM.get(eep_b, readData_sensor_B); // read data from EEPROM address 0
       Serial.print("data -> EEPROM : ");
-      for (int i = 0; i < 16; i ++) 
+      for (int i = 0; i < DATA_sensor_SIZE_B; i ++) 
         {
          Serial.print(readData_sensor_B[i]);Serial.print("  ");
         }
@@ -728,7 +731,7 @@ void add_sensor_B()
 uint16_t max_analogRead(int sensor)
     {     
        int readData_sensor[DATA_sensor_SIZE];
-       EEPROM.get(0, readData_sensor); // read data from EEPROM address 0
+       EEPROM.get(eep_f, readData_sensor); // read data from EEPROM address 0
        if(sensor == 26)
           {
              return readData_sensor[0];
@@ -742,7 +745,7 @@ uint16_t max_analogRead(int sensor)
 uint16_t min_analogRead(int sensor)
     {     
        int readData_sensor[DATA_sensor_SIZE];
-       EEPROM.get(0, readData_sensor); // read data from EEPROM address 0
+       EEPROM.get(eep_f, readData_sensor); // read data from EEPROM address 0
        if(sensor == 26)
           {
              return readData_sensor[1];
@@ -763,7 +766,7 @@ uint16_t md_adc(int sensor)
 uint16_t max_mcp_f(int sensor)
     {     
       int readData_sensor[DATA_sensor_SIZE];
-      EEPROM.get(0, readData_sensor); // read data from EEPROM address 0
+      EEPROM.get(eep_f, readData_sensor); // read data from EEPROM address 0
        if(sensor == 0)
           {
              return readData_sensor[4];
@@ -802,7 +805,7 @@ uint16_t max_mcp_f(int sensor)
 uint16_t min_mcp_f(int sensor)
     {     
       int readData_sensor[DATA_sensor_SIZE];
-      EEPROM.get(0, readData_sensor); // read data from EEPROM address 0
+      EEPROM.get(eep_f, readData_sensor); // read data from EEPROM address 0
        if(sensor == 0)
           {
              return readData_sensor[12];
@@ -849,7 +852,7 @@ uint16_t md_mcp_f(int sensor)
 uint16_t max_mcp_b(int sensor)
     {     
       int readData_sensor_B[DATA_sensor_SIZE_B];
-      EEPROM.get(50, readData_sensor_B); // read data from EEPROM address 0
+      EEPROM.get(eep_b, readData_sensor_B); // read data from EEPROM address 0
        if(sensor == 0)
           {
              return readData_sensor_B[0];
@@ -888,7 +891,7 @@ uint16_t max_mcp_b(int sensor)
 uint16_t min_mcp_b(int sensor)
     {     
       int readData_sensor_B[DATA_sensor_SIZE_B];
-      EEPROM.get(50, readData_sensor_B); // read data from EEPROM address 0
+      EEPROM.get(eep_b, readData_sensor_B); // read data from EEPROM address 0
        if(sensor == 0)
           {
              return readData_sensor_B[8];
@@ -1207,9 +1210,9 @@ int error_B()
                }
 
             int readData_sensor_F[DATA_sensor_SIZE];
-            EEPROM.get(0, readData_sensor_F); // read data from EEPROM address 0
+            EEPROM.get(eep_f, readData_sensor_F); // read data from EEPROM address 0
             Serial.print("EEP_F: ");
-            for (int i = 0; i < 16; i ++) 
+            for (int i = 0; i < DATA_sensor_SIZE; i ++) 
                {
                   Serial.print(readData_sensor_F[i]);Serial.print("  ");
                }
@@ -1218,9 +1221,9 @@ int error_B()
                Serial.println("  ");
             
             int readData_sensor_B[DATA_sensor_SIZE_B];
-            EEPROM.get(80, readData_sensor_B); // read data from EEPROM address 0
+            EEPROM.get(eep_b, readData_sensor_B); // read data from EEPROM address 0
             Serial.print("  EEP_B: ");
-            for (int i = 0; i < 16; i ++) 
+            for (int i = 0; i < DATA_sensor_SIZE_B; i ++) 
                {
                   Serial.print(readData_sensor_B[i]);Serial.print("  ");
                }
