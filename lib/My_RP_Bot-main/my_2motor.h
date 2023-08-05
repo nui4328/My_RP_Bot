@@ -1,11 +1,18 @@
 #ifndef _my_motor_
 #define _my_motor_
-
-
+int fq;
+int sl = 0;
+int sr = 0;
+void Freq_motor(int fq_m)
+   {
+      fq = fq_m;
+      Serial.println(fq);
+   }
 void Motor(int spl,int spr)    
    {   
+      delay(1);
       analogWriteResolution(12);
-      analogWriteFreq( 1000);
+      analogWriteFreq(1000);
       pinMode(7,OUTPUT);
       pinMode(6,OUTPUT);
       pinMode(8,OUTPUT);            
@@ -13,8 +20,7 @@ void Motor(int spl,int spr)
       pinMode(18,OUTPUT);
       pinMode(19,OUTPUT);
       pinMode(19,OUTPUT);
-      int sl = 0;
-      int sr = 0;
+
       sl = map(spl, -100, 100, -4095,4095);
       sr = map(spr, -100, 100, -4095,4095);      
 
