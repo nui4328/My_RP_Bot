@@ -100,7 +100,7 @@ void bturn_speed_fl()
           Motor(-(llmotor + PID_output),-((lrmotor-10) - PID_output)); 
       }
       while (T<ldelaymotor);
-      T=0; delay(5);  
+      T=0; delay(2);  
   }
 
 void bturn_speed_fr()
@@ -113,7 +113,7 @@ void bturn_speed_fr()
           Motor(-(rlmotor + PID_output),-((rrmotor-10) - PID_output)); 
       }
       while (T<rdelaymotor);
-      T=0; delay(5);
+      T=0; delay(2);
   
 }
 ////////////////////////-------------------------------------->>>>>
@@ -250,7 +250,7 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
           Motor(-(slmotor+10) ,-(srmotor+10)) ;
           delay(endt);
           Motor(0,0);
-          delay(5);
+          delay(2);
         }
       else if (splr == 'p')
         {
@@ -259,7 +259,7 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
             {
                 while(1)
                   {  
-                      Motor(spl,spr); delay(5); 
+                      Motor(spl,spr); 
                       if( mcp_f(0)>md_mcp_f(0) && mcp_f(7)>md_mcp_f(7))   
                         {
                           break;
@@ -298,7 +298,7 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
             {
               while(1)
                 {  
-                  Motor(slmotor,srmotor); delay(5); 
+                  Motor(slmotor,srmotor);  
                   if( mcp_f(0)>md_mcp_f(0) && mcp_f(7)>md_mcp_f(7))    
                     {
                         break;
@@ -309,7 +309,7 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
 
               for ( int i = 0; i <= sensor_f; i++ )
                 {
-                  do{ Motor((flml*power)/100,(flmr*power)/100); } while( mcp_f(i) > md_mcp_f(i)-50 ); delay(5);
+                  do{ Motor((flml*power)/100,(flmr*power)/100); } while( mcp_f(i) > md_mcp_f(i)-50 ); delay(2);
                   do{ Motor((flml*power)/100,(flmr*power)/100); } while( mcp_f(0) < md_mcp_f(0)-50 ); 
                 } 
                                         
@@ -318,21 +318,21 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
             {
               if(nfc=='n')
                 {
-                  Motor(0,0); delay(5);
+                  Motor(0,0); delay(2);
                 }
               else
                 {
                   if (spl > 0 )
                     {
-                      delay(10);
+                      
                       Motor(-(slmotor) ,-(srmotor)) ; delay(break_fc);
-                      //Motor(0,0); delay(5);
+                      //Motor(0,0); delay(2);
                     }
                   else
                     {
-                      delay(10);
+                      
                       Motor(-slmotor ,-srmotor) ; delay(break_fc);
-                      //Motor(0,0); delay(5);
+                      //Motor(0,0); delay(2);
                     }
                 }
               if (sensor[0] == 'a')
@@ -341,14 +341,15 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
                     {
                       for ( int i = 0; i <= sensor_f; i++ )
                         {
-                          do{ Motor((clml*power)/100,(clmr*power)/100); } while (mcp_f(i+5) > md_mcp_f(i+5)); delay(5);
+                          do{ Motor((clml*power)/100,(clmr*power)/100); } while (mcp_f(i+5) > md_mcp_f(i+5)); delay(2);
                         } 
                     }
                   else
                     {
+                      Motor((clml*power)/100,(clmr*power)/100); delay(2);
                       for ( int i = 0; i <= sensor_f; i++ )
                         {
-                          do{ Motor((clml*power)/100,(clmr*power)/100); } while (mcp_f(i) > md_mcp_f(i)); delay(5);
+                          do{ Motor((clml*power)/100,(clmr*power)/100); } while (mcp_f(i) > md_mcp_f(i)); delay(2);
                         } 
                     }
                 }
@@ -356,7 +357,7 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
                 {
                   for ( int i = 0; i <= sensor_f; i++ )
                     {
-                      do{ Motor((clml*power)/100,(clmr*power)/100); } while (mcp_b(i) > md_mcp_f(i)); delay(5);
+                      do{ Motor((clml*power)/100,(clmr*power)/100); } while (mcp_b(i) > md_mcp_f(i)); delay(2);
                     } 
                 }           
             }
@@ -376,7 +377,7 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
             {
               while(1)
                 {  
-                  Motor(slmotor,srmotor); delay(5); 
+                  Motor(slmotor,srmotor); delay(2); 
                   if( mcp_f(0) >= md_mcp_f(0)+100 && mcp_f(7) >= md_mcp_f(7)+100 )  
                     {
                         break;
@@ -386,7 +387,7 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
               Motor(-slmotor,-srmotor); delay(break_ff); 
               for ( int i = 7; i >= sensor_f; i -- )
                 {
-                  do{ Motor((frml*power)/100,(frmr*power)/100);  } while (mcp_f(i) > md_mcp_f(i)-50);delay(5);  
+                  do{ Motor((frml*power)/100,(frmr*power)/100);  } while (mcp_f(i) > md_mcp_f(i)-50);delay(2);  
                   do{ Motor((frml*power)/100,(frmr*power)/100);  } while (mcp_f(7) < md_mcp_f(7)-50);
                 }
               
@@ -395,21 +396,21 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
             {
               if(nfc=='n')
                 {
-                  Motor(0,0); delay(5);
+                  Motor(0,0); delay(2);
                 }
               else
                 {
                   if (spl > 0 )
                     {
-                      delay(10);
+                      
                       Motor(-(slmotor) ,-(srmotor)) ; delay(break_fc);
-                      //Motor(0,0); delay(5);
+                      //Motor(0,0); delay(2);
                     }
                   else
                     {
-                      delay(10);
+                     
                       Motor(-slmotor ,-srmotor) ; delay(break_fc);
-                      //Motor(0,0); delay(5);
+                      //Motor(0,0); delay(2);
                     }
                 }
               if (sensor[0] == 'a')
@@ -418,14 +419,15 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
                     {
                       for ( int i = 7; i >= sensor_f; i -- )
                         {
-                          do{ Motor((crml*power)/100,(crmr*power)/100);   } while (mcp_f(i-5) > md_mcp_f(i-5)); delay(5);
+                          do{ Motor((crml*power)/100,(crmr*power)/100);   } while (mcp_f(i-5) > md_mcp_f(i-5)); delay(2);
                         }
                     }
                   else
                     {
+                       Motor((crml*power)/100,(crmr*power)/100);  delay(30);
                       for ( int i = 7; i >= sensor_f; i -- )
                         {
-                          do{ Motor((crml*power)/100,(crmr*power)/100);   } while (mcp_f(i) > md_mcp_f(i)); delay(5);
+                          do{ Motor((crml*power)/100,(crmr*power)/100);   } while (mcp_f(i) > md_mcp_f(i)); delay(2);
                         }
                     }
                 }
@@ -433,7 +435,7 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
                 {
                   for ( int i = 7; i >= sensor_f; i -- )
                     {
-                      do{ Motor((crml*power)/100,(crmr*power)/100);   } while (mcp_b(i) > md_mcp_f(i)); delay(5);
+                      do{ Motor((crml*power)/100,(crmr*power)/100);   } while (mcp_b(i) > md_mcp_f(i)); delay(2);
                     }
                 }
             }
@@ -444,7 +446,7 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
           else
             {
               Motor(-((crml*power)/100),-((crmr*power)/100)); delay(endt);  
-              //Motor(1,1);delay(5);
+              //Motor(1,1);delay(2);
               Motor(0,0);delay(10);
             } 
         }
@@ -613,7 +615,7 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
         Motor(slmotor+10 ,srmotor+10) ;
         delay(endt);
         Motor(0,0);
-        delay(5);
+        delay(2);
       }
 
     else if (splr == 'p')
@@ -636,7 +638,7 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
           {
             while(1)
               {  
-                 Motor(-slmotor,-srmotor); delay(5); 
+                 Motor(-slmotor,-srmotor); 
                 if( mcp_b(1) > md_mcp_b(1) && mcp_b(6) > md_mcp_b(6) )  
                   {
                       break;
@@ -646,7 +648,7 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
 
             for ( int i = 0; i < sensor_f; i++ )
               {
-                 do{ Motor(-((flmr*power)/100), -((flml*power)/100)); } while( mcp_f(i) > md_mcp_f(i) ); delay(5);
+                 do{ Motor(-((flmr*power)/100), -((flml*power)/100)); } while( mcp_f(i) > md_mcp_f(i) ); delay(2);
              
               }                            
           }
@@ -655,7 +657,7 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
             if (spl > 0 )
               {
                 Motor(slmotor+20 ,srmotor+20) ; delay(break_fc);
-                Motor(0,0); delay(5);
+                Motor(0,0); delay(2);
               }
             else{}
            
@@ -665,22 +667,23 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
                     {
                       for ( int i = 0; i <= sensor_f; i++ )
                         {
-                          do{ Motor((clml*power)/100,(clmr*power)/100); } while (mcp_f(i+5) > md_mcp_f(i+5)); delay(5);
+                          do{ Motor((clml*power)/100,(clmr*power)/100); } while (mcp_f(i+5) > md_mcp_f(i+5)); delay(2);
                         } 
                     }
                   else
                     {
+                      Motor((clml*power)/100,(clmr*power)/100); delay(30);
                       for ( int i = 0; i <= sensor_f; i++ )
                         {
-                          do{ Motor((clml*power)/100,(clmr*power)/100); } while (mcp_f(i) > md_mcp_f(i)); delay(5);
+                          do{ Motor((clml*power)/100,(clmr*power)/100); } while (mcp_f(i) > md_mcp_f(i)); delay(2);
                         } 
                     }
                 }
-              else
+            else
                 {
                   for ( int i = 0; i <= sensor_f; i++ )
                     {
-                      do{ Motor((clml*power)/100,(clmr*power)/100); } while (mcp_b(i) > md_mcp_f(i)); delay(5);
+                      do{ Motor((clml*power)/100,(clmr*power)/100); } while (mcp_b(i) > md_mcp_f(i)); delay(2);
                     } 
                 }           
             }
@@ -691,7 +694,7 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
         else
           {
             Motor(-((clml*power)/100),-((clmr*power)/100));delay(endt); 
-            Motor(0,0);delay(5);                
+            Motor(0,0);delay(2);                
           }
       
       }
@@ -701,7 +704,7 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
           {
              while(1)
               {  
-                Motor(-slmotor,-srmotor); delay(5); 
+                Motor(-slmotor,-srmotor); 
                 if( mcp_b(1) > md_mcp_b(1) && mcp_b(6) > md_mcp_b(6) )  
                   {
                       break;
@@ -710,14 +713,14 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
             delay(10);
             for ( int i = 7; i > sensor_f; i -- )
               {
-                do{ Motor(-((frmr*power)/100), -((frml*power)/100));  } while (mcp_b(i) > md_mcp_b(i));delay(5);  
+                do{ Motor(-((frmr*power)/100), -((frml*power)/100));  } while (mcp_b(i) > md_mcp_b(i));delay(2);  
               }
           }
         else
             {
               if(nfc=='n')
                 {
-                  Motor(0,0); delay(5);
+                  Motor(0,0); delay(2);
                 }
               else
                 {
@@ -725,13 +728,13 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
                     {
                       delay(10);
                       Motor(slmotor ,srmotor) ; delay(break_fc);
-                      //Motor(0,0); delay(5);
+                      //Motor(0,0); delay(2);
                     }
                   else
                     {
                       delay(10);
                       Motor(slmotor+20 ,srmotor+20) ; delay(break_fc);
-                      //Motor(0,0); delay(5);
+                      //Motor(0,0); delay(2);
                     }
                 }
               if (sensor[0] == 'a')
@@ -740,14 +743,15 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
                     {
                       for ( int i = 7; i >= sensor_f; i -- )
                         {
-                          do{ Motor((crml*power)/100,(crmr*power)/100);   } while (mcp_f(i-5) > md_mcp_f(i-5)); delay(5);
+                          do{ Motor((crml*power)/100,(crmr*power)/100);   } while (mcp_f(i-5) > md_mcp_f(i-5)); delay(2);
                         }
                     }
                   else
                     {
+                      Motor((crml*power)/100,(crmr*power)/100); delay(30);
                       for ( int i = 7; i >= sensor_f; i -- )
                         {
-                          do{ Motor((crml*power)/100,(crmr*power)/100);   } while (mcp_f(i) > md_mcp_f(i)); delay(5);
+                          do{ Motor((crml*power)/100,(crmr*power)/100);   } while (mcp_f(i) > md_mcp_f(i)); delay(2);
                         }
                     }
                 }
@@ -755,7 +759,7 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
                 {
                   for ( int i = 7; i >= sensor_f; i -- )
                     {
-                      do{ Motor((crml*power)/100,(crmr*power)/100);   } while (mcp_b(i) > md_mcp_f(i)); delay(5);
+                      do{ Motor((crml*power)/100,(crmr*power)/100);   } while (mcp_b(i) > md_mcp_f(i)); delay(2);
                     }
                 }
             }
@@ -766,7 +770,7 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
         else
           {
             Motor(-((crml*power)/100),-((crmr*power)/100)); delay(endt);  
-            Motor(0,0);delay(5);
+            Motor(0,0);delay(2);
           } 
       }
     else{}
