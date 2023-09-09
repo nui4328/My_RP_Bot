@@ -49,8 +49,16 @@ uint16_t green = ST77XX_GREEN;
 uint16_t black = ST77XX_WHITE;
 uint16_t white = ST77XX_BLACK;
 uint16_t blue = ST77XX_BLUE;
-///////////////////////////////------------------------------->>>
 
+int cl_sp, cr_sp;
+void add_sensor_F(void);
+///////////////////////////////------------------------------->>>
+void cal_censor(int spcl, int spcr)
+   {
+      cl_sp = spcl;
+      cr_sp = spcr;
+      add_sensor_F();
+   }
 void sensor_set()
    {
       EEPROM.begin(512); // initialize EEPROM with 512 bytes
@@ -60,15 +68,21 @@ void sensor_set()
       tft.fillScreen(ST77XX_WHITE);
       delay(50);
    }
-void mydisplay(String text, int x, int y, int size_text, uint16_t color, uint16_t led_color) {
-  tft.fillScreen(led_color);
-  tft.setCursor(x, y);
-  tft.setTextSize(size_text);
-  tft.setTextColor(color);
-  tft.setTextWrap(true);
-  tft.print(text);
-  //delay(50);
-}
+void mydisplay(String text, int x, int y, int size_text, uint16_t color) 
+   {
+  
+      tft.setCursor(x, y);
+      tft.setTextSize(size_text);
+      tft.setTextColor(color);
+      tft.setTextWrap(true);
+      tft.print(text);
+      //delay(50);
+   }
+
+void mydisplay_background(uint16_t color_b)
+   {
+      tft.fillScreen(color_b);
+   }
 
 void testtext(char *text, uint16_t color) {
    tft.setTextSize(2);
@@ -79,11 +93,12 @@ void testtext(char *text, uint16_t color) {
 }
 void bz(int dl)
   {
-    pinMode(21,OUTPUT);
-    digitalWrite(21,HIGH);
     delay(dl);
-    digitalWrite(21,LOW);
-    delay(dl);    
+    pinMode(21,OUTPUT);
+    digitalWrite(21,1);
+    delay(dl);
+    digitalWrite(21,0);
+    delay(dl/2);    
   }
 int mcp_f(int sensor) 
   {         
@@ -93,15 +108,18 @@ int mcp_f(int sensor)
   }
 void sw()
   {         
-      bz(100); 
-      bz(100);
+      bz(200); 
+      bz(200);
+      bz(200);
+      mydisplay_background(black);
       while(digitalRead(9) == 1)
          {
-            mydisplay("MY-MAKERS", 30, 20, 2,white,black);
+            mydisplay("MY-MAKERS", 20, 30, 2, white);
+            delay(10);
          }
         
-         end_sw:
-         bz(300);     
+
+         bz(500);     
   }
 /////////////////////////////////----------------------->>>>
 
@@ -111,7 +129,7 @@ void add_sensor_F()
       bz(100);
       for (int i = 0; i < 50; i ++)         
          {  
- 
+            Motor(cl_sp, cr_sp);
             sensor_F0[i] = mcp_f(0);
             sensor_F1[i] = mcp_f(1);
             sensor_F2[i] = mcp_f(2);
@@ -124,7 +142,7 @@ void add_sensor_F()
          }
       for (int i = 50; i < 100; i ++)         
          {  
-            
+            Motor(cl_sp, cr_sp);
             sensor_F0[i] = mcp_f(0);
             sensor_F1[i] = mcp_f(1);
             sensor_F2[i] = mcp_f(2);
@@ -137,7 +155,7 @@ void add_sensor_F()
          }
        for (int i = 100; i < 150; i ++)         
          {  
-
+            Motor(cl_sp, cr_sp);
             sensor_F0[i] = mcp_f(0);
             sensor_F1[i] = mcp_f(1);
             sensor_F2[i] = mcp_f(2);
@@ -150,7 +168,7 @@ void add_sensor_F()
          }
       for (int i = 150; i < 200; i ++)         
          {  
-              
+            Motor(cl_sp, cr_sp);  
             sensor_F0[i] = mcp_f(0);
             sensor_F1[i] = mcp_f(1);
             sensor_F2[i] = mcp_f(2);
@@ -163,7 +181,7 @@ void add_sensor_F()
          }
       for (int i = 200; i < 250; i ++)         
          {  
-  
+            Motor(cl_sp, cr_sp);
             sensor_F0[i] = mcp_f(0);
             sensor_F1[i] = mcp_f(1);
             sensor_F2[i] = mcp_f(2);
@@ -176,7 +194,7 @@ void add_sensor_F()
          }
        for (int i = 250; i < 300; i ++)         
          {  
-             
+            Motor(cl_sp, cr_sp); 
             sensor_F0[i] = mcp_f(0);
             sensor_F1[i] = mcp_f(1);
             sensor_F2[i] = mcp_f(2);
@@ -189,7 +207,7 @@ void add_sensor_F()
          }
        for (int i = 300; i < 350; i ++)         
          {  
-
+            Motor(cl_sp, cr_sp);
             sensor_F0[i] = mcp_f(0);
             sensor_F1[i] = mcp_f(1);
             sensor_F2[i] = mcp_f(2);
@@ -202,7 +220,7 @@ void add_sensor_F()
          }
        for (int i = 350; i < 400; i ++)         
          {  
-            
+            Motor(cl_sp, cr_sp);
             sensor_F0[i] = mcp_f(0);
             sensor_F1[i] = mcp_f(1);
             sensor_F2[i] = mcp_f(2);
@@ -215,7 +233,7 @@ void add_sensor_F()
          }
       for (int i = 400; i < 450; i ++)         
          {  
-  
+            Motor(cl_sp, cr_sp);
             sensor_F0[i] = mcp_f(0);
             sensor_F1[i] = mcp_f(1);
             sensor_F2[i] = mcp_f(2);
@@ -228,7 +246,7 @@ void add_sensor_F()
          }
        for (int i = 450; i < 502; i ++)         
          {  
-                
+            Motor(cl_sp, cr_sp);   
             sensor_F0[i] = mcp_f(0);
             sensor_F1[i] = mcp_f(1);
             sensor_F2[i] = mcp_f(2);
@@ -239,7 +257,7 @@ void add_sensor_F()
             sensor_F7[i] = mcp_f(7);   
             delay(10);                
          }
-
+      Motor(0, 0); delay(100);
       for(int i = 0; i< 502; i++)
         {
           Serial.print(sensor_F0[i]);
