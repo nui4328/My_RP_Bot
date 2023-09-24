@@ -24,17 +24,19 @@ void servo(int servo,int angle)
         servo_pico23.attach(sevopico23, 500, 2500);
         servo_pico23.write(angle);        
     }
+  else if (servo==22)
+    {
+        servo_pico22.attach(sevopico22,500, 2500);
+        servo_pico22.write(angle);      
+    }
+
   
   else if (servo==28)
     {
         servo_pico28.attach(sevopico28,500, 2500);
         servo_pico28.write(angle);               
     }
-  else if (servo==22)
-    {
-        servo_pico22.attach(sevopico22,500, 2500);
-        servo_pico22.write(angle);      
-    }
+
 
 }
 
