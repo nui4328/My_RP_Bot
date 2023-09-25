@@ -12,7 +12,7 @@ void Motor(int spl,int spr)
    {   
       delay(1);
       analogWriteResolution(10);
-      analogWriteFreq(800);
+      analogWriteFreq(1000);
       pinMode(7,OUTPUT);
       pinMode(6,OUTPUT);
       pinMode(8,OUTPUT);            
