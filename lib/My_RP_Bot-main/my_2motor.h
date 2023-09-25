@@ -19,7 +19,6 @@ void Motor(int spl,int spr)
       pinMode(22,OUTPUT); 
       pinMode(18,OUTPUT);
       pinMode(19,OUTPUT);
-      pinMode(19,OUTPUT);
 
       sl = map(spl, -100, 100, -1024,1024);
       sr = map(spr, -100, 100, -1024,1024);      
