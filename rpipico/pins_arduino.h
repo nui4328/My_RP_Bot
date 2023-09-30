@@ -11,8 +11,8 @@
 #define PIN_SERIAL1_TX (0u)
 #define PIN_SERIAL1_RX (1u)
 
-#define PIN_SERIAL2_TX (8u)
-#define PIN_SERIAL2_RX (9u)
+#define PIN_SERIAL2_TX (30u)
+#define PIN_SERIAL2_RX (30u)
 
 // SPI
 #define PIN_SPI0_MISO  (12u)
@@ -21,8 +21,8 @@
 #define PIN_SPI0_SS    (13u)
 
 #define PIN_SPI1_MISO  (12u)
-#define PIN_SPI1_MOSI  (15u)
-#define PIN_SPI1_SCK   (14u)
+#define PIN_SPI1_MOSI  (30u)
+#define PIN_SPI1_SCK   (31u)
 #define PIN_SPI1_SS    (5u)
 
 // Wire
