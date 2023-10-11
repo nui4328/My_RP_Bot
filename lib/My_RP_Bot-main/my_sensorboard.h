@@ -108,9 +108,8 @@ int mcp_f(int sensor)
   }
 void sw()
   {         
-      bz(200); 
-      bz(200);
-      bz(200);
+      bz(100); 
+      bz(100);
       mydisplay_background(black);
       while(digitalRead(9) == 1)
          {
