@@ -3,7 +3,7 @@
 
 #include "my_sensorboard.h"
 //#include "my_fw.h"
-//#include "my_2motor.h"
+#include "my_4motor.h"
 #include "my_servo_4wd.h"
 
 #endif
