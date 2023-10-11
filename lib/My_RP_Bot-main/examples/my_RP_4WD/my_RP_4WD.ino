@@ -6,9 +6,6 @@
 unsigned long lasts_time=millis();
 //------------------------->>
 
-int sensor_maxs[] = {936, 942, 925, 955, 941, 922}; 
-int sensor_mins[] = {189, 189, 175, 186, 189, 184}; 
-
 void setup()
   {    
      Serial.begin(9600);
@@ -19,11 +16,8 @@ void setup()
      pinMode(27,INPUT_PULLUP);
 
      servo(22, 90);
-     servo(23, 90);
-     //servo(28, 20);
      sw_start();    
          //cal_censor(0, 0);sw();
-         //test_line_r();
          
 //\\------------------------------------------->>>>>  เขียนโค๊ดที่นี้ 
 
