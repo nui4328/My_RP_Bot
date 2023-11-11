@@ -4,18 +4,18 @@
 void Motor_A(int sp_motor)
   { 
     delay(1);
-    analogWriteResolution(10);
-    analogWriteFreq(800);
+    analogWriteResolution(8);
+    analogWriteFreq(1000);
     pinMode(6,OUTPUT);
     pinMode(7,OUTPUT);
-    int spfl = map(sp_motor, -100, 100, -1024,1024); 
-    if(spfl>1024)
+    int spfl = map(sp_motor, -100, 100, -255,255); 
+    if(spfl>255)
       {
-        spfl = 1024;
+        spfl = 255;
       }
-    else if(spfl<-1024)
+    else if(spfl<-255)
       {
-        spfl = -1024;
+        spfl = -255;
       }                   
     if(spfl>0)
       {
@@ -36,18 +36,18 @@ void Motor_A(int sp_motor)
 void Motor_B(int sp_motor)
   { 
     delay(1);
-    analogWriteResolution(10);
+    analogWriteResolution(8);
     analogWriteFreq(800);
     pinMode(20,OUTPUT);
     pinMode(8,OUTPUT);
-    int spfr = map(sp_motor, -100, 100, -1024,1024); 
-    if(spfr>1024)
+    int spfr = map(sp_motor, -100, 100, -255,255); 
+    if(spfr>255)
       {
-        spfr = 1024;
+        spfr = 255;
       }
-    else if(spfr<-1024)
+    else if(spfr<-255)
       {
-        spfr = -1024;
+        spfr = -255;
       }                   
     if(spfr>0)
       {
@@ -72,14 +72,14 @@ void Motor_C(int sp_motor)
     analogWriteFreq( 800);     
     pinMode(10,OUTPUT);
     pinMode(11,OUTPUT);
-    int spbl = map(sp_motor, -100, 100, -1024,1024); 
-    if(spbl>1024)
+    int spbl = map(sp_motor, -100, 100, -255,255); 
+    if(spbl>255)
       {
-        spbl = 1024;
+        spbl = 255;
       }
-    else if(spbl<-1024)
+    else if(spbl<-255)
       {
-        spbl = -1024;
+        spbl = -255;
       }                   
     if(spbl>0)
       {
@@ -104,14 +104,14 @@ void Motor_D(int sp_motor)
     analogWriteFreq( 800);     
     pinMode(18,OUTPUT);
     pinMode(19,OUTPUT);
-    int spbr = map(sp_motor, -100, 100, -1024,1024); 
-    if(spbr>1024)
+    int spbr = map(sp_motor, -100, 100, -255,255); 
+    if(spbr>255)
       {
-        spbr = 1024;
+        spbr = 255;
       }
-    else if(spbr<-1024)
+    else if(spbr<-255)
       {
-        spbr = -1024;
+        spbr = -255;
       }                   
     if(spbr>0)
       {
@@ -132,8 +132,8 @@ void Motor_D(int sp_motor)
 void Motor(int sp_fl, int sp_fr, int sp_bl, int sp_br)
   { 
     delay(1);
-    analogWriteResolution(10);
-    analogWriteFreq( 800);
+    analogWriteResolution(8);
+    analogWriteFreq( 1000);
     pinMode(10,OUTPUT);
     pinMode(11,OUTPUT);
     pinMode(6,OUTPUT);
@@ -144,44 +144,44 @@ void Motor(int sp_fl, int sp_fr, int sp_bl, int sp_br)
     pinMode(20,OUTPUT);
     pinMode(8,OUTPUT);
 
-    int fl = map(sp_fl, -100, 100, -1024,1024); 
-    int fr = map(sp_fr, -100, 100, -1024,1024); 
-    int bl = map(sp_bl, -100, 100, -1024,1024); 
-    int br = map(sp_br, -100, 100, -1024,1024); 
-    if(fl>1024)
+    int fl = map(sp_fl, -100, 100, -255,255); 
+    int fr = map(sp_fr, -100, 100, -255,255); 
+    int bl = map(sp_bl, -100, 100, -255,255); 
+    int br = map(sp_br, -100, 100, -255,255); 
+    if(fl>255)
       {
-        fl = 1024;
+        fl = 255;
       }
-    else if(fl<-1024)
+    else if(fl<-255)
       {
-        fl = -1024;
+        fl = -255;
       }
       
-    if(fr>1024)
+    if(fr>255)
       {
-        fr = 1024;
+        fr = 255;
       }
-    else if(fr<-1024)
+    else if(fr<-255)
       {
-        fr = -1024;
+        fr = -255;
       } 
 
-    if(bl>1024)
+    if(bl>255)
       {
-        bl = 1024;
+        bl = 255;
       }
-    else if(bl<-1024)
+    else if(bl<-255)
       {
-        bl = -1024;
+        bl = -255;
       }
 
-    if(br>1024)
+    if(br>255)
       {
-        br = 1024;
+        br = 255;
       }
-    else if(br<-1024)
+    else if(br<-255)
       {
-        br = -1024;
+        br = -255;
       }
       
     if(fl>0)
@@ -251,8 +251,8 @@ void Motor(int sp_fl, int sp_fr, int sp_bl, int sp_br)
 void Motors(int sp_fl, int sp_fr, int sp_bl, int sp_br)
   { 
     delay(1);
-    analogWriteResolution(10);
-    analogWriteFreq( 800);
+    analogWriteResolution(8);
+    analogWriteFreq( 1000);
     pinMode(10,OUTPUT);
     pinMode(11,OUTPUT);
     pinMode(6,OUTPUT);
@@ -263,44 +263,44 @@ void Motors(int sp_fl, int sp_fr, int sp_bl, int sp_br)
     pinMode(20,OUTPUT);
     pinMode(8,OUTPUT);
 
-    int fl = map(sp_fl, -100, 100, -1024,1024); 
-    int fr = map(sp_fr, -100, 100, -1024,1024); 
-    int bl = map(sp_bl, -100, 100, -1024,1024); 
-    int br = map(sp_br, -100, 100, -1024,1024); 
-    if(fl>1024)
+    int fl = map(sp_fl, -100, 100, -255,255); 
+    int fr = map(sp_fr, -100, 100, -255,255); 
+    int bl = map(sp_bl, -100, 100, -255,255); 
+    int br = map(sp_br, -100, 100, -255,255); 
+    if(fl>255)
       {
-        fl = 1024;
+        fl = 255;
       }
-    else if(fl<-1024)
+    else if(fl<-255)
       {
-        fl = -1024;
+        fl = -255;
       }
       
-    if(fr>1024)
+    if(fr>255)
       {
-        fr = 1024;
+        fr = 255;
       }
-    else if(fr<-1024)
+    else if(fr<-255)
       {
-        fr = -1024;
+        fr = -255;
       } 
 
-    if(bl>1024)
+    if(bl>255)
       {
-        bl = 1024;
+        bl = 255;
       }
-    else if(bl<-1024)
+    else if(bl<-255)
       {
-        bl = -1024;
+        bl = -255;
       }
 
-    if(br>1024)
+    if(br>255)
       {
-        br = 1024;
+        br = 255;
       }
-    else if(br<-1024)
+    else if(br<-255)
       {
-        br = -1024;
+        br = -255;
       }
       
     if(fl>0)
