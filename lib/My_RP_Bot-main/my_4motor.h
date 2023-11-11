@@ -1,11 +1,11 @@
 #ifndef _my_4motor_
 #define _my_4motor_
-#include <arduino.h>
+//#include <Arduino.h>
 void Motor(int sp_fl, int sp_fr, int sp_bl, int sp_br)
   { 
     //delay(1);
-    //analogWriteResolution(10);
-    //analogWriteFreq( 800);
+    analogWriteResolution(10);
+    analogWriteFreq(1100);
     pinMode(10,OUTPUT);
     pinMode(11,OUTPUT);
     pinMode(6,OUTPUT);
@@ -16,44 +16,44 @@ void Motor(int sp_fl, int sp_fr, int sp_bl, int sp_br)
     pinMode(20,OUTPUT);
     pinMode(8,OUTPUT);
 
-    int fl = map(sp_fl, -100, 100, -255,255); 
-    int fr = map(sp_fr, -100, 100, -255,255); 
-    int bl = map(sp_bl, -100, 100, -255,255); 
-    int br = map(sp_br, -100, 100, -255,255); 
-    if(fl>255)
+    int fl = map(sp_fl, -100, 100, -1024,1024); 
+    int fr = map(sp_fr, -100, 100, -1024,1024); 
+    int bl = map(sp_bl, -100, 100, -1024,1024); 
+    int br = map(sp_br, -100, 100, -1024,1024); 
+    if(fl>1024)
       {
-        fl = 255;
+        fl = 1024;
       }
-    else if(fl<-255)
+    else if(fl<-1024)
       {
-        fl = -255;
+        fl = -1024;
       }
       
-    if(fr>255)
+    if(fr>1024)
       {
-        fr = 255;
+        fr = 1024;
       }
-    else if(fr<-255)
+    else if(fr<-1024)
       {
-        fr = -255;
+        fr = -1024;
       } 
 
-    if(bl>255)
+    if(bl>1024)
       {
-        bl = 255;
+        bl = 1024;
       }
-    else if(bl<-255)
+    else if(bl<-1024)
       {
-        bl = -255;
+        bl = -1024;
       }
 
-    if(br>255)
+    if(br>1024)
       {
-        br = 255;
+        br = 1024;
       }
-    else if(br<-255)
+    else if(br<-1024)
       {
-        br = -255;
+        br = -1024;
       }
       
     if(fl>0)
@@ -135,44 +135,44 @@ void Motors(int sp_fl, int sp_fr, int sp_bl, int sp_br)
     pinMode(20,OUTPUT);
     pinMode(8,OUTPUT);
 
-    int fl = map(sp_fl, -100, 100, -255,255); 
-    int fr = map(sp_fr, -100, 100, -255,255); 
-    int bl = map(sp_bl, -100, 100, -255,255); 
-    int br = map(sp_br, -100, 100, -255,255); 
-       if(fl>255)
+    int fl = map(sp_fl, -100, 100, -1024,1024); 
+    int fr = map(sp_fr, -100, 100, -1024,1024); 
+    int bl = map(sp_bl, -100, 100, -1024,1024); 
+    int br = map(sp_br, -100, 100, -1024,1024); 
+       if(fl>1024)
       {
-        fl = 255;
+        fl = 1024;
       }
-    else if(fl<-255)
+    else if(fl<-1024)
       {
-        fl = -255;
+        fl = -1024;
       }
       
-    if(fr>255)
+    if(fr>1024)
       {
-        fr = 255;
+        fr = 1024;
       }
-    else if(fr<-255)
+    else if(fr<-1024)
       {
-        fr = -255;
+        fr = -1024;
       } 
 
-    if(bl>255)
+    if(bl>1024)
       {
-        bl = 255;
+        bl = 1024;
       }
-    else if(bl<-255)
+    else if(bl<-1024)
       {
-        bl = -255;
+        bl = -1024;
       }
 
-    if(br>255)
+    if(br>1024)
       {
-        br = 255;
+        br = 1024;
       }
-    else if(br<-255)
+    else if(br<-1024)
       {
-        br = -255;
+        br = -1024;
       }
       
     if(fl>0)
