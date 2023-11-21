@@ -4,8 +4,7 @@
 void Motor(int sp_fl, int sp_fr, int sp_bl, int sp_br)
   { 
     delay(1);
-    analogWriteResolution(16);
-    analogWriteFreq(300);
+   
     pinMode(10,OUTPUT);
     pinMode(11,OUTPUT);
     pinMode(6,OUTPUT);
@@ -16,44 +15,47 @@ void Motor(int sp_fl, int sp_fr, int sp_bl, int sp_br)
     pinMode(20,OUTPUT);
     pinMode(8,OUTPUT);
 
-    int fl = map(sp_fl, -100, 100, -65535,65535); 
-    int fr = map(sp_fr, -100, 100, -65535,65535); 
-    int bl = map(sp_bl, -100, 100, -65535,65535); 
-    int br = map(sp_br, -100, 100, -65535,65535); 
-    if(fl>65535)
+
+    analogWriteResolution(12);
+    analogWriteFreq(400);
+    long int fl = map(sp_fl, -100, 100, -4096,4096); 
+    long int fr = map(sp_fr, -100, 100, -4096,4096); 
+    long int bl = map(sp_bl, -100, 100, -4096,4096); 
+    long int br = map(sp_br, -100, 100, -4096,4096); 
+    if(fl>4096)
       {
-        fl = 65535;
+        fl = 4096;
       }
-    else if(fl<-65535)
+    else if(fl<-4096)
       {
-        fl = -65535;
+        fl = -4096;
       }
       
-    if(fr>65535)
+    if(fr>4096)
       {
-        fr = 65535;
+        fr = 4096;
       }
-    else if(fr<-65535)
+    else if(fr<-4096)
       {
-        fr = -65535;
+        fr = -4096;
       } 
 
-    if(bl>65535)
+    if(bl>4096)
       {
-        bl = 65535;
+        bl = 4096;
       }
-    else if(bl<-65535)
+    else if(bl<-4096)
       {
-        bl = -65535;
+        bl = -4096;
       }
 
-    if(br>65535)
+    if(br>4096)
       {
-        br = 65535;
+        br = 4096;
       }
-    else if(br<-65535)
+    else if(br<-4096)
       {
-        br = -65535;
+        br = -4096;
       }
       
     if(fl>0)
@@ -124,7 +126,7 @@ void Motors(int sp_fl, int sp_fr, int sp_bl, int sp_br)
   { 
     delay(1);
     analogWriteResolution(16);
-    analogWriteFreq( 300);
+    analogWriteFreq( 200);
     pinMode(10,OUTPUT);
     pinMode(11,OUTPUT);
     pinMode(6,OUTPUT);
@@ -135,44 +137,44 @@ void Motors(int sp_fl, int sp_fr, int sp_bl, int sp_br)
     pinMode(20,OUTPUT);
     pinMode(8,OUTPUT);
 
-    int fl = map(sp_fl, -100, 100, -65535,65535); 
-    int fr = map(sp_fr, -100, 100, -65535,65535); 
-    int bl = map(sp_bl, -100, 100, -65535,65535); 
-    int br = map(sp_br, -100, 100, -65535,65535); 
-       if(fl>65535)
+    int fl = map(sp_fl, -100, 100, -4096,4096); 
+    int fr = map(sp_fr, -100, 100, -4096,4096); 
+    int bl = map(sp_bl, -100, 100, -4096,4096); 
+    int br = map(sp_br, -100, 100, -4096,4096); 
+       if(fl>4096)
       {
-        fl = 65535;
+        fl = 4096;
       }
-    else if(fl<-65535)
+    else if(fl<-4096)
       {
-        fl = -65535;
+        fl = -4096;
       }
       
-    if(fr>65535)
+    if(fr>4096)
       {
-        fr = 65535;
+        fr = 4096;
       }
-    else if(fr<-65535)
+    else if(fr<-4096)
       {
-        fr = -65535;
+        fr = -4096;
       } 
 
-    if(bl>65535)
+    if(bl>4096)
       {
-        bl = 65535;
+        bl = 4096;
       }
-    else if(bl<-65535)
+    else if(bl<-4096)
       {
-        bl = -65535;
+        bl = -4096;
       }
 
-    if(br>65535)
+    if(br>4096)
       {
-        br = 65535;
+        br = 4096;
       }
-    else if(br<-65535)
+    else if(br<-4096)
       {
-        br = -65535;
+        br = -4096;
       }
       
     if(fl>0)
