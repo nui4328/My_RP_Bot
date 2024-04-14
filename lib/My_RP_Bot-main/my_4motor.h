@@ -3,7 +3,7 @@
 //#include <Arduino.h>
 void Motor(int sp_fl, int sp_fr, int sp_bl, int sp_br)
   { 
-    delay(1);
+    delayMicroseconds(50);
    
     pinMode(10,OUTPUT);
     pinMode(11,OUTPUT);
