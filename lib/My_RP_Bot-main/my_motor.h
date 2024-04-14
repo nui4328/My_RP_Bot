@@ -11,7 +11,7 @@ void to_set_motor_LR(int ML, int MR)
 
 void Motor(int spl,int spr)    
    {   
-      delay(1);
+      delayMicroseconds(50);
       analogWriteResolution(12);
       analogWriteFreq( 1000);
       pinMode(10,OUTPUT);
