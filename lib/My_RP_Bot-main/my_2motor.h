@@ -10,7 +10,7 @@ void Freq_motor(int fq_m)
    }
 void Motor(int spl,int spr)    
    {   
-      delay(1);
+     delayMicroseconds(50);
       analogWriteResolution(10);
       analogWriteFreq(1000);
       pinMode(7,OUTPUT);
