@@ -1010,7 +1010,7 @@ void fline_white(int spl ,int spr, float kp, int tim, char nfc, char splr, int p
                       kd_f = 0;
                     }  
                   PID_output = (kp * kf('p')) + (0.0 * kf('i')) + (kd_f * kf('d'));
-                  Motor(spl - PID_output, spr + PID_output);                       
+                  Motor(spl + PID_output, spr - PID_output);                       
                }
          }
       else
@@ -1023,7 +1023,7 @@ void fline_white(int spl ,int spr, float kp, int tim, char nfc, char splr, int p
                       kd_f = 0;
                     }               
                   PID_output = (kp * kf('p')) + (0.0 * kf('i')) + (kd_f * kf('d'));
-                  Motor(spl - PID_output, spr + PID_output);   
+                  Motor(spl + PID_output, spr - PID_output);   
                   if((mcp_f(0)>md_mcp_f(0) && mcp_f(1)>md_mcp_f(1) && mcp_f(3)>md_mcp_f(3))
                      ||(mcp_f(0)>md_mcp_f(0) && mcp_f(1)>md_mcp_f(1) && mcp_f(2)>md_mcp_f(2))
                      //|| (mcp_f(7)>md_mcp_f(7) && mcp_f(6)>md_mcp_f(6) && mcp_f(4)>md_mcp_f(4))
@@ -1043,7 +1043,7 @@ void fline_white(int spl ,int spr, float kp, int tim, char nfc, char splr, int p
                   while(1)
                     {  
                       PID_output = (kp_slow * kf('p')) + (0.0 * kf('i')) + (ki_slow * kf('d'));      
-                      Motor(spl - PID_output, spr + PID_output); 
+                      Motor(spl + PID_output, spr - PID_output); 
                       if( (mcp_f(0)>md_mcp_f(0) && mcp_f(1)>md_mcp_f(1) && mcp_f(3)>md_mcp_f(3))
                       //||(mcp_f(2)>md_mcp_f(2) && mcp_f(3)>md_mcp_f(3) && mcp_f(4)>md_mcp_f(4)&& mcp_f(5)>md_mcp_f(5))
 
@@ -1061,7 +1061,7 @@ void fline_white(int spl ,int spr, float kp, int tim, char nfc, char splr, int p
                   while(1)
                     {                   
                       PID_output = (kp_slow * kf('p')) + (0.0 * kf('i')) + (ki_slow * kf('d'));   
-                      Motor(slmotor - PID_output, srmotor + PID_output); 
+                      Motor(slmotor + PID_output, srmotor - PID_output); 
                       if( (mcp_f(0)>md_mcp_f(0) && mcp_f(1)>md_mcp_f(1) && mcp_f(3)>md_mcp_f(3))
                           || (mcp_f(7)>md_mcp_f(7) && mcp_f(6)>md_mcp_f(6) && mcp_f(4)>md_mcp_f(4))
                           )
@@ -1080,7 +1080,7 @@ void fline_white(int spl ,int spr, float kp, int tim, char nfc, char splr, int p
               while(1)
                 {                   
                     PID_output = (kp_slow * kf('p')) + (0.0 * kf('i')) + (ki_slow * kf('d'));   
-                    Motor(slmotor - PID_output, srmotor + PID_output);    
+                    Motor(slmotor + PID_output, srmotor - PID_output);    
                     if( (mcp_f(0)>md_mcp_f(0) && mcp_f(1)>md_mcp_f(1) && mcp_f(3)>md_mcp_f(3))
                           || (mcp_f(7)>md_mcp_f(7) && mcp_f(6)>md_mcp_f(6) && mcp_f(4)>md_mcp_f(4))
                           )
@@ -1098,7 +1098,7 @@ void fline_white(int spl ,int spr, float kp, int tim, char nfc, char splr, int p
               while(1)
                 {                     
                     PID_output = (kp_slow * kf('p')) + (0.0 * kf('i')) + (ki_slow * kf('d'));   
-                    Motor(slmotor - PID_output, srmotor + PID_output);    
+                    Motor(slmotor + PID_output, srmotor - PID_output);    
                     if( analogRead(26) >= md_adc(26)-50 
                       || analogRead(27) >= md_adc(27)-50 
                       )
@@ -1115,7 +1115,7 @@ void fline_white(int spl ,int spr, float kp, int tim, char nfc, char splr, int p
               while(1)
                 {                   
                     PID_output = (kp_slow * kf('p')) + (0.0 * kf('i')) + (ki_slow * kf('d'));   
-                    Motor(slmotor - PID_output, srmotor + PID_output);  
+                    Motor(slmotor + PID_output, srmotor - PID_output);  
                     if( analogRead(26) >= md_adc(26)-50 
                           || analogRead(27) >= md_adc(27)-50 
                           )
@@ -1152,7 +1152,7 @@ void fline_white(int spl ,int spr, float kp, int tim, char nfc, char splr, int p
                 while(1)
                   {                    
                       PID_output = (kp_slow * kf('p')) + (0.0 * kf('i')) + (ki_slow * kf('d'));   
-                      Motor(spl - PID_output, spr + PID_output);  
+                      Motor(spl + PID_output, spr - PID_output);  
                       if( analogRead(26) >= md_adc(26)-50 
                             || analogRead(27) >= md_adc(27)-50 
                               )
@@ -1355,7 +1355,7 @@ void bline_white (int spl ,int spr, float kp, int tim, char nfc, char splr, int 
                       kd_b = 0;
                     }
             PID_output = (kp * kb('p')) + (0.0 * kb('i')) + (kd_b * kb('d'));
-            Motor(-(spl + PID_output), -(spr - PID_output));                       
+            Motor(-(spl - PID_output), -(spr + PID_output));                       
           }
       }
     else
@@ -1368,7 +1368,7 @@ void bline_white (int spl ,int spr, float kp, int tim, char nfc, char splr, int 
                       kd_b = 0;
                     }              
             PID_output = (kp * kb('p')) + (0.0 * kb('i')) + (kd_b * kb('d'));
-            Motor(-(spl + PID_output), -(spr - PID_output)); 
+            Motor(-(spl - PID_output), -(spr + PID_output));    
             if( (mcp_b(2)>md_mcp_b(2) && mcp_b(3)>md_mcp_b(3) && mcp_b(4)>md_mcp_b(4)&& mcp_b(5)>md_mcp_b(5))
                      ||(mcp_b(0)>md_mcp_b(0) && mcp_b(1)>md_mcp_b(1) && mcp_b(3)>md_mcp_b(3))
                      ||(mcp_b(0)>md_mcp_b(0) && mcp_b(1)>md_mcp_b(1) && mcp_b(3)>md_mcp_b(3))
@@ -1391,7 +1391,7 @@ void bline_white (int spl ,int spr, float kp, int tim, char nfc, char splr, int 
                 while(1)
                   {     
                     PID_output = (kp * kb('p')) + (0.0 * kb('i')) + (kd_b * kb('d'));  
-                    Motor(-(spl + PID_output), -(spr - PID_output));  
+                    Motor(-(spl - PID_output), -(spr + PID_output));    
                     if( (mcp_b(0) > md_mcp_b(0)) && (mcp_b(1) > md_mcp_b(1)) && (mcp_b(6) > md_mcp_b(6)) && (mcp_b(7) > md_mcp_b(7))
                         || (mcp_b(0) > md_mcp_b(0)) && (mcp_b(1) > md_mcp_b(1)) && (mcp_b(2) > md_mcp_b(2))
                         || (mcp_b(7) > md_mcp_b(7)) && (mcp_b(6) > md_mcp_b(6)) && (mcp_b(5) > md_mcp_b(5)) ) 
@@ -1405,7 +1405,7 @@ void bline_white (int spl ,int spr, float kp, int tim, char nfc, char splr, int 
                 while(1)
                   {           
                     PID_output = (kp_slow * kb('p')) + (0.0 * kb('i')) + (ki_slow * kb('d'));    
-                    Motor(-(slmotor + PID_output), -(srmotor - PID_output)); 
+                    Motor(-(slmotor - PID_output), -(srmotor + PID_output)); 
                     if( (mcp_b(0) > md_mcp_b(0)) && (mcp_b(1) > md_mcp_b(1)) && (mcp_b(6) > md_mcp_b(6)) && (mcp_b(7) > md_mcp_b(7))
                         || (mcp_b(0) > md_mcp_b(0)) && (mcp_b(1) > md_mcp_b(1)) && (mcp_b(2) > md_mcp_b(2))
                         || (mcp_b(7) > md_mcp_b(7)) && (mcp_b(6) > md_mcp_b(6)) && (mcp_b(5) > md_mcp_b(5)) )
@@ -1423,7 +1423,7 @@ void bline_white (int spl ,int spr, float kp, int tim, char nfc, char splr, int 
             while(1)
               {                   
                 PID_output = (kp_slow * kb('p')) + (0.0 * kb('i')) + (ki_slow * kb('d')); 
-                Motor(-(slmotor + PID_output), -(srmotor - PID_output));    
+                Motor(-(slmotor - PID_output), -(srmotor + PID_output));    
                 if( analogRead(26) >= md_adc(26)
                       || analogRead(27) >= md_adc(27)
                       )
@@ -1445,7 +1445,7 @@ void bline_white (int spl ,int spr, float kp, int tim, char nfc, char splr, int 
                 while(1)
                   {                     
                     PID_output = (kp_slow * kb('p')) + (0.0 * kb('i')) + (ki_slow * kb('d')); 
-                    Motor(-(slmotor + PID_output), -(srmotor - PID_output)); 
+                    Motor(-(slmotor - PID_output), -(srmotor + PID_output)); 
                     if( analogRead(26) >= md_adc(26)
                       || analogRead(27) >= md_adc(27)
                       )
@@ -1459,7 +1459,7 @@ void bline_white (int spl ,int spr, float kp, int tim, char nfc, char splr, int 
                 while(1)
                   {  
                     PID_output = (kp_slow * kb('p')) + (0.0 * kb('i')) + (ki_slow * kb('d')); 
-                    Motor(-(spl + PID_output), -(spr - PID_output)); 
+                    Motor(-(spl - PID_output), -(spr + PID_output)); 
                     if( mcp_b(1) < md_mcp_b(1) && mcp_b(6) < md_mcp_b(6) )  
                       {
                         break;
@@ -1487,7 +1487,7 @@ void bline_white (int spl ,int spr, float kp, int tim, char nfc, char splr, int 
                  while(1)
                     {                     
                       PID_output = (kp_slow * kb('p')) + (0.0 * kb('i')) + (ki_slow * kb('d')); 
-                      Motor(-(slmotor + PID_output), -(srmotor - PID_output));
+                      Motor(-(slmotor - PID_output), -(srmotor + PID_output));
                       if( analogRead(26) >= md_adc(26)
                             || analogRead(27) >= md_adc(27)
                             )
@@ -1515,7 +1515,7 @@ void bline_white (int spl ,int spr, float kp, int tim, char nfc, char splr, int 
         while(1)
           {  
             PID_output = (kp * kb('p')) + (0.0 * kb('i')) + (kd_b * kb('d'));  
-            Motor(-(spl + PID_output), -(spr - PID_output)); 
+            Motor(-(spl - PID_output), -(spr + PID_output)); 
             if( mcp_b(1) < md_mcp_b(1) && mcp_b(6) < md_mcp_b(6) )  
               {
                 break;
@@ -1540,7 +1540,7 @@ void bline_white (int spl ,int spr, float kp, int tim, char nfc, char splr, int 
 
             for ( int i = 0; i < sensor_f; i++ )
               {
-                 do{ Motor(-((flmr*power)/100), -((flml*power)/100)); } while( mcp_f(i) < md_mcp_f(i) ); delay(2);
+                 do{ Motor(-((flmr*power)/100), ((flml*power)/100)); } while( mcp_f(i) < md_mcp_f(i) ); delay(2);
              
               }                            
           }
