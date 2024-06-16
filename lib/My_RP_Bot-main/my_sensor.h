@@ -9,9 +9,13 @@
 #define EEPROM_ADDR 0x50
 #define DATA_sensor_SIZE 20
 #define DATA_sensor_SIZE_B 16
+#define DATA_sensor_SIZE_M 16
 
-int eep_f = 10;
-int eep_b = 100;
+int eep_f = 150;
+int eep_b = 250;
+
+int _eep_f[20];
+int _eep_b[16];
 
 my_MCP3008 adc;
 int cal_motor_l, cal_motor_r, delay_cal;
@@ -40,6 +44,18 @@ uint16_t sensor_add_B[8];
 uint16_t sensor_maxB[8]; 
 uint16_t sensor_minB[8];
 
+uint16_t sensor_M0[502];
+uint16_t sensor_M1[502];
+uint16_t sensor_M2[502];
+uint16_t sensor_M3[502];
+uint16_t sensor_M4[502];
+uint16_t sensor_M5[502];
+uint16_t sensor_M6[502];
+uint16_t sensor_M7[502];
+uint16_t sensor_add_M[8];
+uint16_t sensor_maxM[8]; 
+uint16_t sensor_minM[8];
+
 uint16_t sensor_26[502];
 uint16_t sensor_27[502];
 uint16_t sensor_PA[2];
@@ -53,6 +69,10 @@ uint16_t sensor_pin_B[] = {0,1,2,3,4,5,6,7};
 uint16_t state_on_Line = 0;
 uint16_t setpoint;
 uint16_t _lastPosition;
+
+uint16_t readData_sensor_F[20];
+uint16_t readData_sensor_B[16];
+uint16_t readData_sensor_M[16];
  
 ///////////////////////////////------------------------------->>>
 
@@ -108,6 +128,7 @@ void pos_motor_cal(int spl, int spr, int delay_calA)
 /////////////////////////////////----------------------->>>>
 uint16_t mcp_f(int sensor) 
   {     
+     adc.begin(2, 4, 3, 0 ); 
      adc.begin(2, 4, 3, 5 );    
      adc.begin(2, 4, 3, 13 );  
      return adc.readADC(sensor);  
@@ -116,11 +137,21 @@ uint16_t mcp_f(int sensor)
 
 uint16_t mcp_b(int sensor) 
   {   
+     adc.begin(2, 4, 3, 0 ); 
      adc.begin(2, 4, 3, 13 );      
      adc.begin(2, 4, 3, 5 );    
      return adc.readADC(sensor);   
   } 
-/////////////////////////////////----------------------->>>>  
+/////////////////////////////////----------------------->>>> 
+uint16_t mcp_m(int sensor) 
+  {     
+     adc.begin(2, 4, 3, 5 );    
+     adc.begin(2, 4, 3, 13 );  
+     adc.begin(2, 4, 3, 0 ); 
+     return adc.readADC(sensor);  
+  }
+/////////////////////////////////----------------------->>>>
+
 
 void add_sensor_F()
   {
@@ -459,7 +490,7 @@ void add_sensor_F()
 
       
 //////////////////////////.........................>>>>>>>>>>>>
-
+/*
       uint16_t Data_sensor[DATA_sensor_SIZE] = {maxVal26, minVal26, maxVal27, minVal27,
                              maxVal0, maxVal1, maxVal2, maxVal3, maxVal4, maxVal5, maxVal6, maxVal7
                              ,minVal0, minVal1, minVal2, minVal3, minVal4, minVal5, minVal6, minVal7};
@@ -477,7 +508,65 @@ void add_sensor_F()
       
       bz(100);
       bz(100);
+*/
+      uint16_t Data_sensor[DATA_sensor_SIZE] = {maxVal26, minVal26, maxVal27, minVal27,
+                             maxVal0, maxVal1, maxVal2, maxVal3, maxVal4, maxVal5, maxVal6, maxVal7
+                             ,minVal0, minVal1, minVal2, minVal3, minVal4, minVal5, minVal6, minVal7};
+      for (int i = 0; i < DATA_sensor_SIZE; i ++) 
+        {
+         Serial.print(Data_sensor[i]);Serial.print("  ");
+        }
+      Serial.println("  ");
+/*
+      EEPROM.put(100, Data_sensor[0]); // write data to EEPROM address 0
+            EEPROM.commit(); // save changes to EEPROM
+            delay(10);
+      EEPROM.put(120, Data_sensor[1]); // write data to EEPROM address 0
+            EEPROM.commit(); // save changes to EEPROM
+            delay(10);
+      EEPROM.put(140, Data_sensor[2]); // write data to EEPROM address 0
+            EEPROM.commit(); // save changes to EEPROM
+            delay(10);
+
+
+      int readData_sensor;
+      Serial.print("sensor_f -> EEPROM : ");
+
+      EEPROM.get(100, readData_sensor); // read data from EEPROM address 0    
+            delay(10);
+      Serial.print(readData_sensor);Serial.print("  ");
+         delay(10); 
    
+*/      
+
+      
+
+
+      for(int i=0; i<DATA_sensor_SIZE; i++)
+         {
+            EEPROM.put((2*i)*2, Data_sensor[i]); // write data to EEPROM address 0
+            EEPROM.commit(); // save changes to EEPROM
+            delay(10);
+         }
+      
+    
+      uint16_t readData_sensor[DATA_sensor_SIZE];
+      for(int i=0; i<DATA_sensor_SIZE; i++)
+         {
+            EEPROM.get((2*i)*2, readData_sensor[i]); // read data from EEPROM address 0    
+            delay(10);        
+         }
+      Serial.print("sensor_f -> EEPROM : ");
+      for (int i = 0; i < DATA_sensor_SIZE; i ++) 
+        {
+         Serial.print(readData_sensor[i]);Serial.print("  ");
+         delay(10);
+        }
+      Serial.println("  ");
+    
+      bz(100);
+      bz(100);
+      Serial.println(" ent--->  ");
   }
 
 void add_sensor_B()
@@ -709,7 +798,7 @@ void add_sensor_B()
 
 
 //////////////////////////.........................>>>>>>>>>>>>
-
+/*
       uint16_t Data_sensor_B[DATA_sensor_SIZE_B] = {sensor_maxB[0], sensor_maxB[1], sensor_maxB[2], sensor_maxB[3], sensor_maxB[4], sensor_maxB[5], sensor_maxB[6], sensor_maxB[7]
                              ,sensor_minB[0], sensor_minB[1], sensor_minB[2], sensor_minB[3], sensor_minB[4], sensor_minB[5], sensor_minB[6], sensor_minB[7]};
       EEPROM.put(eep_b, Data_sensor_B); // write data to EEPROM address 0
@@ -726,33 +815,62 @@ void add_sensor_B()
       
       bz(100);
       bz(100);
+*/
+      uint16_t Data_sensor[DATA_sensor_SIZE_B] = {sensor_maxB[0], sensor_maxB[1], sensor_maxB[2], sensor_maxB[3], sensor_maxB[4], sensor_maxB[5], sensor_maxB[6], sensor_maxB[7]
+                             ,sensor_minB[0], sensor_minB[1], sensor_minB[2], sensor_minB[3], sensor_minB[4], sensor_minB[5], sensor_minB[6], sensor_minB[7]};
+     for (int i = 0; i < DATA_sensor_SIZE_B; i ++) 
+        {
+         Serial.print(Data_sensor[i]);Serial.print("  ");
+        }
+      Serial.println("  ");
+
+      for(int i=0; i<DATA_sensor_SIZE_B; i++)
+         {
+            EEPROM.put((50+i)*2, Data_sensor[i]); // write data to EEPROM address 0
+            EEPROM.commit(); // save changes to EEPROM
+            delay(10);
+         }
+      
+    
+      uint16_t readData_sensor[DATA_sensor_SIZE_B];
+      for(int i=0; i<DATA_sensor_SIZE_B; i++)
+         {
+            EEPROM.get((50+i)*2, readData_sensor[i]); // read data from EEPROM address 0    
+            delay(10);        
+         }
+      Serial.print("sensor_b -> EEPROM : ");
+      for (int i = 0; i < DATA_sensor_SIZE_B; i ++) 
+        {
+         Serial.print(readData_sensor[i]);Serial.print("  ");
+        }
+      Serial.println("  ");
+      
+      bz(100);
+      bz(100);
+      Serial.println(" ent--->  ");
   }
 
 uint16_t max_analogRead(int sensor)
     {     
-       uint16_t readData_sensor[DATA_sensor_SIZE];
-       EEPROM.get(eep_f, readData_sensor); // read data from EEPROM address 0
        if(sensor == 26)
           {
-             return readData_sensor[0];
+             return readData_sensor_F[0];
           }
        else if(sensor == 27)
           {
-             return readData_sensor[2];
+             return readData_sensor_F[2];
           }
         return -1;       
     }
 uint16_t min_analogRead(int sensor)
     {     
-       uint16_t readData_sensor[DATA_sensor_SIZE];
-       EEPROM.get(eep_f, readData_sensor); // read data from EEPROM address 0
        if(sensor == 26)
           {
-             return readData_sensor[1];
+             return readData_sensor_F[1];
           }
        else if(sensor == 27)
           {
-             return readData_sensor[3];
+             return readData_sensor_F[3];
           }
         return -1;       
     }
@@ -765,78 +883,74 @@ uint16_t md_adc(int sensor)
     
 uint16_t max_mcp_f(int sensor)
     {     
-      uint16_t readData_sensor[DATA_sensor_SIZE];
-      EEPROM.get(eep_f, readData_sensor); // read data from EEPROM address 0
        if(sensor == 0)
           {
-             return 750;
+             return readData_sensor_F[4];
           }
        else if(sensor == 1)
           {
-             return readData_sensor[5];
+             return readData_sensor_F[5];
           }
        else if(sensor == 2)
           {
-             return readData_sensor[6];
+             return readData_sensor_F[6];
           }
        else if(sensor == 3)
           {
-            return readData_sensor[7];
+            return readData_sensor_F[7];
           }
        else if(sensor == 4)
           {
-            return readData_sensor[8];
+            return readData_sensor_F[8];
           }
       else if(sensor == 5)
           {
-             return readData_sensor[9];
+             return readData_sensor_F[9];
           }
        else if(sensor == 6)
           {
-             return readData_sensor[10];
+             return readData_sensor_F[10];
           }
        else if(sensor == 7)
           {
-             return readData_sensor[11];
+             return readData_sensor_F[11];
           }
         return -1;    
     }
     
 uint16_t min_mcp_f(int sensor)
     {     
-      uint16_t readData_sensor[DATA_sensor_SIZE];
-      EEPROM.get(eep_f, readData_sensor); // read data from EEPROM address 0
        if(sensor == 0)
           {
-             return readData_sensor[12];
+             return readData_sensor_F[12];
           }
        else if(sensor == 1)
           {
-             return readData_sensor[13];
+             return readData_sensor_F[13];
           }
        else if(sensor == 2)
           {
-             return readData_sensor[14];
+             return readData_sensor_F[14];
           }
        else if(sensor == 3)
           {
-             return readData_sensor[15];
+             return readData_sensor_F[15];
           }
        else if(sensor == 4)
           {
-             return readData_sensor[16];
+             return readData_sensor_F[16];
           }
       else if(sensor == 5)
           {
-             return readData_sensor[17];
+             return readData_sensor_F[17];
           }
        else if(sensor == 6)
           {
-             return readData_sensor[18];
+             return readData_sensor_F[18];
           }
        else if(sensor == 7)
           {
-             return readData_sensor[19];
+             return readData_sensor_F[19];
           }
         return -1;    
     }
@@ -851,8 +965,6 @@ uint16_t md_mcp_f(int sensor)
 /////////////////////////////////////------------------------------------------>>>
 uint16_t max_mcp_b(int sensor)
     {     
-      uint16_t readData_sensor_B[DATA_sensor_SIZE_B];
-      EEPROM.get(eep_b, readData_sensor_B); // read data from EEPROM address 0
        if(sensor == 0)
           {
              return readData_sensor_B[0];
@@ -890,8 +1002,6 @@ uint16_t max_mcp_b(int sensor)
     
 uint16_t min_mcp_b(int sensor)
     {     
-      uint16_t readData_sensor_B[DATA_sensor_SIZE_B];
-      EEPROM.get(eep_b, readData_sensor_B); // read data from EEPROM address 0
        if(sensor == 0)
           {
              return readData_sensor_B[8];
@@ -1083,6 +1193,13 @@ int error_B()
         return P;
                              
     }
+float error_b()
+    {
+      present_position = PositionB() / ((numSensor - 1) * 10) ;
+      setpoint = 50.0;
+      errors = setpoint - present_position;     
+      return errors;                             
+    }
 float kb(char pid)
     {
       present_position = PositionB() / ((numSensor - 1) * 10) ;
@@ -1109,6 +1226,22 @@ float kb(char pid)
                              
     }
 
+float error_f(int _setpoint)
+    {
+      present_position = Position() / ((numSensor - 1) * 10) ;
+      setpoint = _setpoint;
+      errors = setpoint - present_position;     
+      return errors;                             
+    }
+float error_b(int _setpoint)
+    {
+      present_position = PositionB() / ((numSensor - 1) * 10) ;
+      setpoint = _setpoint;
+      errors = setpoint - present_position;     
+      return errors;                             
+    }
+
+
  void sw()
   {
      
@@ -1119,133 +1252,169 @@ float kb(char pid)
       while(digitalRead(9) == 1)
          {
          for(int i=0; i<600; i++)
-         {
-            rgb(1, 0, 0);
-            if(digitalRead(11) == 0)
-               {
-                  add_sensor_F();
-               }
-            if(digitalRead(6) == 0)
-               {
-                  add_sensor_B();
-               }
-            for(int i=26; i<28; i++)
-               {
-                  Serial.print(analogRead(i));
-                  Serial.print("  ");
-                  if(digitalRead(9) == 0)
-                     {
-                     goto end_sw;
-                     }
-               }
-            Serial.print("    ");
-            
-            for(int i=0; i<8; i++)
-               {
-                  Serial.print(mcp_f(i));
-                  Serial.print("  ");
-                  if(digitalRead(9) == 0)
-                     {
-                     goto end_sw;
-                     }
-               }
-            Serial.print("    ");
-            
-            for(int i=0; i<8; i++)
-               {
-                  Serial.print(mcp_b(i));
-                  Serial.print("  ");
-                  if(digitalRead(9) == 0)
-                     {
-                     goto end_sw;
-                     }                
-               }
-            Serial.println("");
-         }
+            {
+               rgb(1, 0, 0);
+               if(digitalRead(11) == 0)
+                  {
+                     add_sensor_F();
+                  }
+               if(digitalRead(6) == 0)
+                  {
+                     add_sensor_B();
+                  }
+               for(int i=26; i<28; i++)
+                  {
+                     Serial.print(analogRead(i));
+                     Serial.print("  ");
+                     if(digitalRead(9) == 0)
+                        {
+                        goto end_sw;
+                        }
+                  }
+               Serial.print("    ");
+               
+               for(int i=0; i<8; i++)
+                  {
+                     Serial.print(mcp_f(i));
+                     Serial.print("  ");
+                     if(digitalRead(9) == 0)
+                        {
+                        goto end_sw;
+                        }
+                  }
+               Serial.print("    ");
+               
+               for(int i=0; i<8; i++)
+                  {
+                     Serial.print(mcp_b(i));
+                     Serial.print("  ");
+                     if(digitalRead(9) == 0)
+                        {
+                        goto end_sw;
+                        }                
+                  }
+               Serial.println("");
+            }
    
          for(int i=0; i<600; i++)
-         {
-            rgb(0, 1, 0);
-            if(digitalRead(11) == 0)
-               {
-                  add_sensor_F();
-               }
-            if(digitalRead(6) == 0)
-               {
-                  add_sensor_B();
-               }
-            for(int i=26; i<28; i++)
-               {
-                  Serial.print(analogRead(i));
-                  Serial.print("  ");
-                  if(digitalRead(9) == 0)
-                     {
-                     goto end_sw;
-                     }               
-               }
-            Serial.print("    ");
-            
-            for(int i=0; i<8; i++)
-               {
-                  Serial.print(mcp_f(i));
-                  Serial.print("  ");
-                  if(digitalRead(9) == 0)
-                     {
-                     goto end_sw;
-                     }                
-               }
-            Serial.print("    ");
-            
-            for(int i=0; i<8; i++)
-               {
-                  Serial.print(mcp_b(i));
-                  Serial.print("  ");
-               }
-            Serial.println("");
-         }
+            {
+               rgb(0, 1, 0);
+               if(digitalRead(11) == 0)
+                  {
+                     add_sensor_F();
+                  }
+               if(digitalRead(6) == 0)
+                  {
+                     add_sensor_B();
+                  }
+               for(int i=26; i<28; i++)
+                  {
+                     Serial.print(analogRead(i));
+                     Serial.print("  ");
+                     if(digitalRead(9) == 0)
+                        {
+                        goto end_sw;
+                        }               
+                  }
+               Serial.print("    ");
+               
+               for(int i=0; i<8; i++)
+                  {
+                     Serial.print(mcp_f(i));
+                     Serial.print("  ");
+                     if(digitalRead(9) == 0)
+                        {
+                        goto end_sw;
+                        }                
+                  }
+               Serial.print("    ");
+               
+               for(int i=0; i<8; i++)
+                  {
+                     Serial.print(mcp_b(i));
+                     Serial.print("  ");
+                  }
+               Serial.println("");
+            }
          for(int i=0; i<600; i++)
-         {
-            rgb(0, 0, 1);
-            if(digitalRead(11) == 0)
-               {
-                  add_sensor_F();
-               }
-            if(digitalRead(6) == 0)
-               {
-                  add_sensor_B();
-               }
-            for(int i=26; i<28; i++)
-               {
-                  Serial.print(analogRead(i));
-                  Serial.print("  ");
-                  if(digitalRead(9) == 0)
-                     {
-                     goto end_sw;
-                     }                
-               }
-            Serial.print("    ");
-            
-            for(int i=0; i<8; i++)
-               {
-                  Serial.print(mcp_f(i));
-                  Serial.print("  ");
-               }
-            Serial.print("    ");
-            
-            for(int i=0; i<8; i++)
-               {
-                  Serial.print(mcp_b(i));
-                  Serial.print("  ");
-                  if(digitalRead(9) == 0)
-                     {
-                     goto end_sw;
-                     }                
-               }
-            Serial.println("");
-         }
+            {
+               rgb(0, 0, 1);
+               if(digitalRead(11) == 0)
+                  {
+                     add_sensor_F();
+                  }
+               if(digitalRead(6) == 0)
+                  {
+                     add_sensor_B();
+                  }
+               for(int i=26; i<28; i++)
+                  {
+                     Serial.print(analogRead(i));
+                     Serial.print("  ");
+                     if(digitalRead(9) == 0)
+                        {
+                        goto end_sw;
+                        }                
+                  }
+               Serial.print("    ");
+               
+               for(int i=0; i<8; i++)
+                  {
+                     Serial.print(mcp_f(i));
+                     Serial.print("  ");
+                  }
+               Serial.print("    ");
+               
+               for(int i=0; i<8; i++)
+                  {
+                     Serial.print(mcp_b(i));
+                     Serial.print("  ");
+                     if(digitalRead(9) == 0)
+                        {
+                        goto end_sw;
+                        }                
+                  }
+               Serial.println("");
+            }
          }
          end_sw:
          bz(300);
+         Serial.println("  ");
+         Serial.println("  ");
+         for(int i=0; i<DATA_sensor_SIZE; i++)
+               {
+                  EEPROM.get((2*i)*2, readData_sensor_F[i]); // read data from EEPROM address 0    
+                  delay(1);        
+               }
+         for (int i = 0; i < DATA_sensor_SIZE; i ++) 
+            {
+               Serial.print(readData_sensor_F[i]);Serial.print("  ");
+               delay(1);
+            }
+            Serial.println("  ");
+
+         for(int i=0; i<DATA_sensor_SIZE_B; i++)
+               {
+                  EEPROM.get((50+i)*2, readData_sensor_B[i]); // read data from EEPROM address 0    
+                  delay(1);        
+               }
+         for (int i = 0; i < DATA_sensor_SIZE_B; i ++) 
+            {
+               Serial.print(readData_sensor_B[i]);Serial.print("  ");
+            }
+            Serial.println("  ");
+         
+         //----------------------------------------->>
+         for(int i=0; i<DATA_sensor_SIZE_M; i++)
+               {
+                  EEPROM.get((70+i)*2, readData_sensor_M[i]); // read data from EEPROM address 0    
+                  delay(1);        
+               }
+         for (int i = 0; i < DATA_sensor_SIZE_M; i ++) 
+            {
+               Serial.print(readData_sensor_M[i]);Serial.print("  ");
+            }
+            Serial.println("  ");
 
       
   }
@@ -1265,31 +1434,551 @@ float kb(char pid)
                {
                   add_sensor_B();
                }
-
-            int readData_sensor_F[DATA_sensor_SIZE];
-            EEPROM.get(eep_f, readData_sensor_F); // read data from EEPROM address 0
-            Serial.print("EEP_F: ");
+           for (int i = 0; i < 8; i ++) 
+               {
+                  Serial.print(mcp_f(i));Serial.print("  ");
+               }
+               Serial.println("  ");
+            
+            
+            for(int i=0; i<DATA_sensor_SIZE; i++)
+               {
+                  EEPROM.get((2*i)*2, readData_sensor_F[i]); // read data from EEPROM address 0    
+                  delay(10);        
+               }
+            Serial.print("sensor_f -> EEPROM : ");
             for (int i = 0; i < DATA_sensor_SIZE; i ++) 
+            {
+               Serial.print(readData_sensor_F[i]);Serial.print("  ");
+               delay(10);
+            }
+            Serial.println("  ");
+               
+                        Serial.println("  ");
+                        Serial.println("  ");
+                        Serial.println("  ");
+            
+            for (int i = 0; i < 8; i ++) 
                {
-                  Serial.print(readData_sensor_F[i]);Serial.print("  ");
+                  Serial.print(mcp_b(i));Serial.print("  ");
                }
                Serial.println("  ");
-               Serial.println("  ");
-               Serial.println("  ");
-            
-            int readData_sensor_B[DATA_sensor_SIZE_B];
-            EEPROM.get(eep_b, readData_sensor_B); // read data from EEPROM address 0
-            Serial.print("  EEP_B: ");
+               
+            for(int i=0; i<DATA_sensor_SIZE_B; i++)
+               {
+                  EEPROM.get((50+i)*2, readData_sensor_B[i]); // read data from EEPROM address 0    
+                  delay(10);        
+               }
+            Serial.print("sensor_b -> EEPROM : ");
             for (int i = 0; i < DATA_sensor_SIZE_B; i ++) 
+            {
+               Serial.print(readData_sensor_B[i]);Serial.print("  ");
+            }
+            Serial.println("  ");
+                        Serial.println("  ");
+                        Serial.println("  ");
+                        Serial.println("  ");
+
+            uint16_t readData_sensorM[DATA_sensor_SIZE_M];
+            for(int i=0; i<DATA_sensor_SIZE_M; i++)
                {
-                  Serial.print(readData_sensor_B[i]);Serial.print("  ");
+                  EEPROM.get((70+i)*2, readData_sensorM[i]); // read data from EEPROM address 0    
+                  delay(10);        
+               }
+            Serial.print("sensor_M -> EEPROM : ");
+            for (int i = 0; i < DATA_sensor_SIZE_M; i ++) 
+            {
+               Serial.print(readData_sensorM[i]);Serial.print("  ");
+            }
+            Serial.println("  ");
+      
+            
+            delay(500);
+        
+         }
+  }
+ void sw_eep_check()
+  {
+      pinMode(11, INPUT);
+      bz(100); 
+      bz(100);
+      while(digitalRead(9) == 1)
+         {
+            if(digitalRead(11) == 0)
+               {
+                  add_sensor_F();
+               }
+            if(digitalRead(6) == 0)
+               {
+                  add_sensor_B();
+               }
+           for (int i = 0; i < 8; i ++) 
+               {
+                  Serial.print(mcp_f(i));Serial.print("  ");
                }
                Serial.println("  ");
             
-            delay(300);
-         
-         }
+            
+            for(int i=0; i<DATA_sensor_SIZE; i++)
+               {
+                  EEPROM.get((2*i)*2, readData_sensor_F[i]); // read data from EEPROM address 0    
+                  delay(10);        
+               }
+            Serial.print("sensor_f -> EEPROM : ");
+            for (int i = 0; i < DATA_sensor_SIZE; i ++) 
+            {
+               Serial.print(readData_sensor_F[i]);Serial.print("  ");
+               delay(10);
+            }
+            Serial.println("  ");
+               
+                        Serial.println("  ");
+                        Serial.println("  ");
+                        Serial.println("  ");
+            
+            for (int i = 0; i < 8; i ++) 
+               {
+                  Serial.print(mcp_b(i));Serial.print("  ");
+               }
+               Serial.println("  ");
+               
+            for(int i=0; i<DATA_sensor_SIZE_B; i++)
+               {
+                  EEPROM.get((50+i)*2, readData_sensor_B[i]); // read data from EEPROM address 0    
+                  delay(10);        
+               }
+            Serial.print("sensor_b -> EEPROM : ");
+            for (int i = 0; i < DATA_sensor_SIZE_B; i ++) 
+            {
+               Serial.print(readData_sensor_B[i]);Serial.print("  ");
+            }
+            Serial.println("  ");
+                        Serial.println("  ");
+                        Serial.println("  ");
+                        Serial.println("  ");
 
+            for (int i = 0; i < 8; i ++) 
+               {
+                  Serial.print(mcp_m(i));Serial.print("  ");
+               }
+               Serial.println("  ");
+               
+            uint16_t readData_sensorM[DATA_sensor_SIZE_M];
+            for(int i=0; i<DATA_sensor_SIZE_M; i++)
+               {
+                  EEPROM.get((70+i)*2, readData_sensorM[i]); // read data from EEPROM address 0    
+                  delay(10);        
+               }
+            Serial.print("sensor_M -> EEPROM : ");
+            for (int i = 0; i < DATA_sensor_SIZE_M; i ++) 
+            {
+               Serial.print(readData_sensorM[i]);Serial.print("  ");
+            }
+            Serial.println("  ");
+
+                        Serial.println("  ");
+                        Serial.println("  ");
+                        Serial.println("  ");
+      
+            
+            delay(3000);
         
+         }
+        
+   }
+
+void test_put_eep(int _val)
+   {
+      
+      EEPROM.put(20, _val); // write data to EEPROM address 0
+      EEPROM.commit(); // save changes to EEPROM
+   }
+void test_get_eep()
+   {
+      int readData_sensor_B;
+      EEPROM.get(20, readData_sensor_B); // read data from EEPROM address 0
+      Serial.print("data -> EEPROM : ");
+      Serial.print(readData_sensor_B);Serial.print("  ");
+      Serial.println("  ");     
+      
+   }
+
+void add_sensor_M()
+  {
+      bz(100);
+      for (int i = 0; i < 50; i ++)         
+         {  
+            //Motor(-cal_motor_l, cal_motor_r); 
+            sensor_M0[i] = mcp_m(0);
+            sensor_M1[i] = mcp_m(1);
+            sensor_M2[i] = mcp_m(2);
+            sensor_M3[i] = mcp_m(3);
+            sensor_M4[i] = mcp_m(4);
+            sensor_M5[i] = mcp_m(5);
+            sensor_M6[i] = mcp_m(6);
+            sensor_M7[i] = mcp_m(7);   
+            delay(delay_cal+10);               
+         }
+      for (int i = 50; i < 100; i ++)         
+         {  
+            //Motor(cal_motor_l, -cal_motor_r);
+            sensor_M0[i] = mcp_m(0);
+            sensor_M1[i] = mcp_m(1);
+            sensor_M2[i] = mcp_m(2);
+            sensor_M3[i] = mcp_m(3);
+            sensor_M4[i] = mcp_m(4);
+            sensor_M5[i] = mcp_m(5);
+            sensor_M6[i] = mcp_m(6);
+            sensor_M7[i] = mcp_m(7);   
+            delay(delay_cal+10);                
+         }
+       for (int i = 100; i < 150; i ++)         
+         {  
+            //Motor(cal_motor_l, -cal_motor_r)  ;  
+            sensor_M0[i] = mcp_m(0);
+            sensor_M1[i] = mcp_m(1);
+            sensor_M2[i] = mcp_m(2);
+            sensor_M3[i] = mcp_m(3);
+            sensor_M4[i] = mcp_m(4);
+            sensor_M5[i] = mcp_m(5);
+            sensor_M6[i] = mcp_m(6);
+            sensor_M7[i] = mcp_m(7);   
+            delay(delay_cal+10);                 
+         }
+      for (int i = 150; i < 200; i ++)         
+         {  
+           // Motor(-cal_motor_l, cal_motor_r);  
+            sensor_M0[i] = mcp_m(0);
+            sensor_M1[i] = mcp_m(1);
+            sensor_M2[i] = mcp_m(2);
+            sensor_M3[i] = mcp_m(3);
+            sensor_M4[i] = mcp_m(4);
+            sensor_M5[i] = mcp_m(5);
+            sensor_M6[i] = mcp_m(6);
+            sensor_M7[i] = mcp_m(7);   
+            delay(delay_cal+10);                 
+         }
+      for (int i = 200; i < 250; i ++)         
+         {  
+            //Motor(-cal_motor_l, cal_motor_r);  
+            sensor_M0[i] = mcp_m(0);
+            sensor_M1[i] = mcp_m(1);
+            sensor_M2[i] = mcp_m(2);
+            sensor_M3[i] = mcp_m(3);
+            sensor_M4[i] = mcp_m(4);
+            sensor_M5[i] = mcp_m(5);
+            sensor_M6[i] = mcp_m(6);
+            sensor_M7[i] = mcp_m(7);   
+            delay(delay_cal+10);               
+         }
+       for (int i = 250; i < 300; i ++)         
+         {  
+           // Motor(cal_motor_l, -cal_motor_r); 
+            sensor_M0[i] = mcp_m(0);
+            sensor_M1[i] = mcp_m(1);
+            sensor_M2[i] = mcp_m(2);
+            sensor_M3[i] = mcp_m(3);
+            sensor_M4[i] = mcp_m(4);
+            sensor_M5[i] = mcp_m(5);
+            sensor_M6[i] = mcp_m(6);
+            sensor_M7[i] = mcp_m(7);   
+            delay(delay_cal+10);                
+         }
+       for (int i = 300; i < 350; i ++)         
+         {  
+           // Motor(cal_motor_l, -cal_motor_r); 
+            sensor_M0[i] = mcp_m(0);
+            sensor_M1[i] = mcp_m(1);
+            sensor_M2[i] = mcp_m(2);
+            sensor_M3[i] = mcp_m(3);
+            sensor_M4[i] = mcp_m(4);
+            sensor_M5[i] = mcp_m(5);
+            sensor_M6[i] = mcp_m(6);
+            sensor_M7[i] = mcp_m(7);   
+            delay(delay_cal+10);                 
+         }
+       for (int i = 350; i < 400; i ++)         
+         {  
+           // Motor(-cal_motor_l, cal_motor_r);
+            sensor_M0[i] = mcp_m(0);
+            sensor_M1[i] = mcp_m(1);
+            sensor_M2[i] = mcp_m(2);
+            sensor_M3[i] = mcp_m(3);
+            sensor_M4[i] = mcp_m(4);
+            sensor_M5[i] = mcp_m(5);
+            sensor_M6[i] = mcp_m(6);
+            sensor_M7[i] = mcp_m(7);   
+            delay(delay_cal+10);                
+         }
+      for (int i = 400; i < 450; i ++)         
+         {  
+           // Motor(-cal_motor_l, cal_motor_r);   
+            sensor_M0[i] = mcp_m(0);
+            sensor_M1[i] = mcp_m(1);
+            sensor_M2[i] = mcp_m(2);
+            sensor_M3[i] = mcp_m(3);
+            sensor_M4[i] = mcp_m(4);
+            sensor_M5[i] = mcp_m(5);
+            sensor_M6[i] = mcp_m(6);
+            sensor_M7[i] = mcp_m(7);   
+            delay(delay_cal+10);                 
+         }
+       for (int i = 450; i < 502; i ++)         
+         {  
+            Motor(cal_motor_l, -cal_motor_r);    
+            sensor_M0[i] = mcp_m(0);
+            sensor_M1[i] = mcp_m(1);
+            sensor_M2[i] = mcp_m(2);
+            sensor_M3[i] = mcp_m(3);
+            sensor_M4[i] = mcp_m(4);
+            sensor_M5[i] = mcp_m(5);
+            sensor_M6[i] = mcp_m(6);
+            sensor_M7[i] = mcp_m(7);   
+           // delay(delay_cal+10);                
+         }
+      Motor(1, 1); delay(100);  
+      Motor(0, 0); delay(10); 
+      Serial.println(" ");
+      for(int i = 0; i< 502; i++)
+        {
+          Serial.print(sensor_M0[i]);
+          Serial.println(" ");
+          Serial.println(i);
+        }
+      bz(300);
+
+      uint16_t maxVal0 = sensor_M0[0];
+      uint16_t minVal0 = sensor_M0[0];
+      for (int i = 0; i < (sizeof(sensor_M0) / sizeof(sensor_M0[0])); i++) 
+         {
+            maxVal0 = max(sensor_M0[i],maxVal0);
+            minVal0 = min(sensor_M0[i],minVal0);
+            sensor_maxM[0] = maxVal0;
+            sensor_minM[0] = minVal0;        
+         } 
+      Serial.print("Val0 --> ");Serial.print(maxVal0);    Serial.print(" ");   Serial.println(minVal0);
+     
+      uint16_t maxVal1 = sensor_M1[0];
+      uint16_t minVal1 = sensor_M1[0];
+      for (int i = 0; i < (sizeof(sensor_M1) / sizeof(sensor_M1[0])); i++) 
+         {
+            maxVal1 = max(sensor_M1[i],maxVal1);
+            minVal1 = min(sensor_M1[i],minVal1);
+            sensor_maxM[1] = maxVal1;
+            sensor_minM[1] = minVal1;         
+         }
+      Serial.print("Val1 --> ");Serial.print(maxVal1);    Serial.print(" ");   Serial.println(minVal1);
+      uint16_t maxVal2 = sensor_M2[0];
+      uint16_t minVal2 = sensor_M2[0];
+      for (int i = 0; i < (sizeof(sensor_M2) / sizeof(sensor_M2[0])); i++) 
+         {
+            maxVal2 = max(sensor_M2[i],maxVal2);
+            minVal2 = min(sensor_M2[i],minVal2);
+            sensor_maxM[2] = maxVal2;
+            sensor_minM[2] = minVal2;         
+         }
+      Serial.print("Val2 --> ");Serial.print(maxVal2);    Serial.print(" ");   Serial.println(minVal2);
+
+      uint16_t maxVal3 = sensor_M3[0];
+      uint16_t minVal3 = sensor_M3[0];
+      for (int i = 0; i < (sizeof(sensor_M3) / sizeof(sensor_M3[0])); i++) 
+         {
+            maxVal3 = max(sensor_M3[i],maxVal3);
+            minVal3 = min(sensor_M3[i],minVal3);
+            sensor_maxM[3] = maxVal3;
+            sensor_minM[3] = minVal3;         
+         }
+      Serial.print("Val3 --> ");Serial.print(maxVal3);    Serial.print(" ");   Serial.println(minVal3);
+      uint16_t maxVal4 = sensor_M4[0];
+      uint16_t minVal4 = sensor_M4[0];
+      for (int i = 0; i < (sizeof(sensor_M4) / sizeof(sensor_M4[0])); i++) 
+         {
+            maxVal4 = max(sensor_M4[i],maxVal4);
+            minVal4 = min(sensor_M4[i],minVal4);
+            sensor_maxM[4] = maxVal4;
+            sensor_minM[4] = minVal4;         
+         }
+      Serial.print("Val4 --> ");Serial.print(maxVal4);    Serial.print(" ");   Serial.println(minVal4);
+      uint16_t maxVal5 = sensor_M5[0];
+      uint16_t minVal5 = sensor_M5[0];
+      for (int i = 0; i < (sizeof(sensor_M5) / sizeof(sensor_M5[0])); i++) 
+         {
+            maxVal5 = max(sensor_M5[i],maxVal5);
+            minVal5 = min(sensor_M5[i],minVal5);
+            sensor_maxM[5] = maxVal5;
+            sensor_minM[5] = minVal5;         
+         }
+      Serial.print("Val5 --> ");Serial.print(maxVal5);    Serial.print(" ");   Serial.println(minVal5);
+      uint16_t maxVal6 = sensor_M6[0];
+      uint16_t minVal6 = sensor_M6[0];
+      for (int i = 0; i < (sizeof(sensor_M6) / sizeof(sensor_M6[0])); i++) 
+         {
+            maxVal6 = max(sensor_M6[i],maxVal6);
+            minVal6 = min(sensor_M6[i],minVal6);
+            sensor_maxM[6] = maxVal6;
+            sensor_minM[6] = minVal6;         
+         }
+      Serial.print("Val6 --> ");Serial.print(maxVal6);    Serial.print(" ");   Serial.println(minVal6);
+      uint16_t maxVal7 = sensor_M7[0];
+      uint16_t minVal7 = sensor_M7[0];
+      for (int i = 0; i < (sizeof(sensor_M7) / sizeof(sensor_M7[0])); i++) 
+         {
+            maxVal7 = max(sensor_M7[i],maxVal7);
+            minVal7 = min(sensor_M7[i],minVal7);
+            sensor_maxM[7] = maxVal7;
+            sensor_minM[7] = minVal7;         
+         }
+      Serial.print("Val7 --> ");Serial.print(maxVal7);    Serial.print(" ");   Serial.println(minVal7);
+
+      uint16_t Data_sensorM[DATA_sensor_SIZE_M] = {sensor_maxM[0], sensor_maxM[1], sensor_maxM[2], sensor_maxM[3], sensor_maxM[4], sensor_maxM[5], sensor_maxM[6], sensor_maxM[7]
+                             ,sensor_minM[0], sensor_minM[1], sensor_minM[2], sensor_minM[3], sensor_minM[4], sensor_minM[5], sensor_minM[6], sensor_minM[7]};
+     for (int i = 0; i < DATA_sensor_SIZE_M; i ++) 
+        {
+         Serial.print(Data_sensorM[i]);Serial.print("  ");
+        }
+      Serial.println("  ");
+
+      for(int i=0; i<DATA_sensor_SIZE_M; i++)
+         {
+            EEPROM.put((70+i)*2, Data_sensorM[i]); // write data to EEPROM address 0
+            EEPROM.commit(); // save changes to EEPROM
+            delay(10);
+         }
+      
+    
+      uint16_t readData_sensorM[DATA_sensor_SIZE_M];
+      for(int i=0; i<DATA_sensor_SIZE_M; i++)
+         {
+            EEPROM.get((70+i)*2, readData_sensorM[i]); // read data from EEPROM address 0    
+            delay(10);        
+         }
+      Serial.print("sensor_M -> EEPROM : ");
+      for (int i = 0; i < DATA_sensor_SIZE_M; i ++) 
+        {
+         Serial.print(readData_sensorM[i]);Serial.print("  ");
+        }
+      Serial.println("  ");
+      
+      bz(100);
+      bz(100);
+      Serial.println(" ent--->  ");
   }
+
+/////////////////////////////////////------------------------------------------>>>
+uint16_t max_mcp_m(int sensor)
+    {     
+       if(sensor == 0)
+          {
+             return readData_sensor_M[0];
+          }
+       else if(sensor == 1)
+          {
+             return readData_sensor_M[1];
+          }
+       else if(sensor == 2)
+          {
+             return readData_sensor_M[2];
+          }
+       else if(sensor == 3)
+          {
+             return readData_sensor_M[3];
+          }
+       else if(sensor == 4)
+          {
+             return readData_sensor_M[4];
+          }
+      else if(sensor == 5)
+          {
+             return readData_sensor_M[5];
+          }
+       else if(sensor == 6)
+          {
+             return readData_sensor_M[6];
+          }
+       else if(sensor == 7)
+          {
+             return readData_sensor_M[7];
+          }
+        return -1;    
+    }
+    
+uint16_t min_mcp_m(int sensor)
+    {     
+       if(sensor == 0)
+          {
+             return readData_sensor_M[8];
+          }
+       else if(sensor == 1)
+          {
+             return readData_sensor_M[9];
+          }
+       else if(sensor == 2)
+          {
+             return readData_sensor_M[10];
+          }
+       else if(sensor == 3)
+          {
+             return readData_sensor_M[11];
+          }
+       else if(sensor == 4)
+          {
+             return readData_sensor_M[12];
+          }
+      else if(sensor == 5)
+          {
+             return readData_sensor_M[13];
+          }
+       else if(sensor == 6)
+          {
+             return readData_sensor_M[14];
+          }
+       else if(sensor == 7)
+          {
+             return readData_sensor_M[15];
+          }
+        return -1;    
+    }
+
+uint16_t md_mcp_m(int sensor)
+    {
+      uint16_t md = 0;
+      md = (max_mcp_m(sensor) + min_mcp_m(sensor))/2;
+      return md;
+    }
+///////////////////////----------------------------->>>>
+void calibrate_M()
+  {
+     
+      pinMode(11, INPUT);
+      
+      bz(100); 
+      bz(100);
+      while(digitalRead(9) == 1)
+         {
+             add_sensor_M();
+             break;
+         }
+      bz(400);
+  }
+void read_sensor_M()
+   {
+      for(int i=0; i<8; i++)
+         {
+            Serial.print(max_mcp_m(i));Serial.print("  ");
+         }
+      Serial.println("  ");   
+
+      for(int i=0; i<8; i++)
+         {
+            Serial.print(min_mcp_m(i));Serial.print("  ");
+         }
+      Serial.println("  ");  
+
+      for(int i=0; i<8; i++)
+         {
+            Serial.print(md_mcp_m(i));Serial.print("  ");
+         }
+      Serial.println("  ");  
+         
+   }
 #endif
