@@ -5,6 +5,7 @@ unsigned long lasts_time=millis();
 unsigned long T=0 ;
 int slmotor, srmotor, clml, clmr, crml, crmr, flml, flmr, frml, frmr, break_ff, break_fc, break_bf, break_bc, delay_f, llmotor, lrmotor, ldelaymotor, rlmotor, rrmotor, rdelaymotor  ;
 float kd_f, kd_b, kp_slow, ki_slow;  
+
 void to_slow_motor(int sl, int sr)
      {       
         slmotor = sl;  
@@ -129,39 +130,76 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
       sensor.toCharArray(sensors, sizeof(sensors));
       int sensor_f = atoi(&sensors[1]); 
       //while(1){Serial.print(sensor); Serial.print(" aray ");  Serial.print(sensors[1]); Serial.print(" sensor_f");  Serial.println(sensor_f); delay(500); }
+      if(kp == 0)
+          {
+              kp = 0;
+              I = 0;
+              kd_b = 0;
+              kd_f = 0;
+              kp_slow = 0;
+              ki_slow = 0;
+          }
       if (tim >= 1)
          {
             lasts_time=millis();
             while(millis()-lasts_time <tim)
-               {
-                 if(mcp_f(7)<md_mcp_f(7) && mcp_f(4)<md_mcp_f(4) || mcp_f(0)<md_mcp_f(0) && mcp_f(3)<md_mcp_f(3) )
-                    {
-                      kp = 0;
-                      kd_f = 0;
-                    }  
+               {  
                   PID_output = (kp * kf('p')) + (0.0 * kf('i')) + (kd_f * kf('d'));
-                  Motor(spl - PID_output, spr + PID_output);                       
+                  Motor(spl - PID_output, spr + PID_output);   
+                      
                }
          }
       else
          {
+          Motor(spl , spr );delay(20);
             while(1)
                {    
-                  if(mcp_f(7)<md_mcp_f(7) && mcp_f(4)<md_mcp_f(4) || mcp_f(0)<md_mcp_f(0) && mcp_f(3)<md_mcp_f(3) )
-                    {
-                      kp = 0;
-                      kd_f = 0;
-                    }               
+                 bg_while:               
                   PID_output = (kp * kf('p')) + (0.0 * kf('i')) + (kd_f * kf('d'));
                   Motor(spl - PID_output, spr + PID_output);   
                   if((mcp_f(0)<md_mcp_f(0) && mcp_f(1)<md_mcp_f(1) && mcp_f(3)<md_mcp_f(3))
-                     ||(mcp_f(0)<md_mcp_f(0) && mcp_f(1)<md_mcp_f(1) && mcp_f(2)<md_mcp_f(2))
-                     //|| (mcp_f(7)<md_mcp_f(7) && mcp_f(6)<md_mcp_f(6) && mcp_f(4)<md_mcp_f(4))
-                     || (mcp_f(7)<md_mcp_f(7) && mcp_f(6)<md_mcp_f(6) && mcp_f(5)<md_mcp_f(5))
+                     //||(mcp_f(0)<md_mcp_f(0) && mcp_f(1)<md_mcp_f(1) && mcp_f(2)<md_mcp_f(2))
+                     || (mcp_f(7)<md_mcp_f(7) && mcp_f(6)<md_mcp_f(6) && mcp_f(4)<md_mcp_f(4))
+                     //|| (mcp_f(7)<md_mcp_f(7) && mcp_f(6)<md_mcp_f(6) && mcp_f(5)<md_mcp_f(5))
+                     || (mcp_f(7)<md_mcp_f(7) && mcp_f(3)>md_mcp_f(3) && mcp_f(4)>md_mcp_f(4))
+                     || (mcp_f(0)<md_mcp_f(0) && mcp_f(3)>md_mcp_f(3) && mcp_f(4)>md_mcp_f(4))
                      )
                         {
                            break;
-                        }                       
+                        }    
+                  if(mcp_f(3)<md_mcp_f(3)+100 && mcp_f(4)<md_mcp_f(4)+100)
+                    {
+                      while(1)
+                        {
+                          float error_L = map(mcp_f(3), min_mcp_f(3), max_mcp_f(3), 0, 30 );
+                          float error_R = map(mcp_f(4), min_mcp_f(4), max_mcp_f(4), 0, 30 );
+                          errors = error_L - error_R;  
+
+                          P = errors;
+                          I = I + errors;
+                          D = errors - previous_error;                    
+                          previous_error=errors  ;
+
+                          PID_output = (kp * P) + (0.0000015 * I) + (kd_f* D); 
+
+                          Motor(spl + PID_output,spr - PID_output);
+                          if((mcp_f(0)<md_mcp_f(0) && mcp_f(1)<md_mcp_f(1) && mcp_f(3)<md_mcp_f(3))
+                            //||(mcp_f(0)<md_mcp_f(0) && mcp_f(1)<md_mcp_f(1) && mcp_f(2)<md_mcp_f(2))
+                            || (mcp_f(7)<md_mcp_f(7) && mcp_f(6)<md_mcp_f(6) && mcp_f(4)<md_mcp_f(4))
+                           // || (mcp_f(7)<md_mcp_f(7) && mcp_f(6)<md_mcp_f(6) && mcp_f(5)<md_mcp_f(5))
+                            || (mcp_f(7)<md_mcp_f(7) && mcp_f(3)>md_mcp_f(3) && mcp_f(4)>md_mcp_f(4))
+                            || (mcp_f(0)<md_mcp_f(0) && mcp_f(3)>md_mcp_f(3) && mcp_f(4)>md_mcp_f(4))
+                            )
+                                {
+                                  break;
+                                }  
+                          if(mcp_f(3)>md_mcp_f(3) && mcp_f(4)>md_mcp_f(4))
+                            {
+                              goto bg_while;
+                            }
+                        }
+                      break;
+                    }                          
                }
          }
       if (nfc == 'n')
@@ -201,7 +239,10 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
                     }
                 }
             }
-          else{}
+          if (splr == 's')
+            {
+              goto  _entN;
+            }
         }
       else if (nfc == 'f')
         {
@@ -213,6 +254,8 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
                     Motor(slmotor - PID_output, srmotor + PID_output);    
                     if((mcp_f(0)<md_mcp_f(0) && mcp_f(1)<md_mcp_f(1) && mcp_f(3)<md_mcp_f(3))
                           || (mcp_f(7)<md_mcp_f(7) && mcp_f(6)<md_mcp_f(6) && mcp_f(4)<md_mcp_f(4))
+                          || (mcp_f(5)<md_mcp_f(5) && mcp_f(6)<md_mcp_f(6) && mcp_f(3)<md_mcp_f(3))
+                          || (mcp_f(4)<md_mcp_f(4) && mcp_f(2)<md_mcp_f(2) && mcp_f(1)<md_mcp_f(1))
                           )
                             {
                                 break;
@@ -220,9 +263,31 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
                 }
             }
           else{}
+          if (splr == 'p' )
+            {
+              while(1)
+                  {  
+                      Motor(spl,spr); 
+                      if( mcp_f(0)>md_mcp_f(0) && mcp_f(7)>md_mcp_f(7))   
+                        {
+                          break;
+                        }                                                               
+                  } 
+                delay(10);
+                goto _entN; 
+            }
+          if (splr == 's')
+            {
+              Motor(-spl, -spr) ;
+              delay(endt);
+              Motor(0,0);
+              delay(2);
+              goto _entN; 
+            }
         }
       else if (nfc == 'c')
         {
+
           if (tim >= 1 and spl == 0)
             {
               while(1)
@@ -239,7 +304,21 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
             }
           else{}
         
-          if (splr == 'p' ){}
+          if (splr == 'p' )
+            {
+              while(1)
+                  {                    
+                      PID_output = (kp_slow * kf('p')) + (0.0 * kf('i')) + (ki_slow * kf('d'));   
+                      Motor(spl - PID_output, spr + PID_output);  
+                      if( analogRead(26) <= md_adc(26)-50 
+                            || analogRead(27) <= md_adc(27)-50 
+                              )
+                                  {
+                                  break;
+                                  }                           
+                  }
+                goto _entN; 
+            }
           else
             {
               while(1)
@@ -254,58 +333,19 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
                             }                           
                 }
             }
+          if (splr == 's')
+            {
+              Motor(-spl, -spr) ;
+              delay(endt);
+              Motor(0,0);
+              delay(2);
+              goto _entN; 
+            }
             
         }
-      else{}
-
-      if (splr == 's')
-        {
-          Motor(-(slmotor+10) ,-(srmotor+10)) ;
-          delay(endt);
-          Motor(0,0);
-          delay(2);
-        }
-      else if (splr == 'p')
-        {
-          delay(10); 
-          if(nfc == 'c')
-            {
-                while(1)
-                  {  
-                      Motor(spl,spr); 
-                      if( mcp_f(0)>md_mcp_f(0) && mcp_f(7)>md_mcp_f(7))   
-                        {
-                          break;
-                        }                                                               
-                  } 
-                delay(10);
-                while(1)
-                  {                    
-                      PID_output = (kp_slow * kf('p')) + (0.0 * kf('i')) + (ki_slow * kf('d'));   
-                      Motor(spl - PID_output, spr + PID_output);  
-                      if( analogRead(26) <= md_adc(26)-50 
-                            || analogRead(27) <= md_adc(27)-50 
-                              )
-                                  {
-                                  break;
-                                  }                           
-                  }
-            }
-          else
-            {
-              while(1)
-                  {  
-                      Motor(spl,spr);  
-                      if( mcp_f(0)>md_mcp_f(0) && mcp_f(7)>md_mcp_f(7))   
-                        {
-                            break;
-                        }                                                               
-                  }                  
-              delay(40); 
-            }
+      else{}      
         
-        }
-    else if (splr == 'l')
+     if (splr == 'l')
         {
           if ((nfc == 'f') || (nfc == 'n' && spl > 0 && tim == 0))
             {
@@ -339,13 +379,13 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
                     {
                       
                       Motor(-(slmotor) ,-(srmotor)) ; delay(break_fc);
-                      //Motor(0,0); delay(2);
+                      Motor(1,1); delay(2);
                     }
                   else
                     {
                       
                       Motor(-slmotor ,-srmotor) ; delay(break_fc);
-                      //Motor(0,0); delay(2);
+                      Motor(1,1); delay(2);
                     }
                 }
               if (sensor[0] == 'a')
@@ -464,10 +504,17 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
             } 
         }
       else{}
-  
+      _entN:
+      if(nfc=='n' && splr == 's' && endt==0)
+        {
+        }
+      else
+        {
+          Motor(-1,-1);delay(endt); 
+        }
+           
 
   }
-
 
 void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power, String sensor, int endt)     //////เดินหน้าแบบตั่งค่า  ความเร็ว  KP  KI  KD และเวลาเอง
   {    
@@ -475,17 +522,23 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
       sensor.toCharArray(sensors, sizeof(sensors));
       int sensor_f = atoi(&sensors[1]); 
       //while(1){Serial.print(sensor); Serial.print(" aray1 ");  Serial.print(sensors[0]); Serial.print(" aray1 ");  Serial.print(sensors[1]); Serial.print(" sensor_f");  Serial.println(sensor_f); delay(500); }
-    if (tim > 1)
+     
+     
+        if(kp == 0)
+          {
+              kp = 0;
+              I = 0;
+              kd_b = 0;
+              kd_f = 0;
+              kp_slow = 0;
+              ki_slow = 0;
+          }
+     if (tim > 1)
       {
         lasts_time=millis();
         while(millis()-lasts_time <tim)
           {
-            if(mcp_b(7)<md_mcp_b(7) && mcp_b(4)<md_mcp_b(4) || mcp_b(0)<md_mcp_b(0) && mcp_b(3)<md_mcp_b(3) )
-                    {
-                      kp = 0;
-                      kd_b = 0;
-                    }
-            PID_output = (kp * kb('p')) + (0.0 * kb('i')) + (kd_b * kb('d'));
+            PID_output = (kp * error_B()) + (0.00015 * I) + (kd_b * D);
             Motor(-(spl + PID_output), -(spr - PID_output));                       
           }
       }
@@ -493,197 +546,230 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
       {
         while(1)
           {     
-            if(mcp_b(7)<md_mcp_b(7) && mcp_b(4)<md_mcp_b(4) || mcp_b(0)<md_mcp_b(0) && mcp_b(3)<md_mcp_b(3) )
-                    {
-                      kp = 0;
-                      kd_b = 0;
-                    }              
-            PID_output = (kp * kb('p')) + (0.0 * kb('i')) + (kd_b * kb('d'));
+            bg_while:              
+            PID_output = (kp * error_B()) + (0.00015 * I) + (kd_b * D);
             Motor(-(spl + PID_output), -(spr - PID_output)); 
-            if( (mcp_b(2)<md_mcp_b(2) && mcp_b(3)<md_mcp_b(3) && mcp_b(4)<md_mcp_b(4)&& mcp_b(5)<md_mcp_b(5))
-                     ||(mcp_b(0)<md_mcp_b(0) && mcp_b(1)<md_mcp_b(1) && mcp_b(3)<md_mcp_b(3))
-                     ||(mcp_b(0)<md_mcp_b(0) && mcp_b(1)<md_mcp_b(1) && mcp_b(3)>md_mcp_b(3))
-                     ||(mcp_b(0)<md_mcp_b(0) && mcp_b(1)<md_mcp_b(1) && mcp_b(2)<md_mcp_b(2))
+            if( (mcp_b(0)<md_mcp_b(0) && mcp_b(1)<md_mcp_b(1) && mcp_b(3)<md_mcp_b(3))
                      || (mcp_b(7)<md_mcp_b(7) && mcp_b(6)<md_mcp_b(6) && mcp_b(4)<md_mcp_b(4))
-                     || (mcp_b(7)<md_mcp_b(7) && mcp_b(6)<md_mcp_b(6) && mcp_b(4)>md_mcp_b(4))
-                     || (mcp_b(7)<md_mcp_b(7) && mcp_b(6)<md_mcp_b(6) && mcp_b(5)<md_mcp_b(5))
+                     || (mcp_b(7)<md_mcp_b(7) && mcp_b(3) > md_mcp_b(3) && mcp_b(4) > md_mcp_b(4))
+                     || (mcp_b(0)<md_mcp_b(0) && mcp_b(3) > md_mcp_b(3) && mcp_b(4) > md_mcp_b(4))
                      )
                         {
                            break;
-                        }                         
+                        }   
+            if(mcp_b(3)<md_mcp_b(3)+100 && mcp_b(4)<md_mcp_b(4)+100)
+                    {
+                      while(1)
+                        {
+                          float error_L = map(mcp_b(3), min_mcp_b(3), max_mcp_b(3), 0, 30 );
+                          float error_R = map(mcp_b(4), min_mcp_b(4), max_mcp_b(4), 0, 30 );
+                          errors = error_L - error_R;  
+
+                          P = errors;
+                          I = I + errors;
+                          D = errors - previous_error;                    
+                          previous_error=errors  ;
+                          
+                          PID_output = (kp * P) + (0.0000015 * I) + (kd_b* D); 
+
+                          Motor(-(spl - PID_output),-(spr + PID_output));
+
+                          if((mcp_b(0)<md_mcp_b(0) && mcp_b(1)<md_mcp_b(1) && mcp_b(3)<md_mcp_b(3))
+                            || (mcp_b(7)<md_mcp_b(7) && mcp_b(6)<md_mcp_b(6) && mcp_b(4)<md_mcp_b(4))
+                            || (mcp_b(7)<md_mcp_b(7) && mcp_b(3) > md_mcp_b(3) && mcp_b(4) > md_mcp_b(4))
+                            || (mcp_b(0)<md_mcp_b(0) && mcp_b(3) > md_mcp_b(3) && mcp_b(4) > md_mcp_b(4))
+                            )
+                                {
+                                  break;
+                                }  
+                          if(mcp_b(3)>md_mcp_b(3) && mcp_b(4)>md_mcp_b(4))
+                            {
+                              goto bg_while;
+                            }
+                        }
+                      break;
+                    }                                 
           }
       }
-    if (nfc == 'n')
-      {
-        if (splr == 'p')
-          {
-            if(spl > 1)
-              {
-                while(1)
-                  {     
-                    PID_output = (kp * kb('p')) + (0.0 * kb('i')) + (kd_b * kb('d'));  
-                    Motor(-(spl + PID_output), -(spr - PID_output));  
-                    if( (mcp_b(0) < md_mcp_b(0)) && (mcp_b(1) < md_mcp_b(1)) && (mcp_b(6) < md_mcp_b(6)) && (mcp_b(7) < md_mcp_b(7))
-                        || (mcp_b(0) < md_mcp_b(0)) && (mcp_b(1) < md_mcp_b(1)) && (mcp_b(2) < md_mcp_b(2))
-                        || (mcp_b(7) < md_mcp_b(7)) && (mcp_b(6) < md_mcp_b(6)) && (mcp_b(5) < md_mcp_b(5)) ) 
-                      {
-                        break;
-                      }                         
-                  }
-              }
-            else
-              {
-                while(1)
-                  {           
-                    PID_output = (kp_slow * kb('p')) + (0.0 * kb('i')) + (ki_slow * kb('d'));    
-                    Motor(-(slmotor + PID_output), -(srmotor - PID_output)); 
-                    if( (mcp_b(0) < md_mcp_b(0)) && (mcp_b(1) < md_mcp_b(1)) && (mcp_b(6) < md_mcp_b(6)) && (mcp_b(7) < md_mcp_b(7))
-                        || (mcp_b(0) < md_mcp_b(0)) && (mcp_b(1) < md_mcp_b(1)) && (mcp_b(2) < md_mcp_b(2))
-                        || (mcp_b(7) < md_mcp_b(7)) && (mcp_b(6) < md_mcp_b(6)) && (mcp_b(5) < md_mcp_b(5)) ) 
-                      {
-                        break;
-                      }                         
-                  }
-              }
-          }
-      }
-    else if (nfc == 'f')
-      {
-        if (tim > 1 and spl == 0)
-          {
-            while(1)
-              {                   
-                PID_output = (kp_slow * kb('p')) + (0.0 * kb('i')) + (ki_slow * kb('d')); 
-                Motor(-(slmotor + PID_output), -(srmotor - PID_output));    
-                if( analogRead(26) <= md_adc(26)
-                      || analogRead(27) <= md_adc(27)
+     if (nfc == 'n')
+        {
+          if (splr == 'p')
+            {
+              if(spl >= 1)
+                {
+                  while(1)
+                    {  
+                        PID_output = (kp * kb('p')) + (0.0 * kb('i')) + (kd_b * kb('d'));  
+                        Motor(-(spl + PID_output), -(spr - PID_output));  
+                        if(  (mcp_b(0) < md_mcp_b(0)) && (mcp_b(1) < md_mcp_b(1)) && (mcp_b(2) < md_mcp_b(2))
+                            || (mcp_b(7) < md_mcp_b(7)) && (mcp_b(6) < md_mcp_b(6)) && (mcp_b(5) < md_mcp_b(5)) ) 
+                        {
+                            break;
+                        }                            
+                    }
+                }
+              else
+                {
+                  while(1)
+                    {                   
+                      PID_output = (kp_slow * kb('p')) + (0.0 * kb('i')) + (ki_slow * kb('d'));   
+                      Motor(-(slmotor + PID_output), -(srmotor - PID_output)); 
+                      if( (mcp_b(0)<md_mcp_b(0) && mcp_b(1)<md_mcp_b(1) && mcp_b(3)<md_mcp_b(3))
+                          || (mcp_b(7)<md_mcp_b(7) && mcp_b(6)<md_mcp_b(6) && mcp_b(4)<md_mcp_b(4))
+                          )
+                            {
+                                break;
+                            }                        
+                    }
+                }
+            }
+          if (splr == 's')
+            {
+              goto  _entN;
+            }
+        }
+      else if (nfc == 'f')
+        {
+          if (tim >= 1)
+            {
+              while(1)
+                {                   
+                    PID_output = (kp_slow * kb('p')) + (0.0 * kb('i')) + (ki_slow * kb('d'));   
+                    Motor(-(slmotor + PID_output), -(srmotor - PID_output));    
+                    if((mcp_b(0)<md_mcp_b(0) && mcp_b(1)<md_mcp_b(1) && mcp_b(3)<md_mcp_b(3))
+                          || (mcp_b(7)<md_mcp_b(7) && mcp_b(6)<md_mcp_b(6) && mcp_b(4)<md_mcp_b(4))
+                          )
+                            {
+                                break;
+                            }                         
+                }
+            }
+          else{}
+          if (splr == 'p' )
+            {
+              while(1)
+                  {  
+                      Motor(-spl,-spr); 
+                      if( mcp_b(0)>md_mcp_b(0) && mcp_b(7)>md_mcp_b(7))   
+                        {
+                          break;
+                        }                                                               
+                  } 
+                delay(10);
+                goto _entN; 
+            }
+          if (splr == 's')
+            {
+              Motor(spl, spr) ;
+              delay(endt);
+              Motor(0,0);
+              delay(2);
+              goto _entN; 
+            }
+        }
+      else if (nfc == 'c')
+        {
+
+          if (tim >= 1 and spl == 0)
+            {
+              while(1)
+                {                     
+                    PID_output = (kp_slow * kb('p')) + (0.0 * kb('i')) + (ki_slow * kb('d'));   
+                    Motor(-(slmotor + PID_output), -(srmotor - PID_output));    
+                    if( analogRead(26) <= md_adc(26)-50 
+                      || analogRead(27) <= md_adc(27)-50 
                       )
                           {
                           break;
                           }                          
-              }
-          }
-        else{}
-      }
-    else if (nfc == 'c')
-      {
-        if( splr == 'p')
-          {
-            if (spl == 0)
-              {
-                Motor(-slmotor, -srmotor);
-                delay(10);
-                while(1)
-                  {                     
-                    PID_output = (kp_slow * kb('p')) + (0.0 * kb('i')) + (ki_slow * kb('d')); 
-                    Motor(-(slmotor + PID_output), -(srmotor - PID_output)); 
-                    if( analogRead(26) <= md_adc(26)
-                      || analogRead(27) <= md_adc(27)
-                      )
-                          {
-                          break;
-                          }                         
-                  }
-              }
-            else
-              {        
-                while(1)
-                  {  
-                    PID_output = (kp_slow * kb('p')) + (0.0 * kb('i')) + (ki_slow * kb('d')); 
-                    Motor(-(spl + PID_output), -(spr - PID_output)); 
-                    if( mcp_b(1) > md_mcp_b(1) && mcp_b(6) > md_mcp_b(6) )  
-                      {
-                        break;
-                      }                                                               
-                  }
-              }
-          }
-        else
-          {
-            if(kp == 0)
-              {
-                  while(1)
-                    { 
-                      Motor(-(slmotor ), -(srmotor));
-                      if( analogRead(26) <= md_adc(26)
-                          || analogRead(27) <= md_adc(27)
-                        )
-                          {
-                            break;
-                          }                                              
-                    }
-              }
-            else  
-              {
-                 while(1)
-                    {                     
-                      PID_output = (kp_slow * kb('p')) + (0.0 * kb('i')) + (ki_slow * kb('d')); 
-                      Motor(-(slmotor + PID_output), -(srmotor - PID_output));
-                      if( analogRead(26) <= md_adc(26)
-                            || analogRead(27) <= md_adc(27)
-                            )
-                                {
-                                break;
-                                }     
-                                          
-                    }
-              }
-           
-          }          
-      }
-    //else{}
-  
-    if (splr == 's')
-      {
-        Motor(slmotor+10 ,srmotor+10) ;
-        delay(endt);
-        Motor(0,0);
-        delay(2);
-      }
-
-    else if (splr == 'p')
-      {        
-        while(1)
-          {  
-            PID_output = (kp * kb('p')) + (0.0 * kb('i')) + (kd_b * kb('d'));  
-            Motor(-(spl + PID_output), -(spr - PID_output)); 
-            if( mcp_b(1) > md_mcp_b(1) && mcp_b(6) > md_mcp_b(6) )  
-              {
-                break;
-              }                                                                
-          }                  
-        delay(20); 
-      }
-    else if (splr == 'l')
-      {
+                }                
+            }
+          else{}
         
-        if ((nfc == 'f') || (nfc == 'n' && spl > 0 && tim == 0))
-          {
-            while(1)
-              {  
-                 Motor(-slmotor,-srmotor); 
-                if( mcp_b(1) > md_mcp_b(1) && mcp_b(6) > md_mcp_b(6) )  
-                  {
-                      break;
-                  }                                                               
-              }
-            delay(10);
+          if (splr == 'p' )
+            {
+              while(1)
+                  {                    
+                      PID_output = (kp_slow * kb('p')) + (0.0 * kb('i')) + (ki_slow * kb('d'));   
+                      Motor(-(spl + PID_output), -(spr - PID_output));  
+                      if( analogRead(26) <= md_adc(26)-50 
+                            || analogRead(27) <= md_adc(27)-50 
+                              )
+                                  {
+                                  break;
+                                  }                           
+                  }
+                goto _entN; 
+            }
+          else
+            {
+              while(1)
+                {                   
+                    PID_output = (kp_slow * kb('p')) + (0.0 * kb('i')) + (ki_slow * kb('d'));   
+                    Motor(-(slmotor + PID_output), -(srmotor - PID_output));  
+                    if( analogRead(26) <= md_adc(26)-50 
+                          || analogRead(27) <= md_adc(27)-50 
+                          )
+                            {
+                            break;
+                            }                           
+                }
+            }
+          if (splr == 's')
+            {
+              Motor(spl, spr) ;
+              delay(endt);
+              Motor(0,0);
+              delay(2);
+              goto _entN; 
+            }
+            
+        }
+      else{}      
+        
+     if (splr == 'l')
+        {
+          if ((nfc == 'f') || (nfc == 'n' && spl > 0 && tim == 0))
+            {
+              while(1)
+                {  
+                  Motor(-slmotor,-srmotor);  
+                  if( mcp_b(0)>md_mcp_b(0) && mcp_b(7)>md_mcp_b(7))    
+                    {
+                        break;
+                    }                                                               
+                }
+              delay(delay_f);
+              Motor(slmotor,srmotor); delay(break_bf); 
 
-            for ( int i = 0; i < sensor_f; i++ )
+              for ( int i = 0; i < sensor_f; i++ )
               {
                  do{ Motor(-((flmr*power)/100), -((flml*power)/100)); } while( mcp_f(i) > md_mcp_f(i) ); delay(2);
              
-              }                            
-          }
-        else
-          { 
-            if (spl > 0 )
-              {
-                Motor(slmotor+20 ,srmotor+20) ; delay(break_bc);
-                Motor(0,0); delay(2);
-              }
-            else{}
-           
+              }  
+                                        
+            }
+          else
+            {
+              if(nfc=='n')
+                {
+                  Motor(1,1); delay(2);
+                }
+              else
+                {
+                  if (spl > 0 )
+                    {
+                      
+                      Motor(slmotor ,srmotor) ; delay(break_bc);
+                      Motor(1,1); delay(2);
+                    }
+                  else
+                    {
+                      
+                      Motor(slmotor ,srmotor) ; delay(break_bc);
+                      Motor(1,1); delay(2);
+                    }
+                }
             if (sensor[0] == 'a')
                 {
                   if (sensor_f >= 5)
@@ -720,12 +806,12 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
             Motor(0,0);delay(2);                
           }
       
-      }
-     else if (splr == 'r')
-      {
-        if (nfc == 'f')
-          {
-             while(1)
+        }
+      else if (splr == 'r')
+        {
+          if (nfc == 'f')
+            {
+              while(1)
               {  
                 Motor(-slmotor,-srmotor); 
                 if( mcp_b(1) > md_mcp_b(1) && mcp_b(6) > md_mcp_b(6) )  
@@ -733,30 +819,32 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
                       break;
                   }                                                               
               }
-            delay(10);
-            for ( int i = 7; i > sensor_f; i -- )
-              {
-                do{ Motor(-((frmr*power)/100), -((frml*power)/100));  } while (mcp_b(i) > md_mcp_b(i));delay(2);  
-              }
-          }
-        else
+              delay(delay_f);
+              Motor(slmotor,srmotor); delay(break_bf); 
+              for ( int i = 7; i > sensor_f; i -- )
+                {
+                    do{ Motor(-((frmr*power)/100), -((frml*power)/100));  } while (mcp_b(i) > md_mcp_b(i));delay(2);  
+                }
+              
+            }
+          else
             {
               if(nfc=='n')
                 {
-                  Motor(0,0); delay(2);
+                  Motor(1,1); delay(2);
                 }
               else
                 {
                   if (spl > 0 )
                     {
-                      delay(10);
+                      
                       Motor(slmotor ,srmotor) ; delay(break_bc);
                       //Motor(0,0); delay(2);
                     }
                   else
                     {
-                      delay(10);
-                      Motor(slmotor+20 ,srmotor+20) ; delay(break_bc);
+                     
+                      Motor(slmotor ,srmotor) ; delay(break_fc);
                       //Motor(0,0); delay(2);
                     }
                 }
@@ -786,17 +874,25 @@ void bline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
                     }
                 }
             }
-        if(endt==0)
-          {
-            turn_speed_fr();
-          }
-        else
-          {
-            Motor(-((crml*power)/100),-((crmr*power)/100)); delay(endt);  
-            Motor(0,0);delay(2);
-          } 
-      }
-    else{}
+            if(endt==0)
+            {
+                turn_speed_fr();
+            }
+            else
+            {
+                Motor(-((crml*power)/100),-((crmr*power)/100)); delay(endt);  
+                Motor(0,0);delay(2);
+            } 
+        }
+      else{}
+      _entN:
+      if(nfc=='n' && splr == 's' && endt==0)
+        {
+        }
+      else
+        {
+          Motor(-1,-1);delay(endt); 
+        }
 
   }
 
