@@ -3,11 +3,18 @@
 
 
 int mt_l, mt_r;
+int Freqs = 1000;
 void to_set_motor_LR(int ML, int MR)
     {
       mt_l = ML;
       mt_r = MR;
     }
+void to_set_Freq(int _Freq)
+    {
+      Freqs = _Freq;
+    
+    }
+
 
 void Motor(int spl,int spr)    
    {   
