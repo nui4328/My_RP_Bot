@@ -20,7 +20,7 @@ void Motor(int spl,int spr)
    {   
       delayMicroseconds(50);
       analogWriteResolution(12);
-      analogWriteFreq( 1000);
+      analogWriteFreq( Freqs);
       pinMode(10,OUTPUT);
       pinMode(14,OUTPUT);
       pinMode(12,OUTPUT);            
