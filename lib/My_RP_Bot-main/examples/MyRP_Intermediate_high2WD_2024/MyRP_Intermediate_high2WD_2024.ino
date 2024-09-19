@@ -25,8 +25,8 @@ float blue_eep[3];
 float yello_eep[3];
 
 int red_box, green_box, blue_box, yello_box, ch_poit;
-int servo20 = 80;
-int servo28 = 85;
+int servo20 = 95;
+int servo28 = 95;
 int num_encoder = 0;
 int roll_L = 900;
 
@@ -80,8 +80,8 @@ void setup()
      mydisplay_background(black);
      mydisplay("MY-MAKERS", 20, 30, 2, white);
      read_eppcolor();
-     servo(20, 90);
-     servo(28, 90);
+     servo(20, servo20);
+     servo(28, servo28);
      servo(27, 20);
 
      begin_robot();
@@ -93,12 +93,13 @@ void setup()
       do{Motor(30, 30);} while(encoderPos < 1700);     
       
       speed_rotate = 30;           //------------>>  ตั้งความเร็วในการหมุน ซ้ายขวา
+      rotate_right = 630;           //------------>>  ตั้งค่า องศา ในการหมุน ขวา 
       rotate_left = 570;           //------------>>  ตั้งค่า องศา ในการหมุน ซ้าย
-      rotate_right = 560;           //------------>>  ตั้งค่า องศา ในการหมุน ขวา
-      rotate_color = 600;           //------------>>  ตั้งค่า องศา ในการหมุน ซ้าย หลังจากที่ถอยออกมา
+      
+      rotate_color = 580;           //------------>>  ตั้งค่า องศา ในการหมุน ซ้าย หลังจากที่ถอยออกมา
       while(1)
         {
-          move_fw(30, 30, 1600);     //------------>>  ตั้งค่า 30, 30  คือความเร็วของมอเตอร์  ซ้าย และ ขวา  1600 คือ ระยะทางเดิน ระหว่างบล๊อก 
+          move_fw(25, 25, 1580);     //------------>>  ตั้งค่า 30, 30  คือความเร็วของมอเตอร์  ซ้าย และ ขวา  1600 คือ ระยะทางเดิน ระหว่างบล๊อก 
         }
   
 
