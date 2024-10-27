@@ -1076,7 +1076,7 @@ void fline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
       {
         new_encoder = 400 * tm / wheel_distance() ;
         encoder.resetEncoders();
-        for(int i=10; i<sl; i++)
+        for(int i=0; i<sl; i++)
           {
             float error_L = map(mcp_f(sensor_l), min_mcp_f(sensor_l), max_mcp_f(sensor_l), 0, 30 );
             float error_R = map(mcp_f(sensor_r), min_mcp_f(sensor_r), max_mcp_f(sensor_r), 0, 30 );
@@ -1087,7 +1087,7 @@ void fline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
             previous_error=errors  ;
             PID_output = (kp * P) + (0.00001 * I) + (0.2* D); 
             
-            Motor(i + PID_output, i - PID_output); delayMicroseconds(50);
+            Motor(i + PID_output, i - PID_output); 
             if(mcp_f(sensor_l-1) < md_mcp_f(sensor_l-1) || mcp_f(sensor_l-2) < md_mcp_f(sensor_l-2) && mcp_f(sensor_l) > md_mcp_f(sensor_l))
               {
                 do{Motor(sl/2, sl);} while(mcp_f(sensor_l) > md_mcp_f(sensor_l));
@@ -1096,7 +1096,7 @@ void fline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
               {
                 do{Motor(sl, sl/2);} while(mcp_f(sensor_r) > md_mcp_f(sensor_r));
               }
-            delay(3);
+            delay(5);
           }
         while(encoder.Poss_R() < new_encoder)
           {
@@ -1129,7 +1129,7 @@ void fline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
           {
             if(ch_p == 0)
                 {
-                   for(int i=5; i<sl; i++)
+                   for(int i=0; i<sl; i++)
                       {
                         float error_L = map(mcp_f(sensor_l), min_mcp_f(sensor_l), max_mcp_f(sensor_l), 0, 30 );
                         float error_R = map(mcp_f(sensor_r), min_mcp_f(sensor_r), max_mcp_f(sensor_r), 0, 30 );
@@ -1149,7 +1149,7 @@ void fline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
                           {
                             do{Motor(sl, sl/2);} while(mcp_f(sensor_r) > md_mcp_f(sensor_r));
                           }
-                        delay(3);
+                        delay(6);
                       }
                 }
               
@@ -1162,7 +1162,7 @@ void fline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
                 I = I + errors;
                 D = errors - previous_error;                    
                 previous_error=errors  ;
-                PID_output = (kp * P) + (0.0 * I) + (0.2* D);  
+                PID_output = (kp * P) + (0.0 * I) + (0.15* D);  
 
                 Motor(sl + PID_output, sr - PID_output);delayMicroseconds(50);
                 if(mcp_f(sensor_l-1) < md_mcp_f(sensor_l-1) || mcp_f(sensor_l-2) < md_mcp_f(sensor_l-2) && mcp_f(sensor_l) > md_mcp_f(sensor_l))
@@ -1176,14 +1176,42 @@ void fline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
                 
                 if(sensor == "a0")
                       {
-                          if(mcp_f(0)<md_mcp_f(0) )
+                          if(mcp_f(0)<md_mcp_f(0) - 100)
                               {
                                   break;
                               }
                       }
                   else if(sensor == "a7")
                       {
-                          if(mcp_f(7)<md_mcp_f(7) )
+                          if(mcp_f(7)<md_mcp_f(7) - 100)
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a6")
+                      {
+                          if(mcp_f(6)<md_mcp_f(6) - 100)
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a1")
+                      {
+                          if(mcp_f(1)<md_mcp_f(1)- 100 )
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a5")
+                      {
+                          if(mcp_f(5)<md_mcp_f(5) - 100)
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a2")
+                      {
+                          if(mcp_f(2)<md_mcp_f(2) - 100)
                               {
                                   break;
                               }
@@ -1204,14 +1232,14 @@ void fline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
                       }
                 else if(sensor == "26")
                       {
-                          if(analogRead(26)<md_adc(26))
+                          if(analogRead(26)<md_adc(26)- 100)
                               {
                                   break;
                               }
                       }
                   else if(sensor == "27")
                       {
-                          if(analogRead(27)<md_adc(27))
+                          if(analogRead(27)<md_adc(27)- 100)
                               {
                                   break;
                               }
@@ -1248,6 +1276,34 @@ void fline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
                   else if(sensor == "a7")
                       {
                           if(mcp_f(7)>md_mcp_f(7))
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a6")
+                      {
+                          if(mcp_f(6)>md_mcp_f(6) )
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a1")
+                      {
+                          if(mcp_f(1)>md_mcp_f(1) )
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a5")
+                      {
+                          if(mcp_f(5)>md_mcp_f(5) )
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a2")
+                      {
+                          if(mcp_f(2)>md_mcp_f(2) )
                               {
                                   break;
                               }
@@ -1320,7 +1376,7 @@ void bline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
       {
         new_encoder = 400 * tm / wheel_distance() ;
         encoder.resetEncoders();
-        for(int i=10; i<sl; i++)
+        for(int i=0; i<sl; i++)
           {
             float error_L = map(mcp_b(sensor_l), min_mcp_b(sensor_l), max_mcp_b(sensor_l), 0, 30 );
             float error_R = map(mcp_b(sensor_r), min_mcp_b(sensor_r), max_mcp_b(sensor_r), 0, 30 );
@@ -1330,7 +1386,7 @@ void bline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
             D = errors - previous_error;                    
             previous_error=errors  ;
             PID_output = (kp * P) + (0.00001 * I) + (0.2* D); 
-            Motor(-(i + PID_output), -(i - PID_output)); delayMicroseconds(50);
+            Motor(-(i + PID_output), -(i - PID_output)); 
             
             if(mcp_b(sensor_l-1) < md_mcp_b(sensor_l-1) || mcp_b(sensor_l-2) < md_mcp_b(sensor_l-2) && mcp_b(sensor_l) > md_mcp_b(sensor_l))
               {
@@ -1341,7 +1397,7 @@ void bline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
                 do{Motor(-sl/2, -sl);} while(mcp_b(sensor_l) > md_mcp_b(sensor_l));
               }
             
-            delay(3);
+            delay(10);
           }
         while(encoder.Poss_R() > -new_encoder)
           {
@@ -1375,7 +1431,7 @@ void bline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
           {
             if(ch_p == 0)
                 {
-                   for(int i=5; i<sl; i++)
+                   for(int i=0; i<sl; i++)
                       {
                         float error_L = map(mcp_b(sensor_l), min_mcp_b(sensor_l), max_mcp_b(sensor_l), 0, 30 );
                         float error_R = map(mcp_b(sensor_r), min_mcp_b(sensor_r), max_mcp_b(sensor_r), 0, 30 );
@@ -1385,7 +1441,7 @@ void bline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
                         D = errors - previous_error;                    
                         previous_error=errors  ;
                         PID_output = (kp * P) + (0.00001 * I) + (0.2* D); 
-                        Motor(-(i + PID_output), -(i - PID_output)); delayMicroseconds(50);
+                        Motor(-(i + PID_output), -(i - PID_output)); 
                         
                         if(mcp_b(sensor_l-1) < md_mcp_b(sensor_l-1) || mcp_b(sensor_l-2) < md_mcp_b(sensor_l-2) && mcp_b(sensor_l) > md_mcp_b(sensor_l))
                           {
@@ -1396,7 +1452,7 @@ void bline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
                             do{Motor(-sl/2, -sl);} while(mcp_b(sensor_l) > md_mcp_b(sensor_l));
                           }
                         
-                        delay(3);
+                        delay(10);
                       }
                 }
               
@@ -1423,14 +1479,42 @@ void bline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
                 
                 if(sensor == "a0")
                       {
-                          if(mcp_f(0)<md_mcp_f(0) )
+                          if(mcp_f(0)<md_mcp_f(0)- 100 )
                               {
                                   break;
                               }
                       }
-                  else if(sensor == "a7")
+                else if(sensor == "a7")
                       {
-                          if(mcp_f(7)<md_mcp_f(7) )
+                          if(mcp_f(7)<md_mcp_f(7)- 100 )
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a6")
+                      {
+                          if(mcp_f(6)<md_mcp_f(6) - 100)
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a1")
+                      {
+                          if(mcp_f(1)<md_mcp_f(1) - 100)
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a5")
+                      {
+                          if(mcp_f(5)<md_mcp_f(5) - 100)
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a2")
+                      {
+                          if(mcp_f(2)<md_mcp_f(2) - 100)
                               {
                                   break;
                               }
@@ -1449,16 +1533,30 @@ void bline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
                                   break;
                               }
                       }
+                else if(sensor == "b1")
+                      {
+                          if(mcp_b(1) < md_mcp_b(1))
+                              {
+                                  break;
+                              }
+                      }
+                  else if(sensor == "b6")
+                      {
+                          if(mcp_b(6) < md_mcp_b(6))
+                              {
+                                  break;
+                              }
+                      }
                 else if(sensor == "26")
                       {
-                          if(analogRead(26)<md_adc(26))
+                          if(analogRead(26)<md_adc(26)- 100)
                               {
                                   break;
                               }
                       }
                   else if(sensor == "27")
                       {
-                          if(analogRead(27)<md_adc(27))
+                          if(analogRead(27)<md_adc(27)- 100)
                               {
                                   break;
                               }
@@ -1494,6 +1592,34 @@ void bline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
                   else if(sensor == "a7")
                       {
                           if(mcp_f(7)>md_mcp_f(7))
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a6")
+                      {
+                          if(mcp_f(6)>md_mcp_f(6) )
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a1")
+                      {
+                          if(mcp_f(1)>md_mcp_f(1) )
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a5")
+                      {
+                          if(mcp_f(5)>md_mcp_f(5) )
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a2")
+                      {
+                          if(mcp_f(2)>md_mcp_f(2) )
                               {
                                   break;
                               }
