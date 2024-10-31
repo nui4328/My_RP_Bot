@@ -53,8 +53,8 @@ uint16_t sensor_max_PA[2];
 uint16_t sensor_min_PA[2];
 
 float P, I, D, previous_I, previous_error,errors, PID_output, present_position, previous_integral; 
-uint16_t numSensor = 8; 
-uint16_t sensor_pin_F[] = {0,1,2,3,4,5,6,7}; 
+uint16_t numSensor = 6; 
+uint16_t sensor_pin_F[] = {1,2,3,4,5,6}; 
 uint16_t sensor_pin_B[] = {0,1,2,3,4,5,6,7}; 
 uint16_t state_on_Line = 0;
 uint16_t setpoint;
@@ -1031,12 +1031,12 @@ uint16_t md_mcp_b(int sensor)
 
 uint16_t Position()  
    {        
-      uint16_t min_sensor_values_F[] = { min_mcp_f(0),min_mcp_f(1),min_mcp_f(2),min_mcp_f(3),min_mcp_f(4),min_mcp_f(5),min_mcp_f(6),min_mcp_f(7)  }; //ค่าที่อ่านได้น้อยสุดหรือ สีดำ
-      uint16_t max_sensor_values_F[] = { max_mcp_f(0),max_mcp_f(1),max_mcp_f(2),max_mcp_f(3),max_mcp_f(4),max_mcp_f(5),max_mcp_f(6),max_mcp_f(7)  } ; //ค่าที่อ่านได้มากสุด สีขาว                
+      uint16_t min_sensor_values_F[] = { min_mcp_f(1),min_mcp_f(2),min_mcp_f(3),min_mcp_f(4),min_mcp_f(5),min_mcp_f(6)  }; //ค่าที่อ่านได้น้อยสุดหรือ สีดำ
+      uint16_t max_sensor_values_F[] = { max_mcp_f(1),max_mcp_f(2),max_mcp_f(3),max_mcp_f(4),max_mcp_f(5),max_mcp_f(6)  } ; //ค่าที่อ่านได้มากสุด สีขาว                
       bool onLine = false;
       long avg = 0;
       long sum = 0;
-      for (uint8_t i = 0; i < numSensor ; i++) 
+      for (uint8_t i = 0; i < 6 ; i++) 
           {              
               long value = map(mcp_f(sensor_pin_F[i]), min_sensor_values_F[i], max_sensor_values_F[i], 1000, 0);                                                                         // จากนั้นก็เก็บเข้าไปยังตัวแป value
 
@@ -1054,11 +1054,11 @@ uint16_t Position()
          {
             if (_lastPosition < (numSensor - 1) * 1000 / 2)  // ถ้าค่าก่อนหน้าที่จะไม่เจอเส้นดำหรือหลุดจะให้ค่านั้นเป็น 0
                {
-                  return 3500;
+                  return 2500;
                }
             else                                          //แต่ถ้ามากกว่าแสดงว่าหลุดออกอีกฝั่ง ค่าก็จะเป็น 1000 คุณด้วยจำนวนเซ็นเซอร์
                {
-                 return 3500;                  
+                 return 2500;                  
 
                }
 
@@ -1073,17 +1073,6 @@ float error_F()
         present_position = Position() / ((numSensor - 1) * 10) ;
         setpoint = 50.0;
         errors = setpoint - present_position;   
-        /*
-        I = 0;
-        previous_I = 0;
-        previous_error = 0;
-        
-        P = errors;
-        I = I + previous_I;
-        D = errors - previous_error ;            
-        previous_I=I;
-        previous_error=errors  ; 
-        */ 
         P = errors;
         I = I + errors;
         D = errors - previous_error;                    
