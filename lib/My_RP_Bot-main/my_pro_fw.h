@@ -171,12 +171,28 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
             new_encoder = 380 * (tim-5) / wheel_distance() ;
             encoder.resetEncoders();
            // lasts_time=millis();
-            for(int i=10; i<spl; i++)
-              {                
-                PID_output = (kp * kf('p')) + (0.00001 * kf('i')) + (kd_f * kf('d'));
-                Motor(i - PID_output, i + PID_output); 
-                delay(2);  
-              }
+           if(ch_p == 0)
+                {
+                  ch_p = 0; 
+                  if(tim > 20)
+                      {
+                        for(int i=10; i<spl; i++)
+                          {                
+                            PID_output = (kp * kf('p')) + (0.00001 * kf('i')) + (kd_f * kf('d'));
+                            Motor(i - PID_output, i + PID_output); 
+                            delay(4);  
+                          }
+                      }
+                    else  
+                      {
+                        for(int i=10; i<spl; i++)
+                          {                
+                            PID_output = (kp * kf('p')) + (0.00001 * kf('i')) + (kd_f * kf('d'));
+                            Motor(i - PID_output, i + PID_output); 
+                            delay(2);  
+                          }
+                      }
+                }  
             while(encoder.Poss_R() < new_encoder)
            // while(millis()-lasts_time <tim)
                {  
@@ -198,7 +214,7 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
                             {
                               break;
                             }
-                    delay(1);  
+                    delay(3);  
                   }
               }
             
@@ -211,9 +227,10 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
             {
               if(ch_p == 0)
                 {
+                  ch_p = 0; 
                    for(int i=5; i<spl; i++)
                     {                
-                      PID_output = (kp * kf('p')) + (0.00001 * kf('i')) + (kd_f * kf('d'));
+                      PID_output = ((kp/1.5) * kf('p')) + (0.00001 * kf('i')) + (kd_f * kf('d'));
                       Motor(i - PID_output, i + PID_output); 
                       if((mcp_f(0)<md_mcp_f(0) && mcp_f(1)<md_mcp_f(1) && mcp_f(3)<md_mcp_f(3))                    
                         || (mcp_f(7)<md_mcp_f(7) && mcp_f(6)<md_mcp_f(6) && mcp_f(4)<md_mcp_f(4))
@@ -221,7 +238,7 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
                         {
                           break;
                         }
-                      delay(3);  
+                      delay(4);  
                     }
                 }
                 while(1)
@@ -273,7 +290,7 @@ void fline (int spl ,int spr, float kp, int tim, char nfc, char splr, int power,
                           break;
                         } 
                     */ 
-                    ch_p = 0;                        
+                                           
                   }
             }
          }
@@ -1329,6 +1346,321 @@ void fline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
     if(ofset > 0)
       {
         Motor(-sl, -sr);
+        delay(ofset);
+        Motor(0, 0);
+        delay(50);
+      }
+    else  {}
+ //////////////////////////////////////////////////////////////     
+  }
+
+void bline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, char sp, int ofset)
+  {
+    char sensors[4];  // Declare a char array to store the converted string
+    line.toCharArray(sensors, sizeof(sensors));
+    int sensor_l = atoi(&sensors[0]); 
+    int sensor_r = atoi(&sensors[2]); 
+    if(tm > 0)
+      {
+        new_encoder = 400 * tm / wheel_distance() ;
+        encoder.resetEncoders();
+        for(int i=0; i<sl; i++)
+          {
+            float error_L = map(mcp_b(sensor_l), min_mcp_b(sensor_l), max_mcp_b(sensor_l), 0, 30 );
+            float error_R = map(mcp_b(sensor_r), min_mcp_b(sensor_r), max_mcp_b(sensor_r), 0, 30 );
+            errors = error_R - error_L;       
+            P = errors;
+            I = I + errors;
+            D = errors - previous_error;                    
+            previous_error=errors  ;
+            PID_output = (kp * P) + (0.00001 * I) + (0.2* D); 
+            Motor(-(i + PID_output), -(i - PID_output)); 
+            
+            if(mcp_b(sensor_l-1) < md_mcp_b(sensor_l-1) || mcp_b(sensor_l-2) < md_mcp_b(sensor_l-2) && mcp_b(sensor_l) > md_mcp_b(sensor_l))
+              {
+                do{Motor(-sl, -sl/2);} while(mcp_b(sensor_r) > md_mcp_b(sensor_r));
+              }
+            if(mcp_b(sensor_r+1) < md_mcp_b(sensor_r+1) || mcp_b(sensor_r+2) < md_mcp_b(sensor_r+2) && mcp_b(sensor_r) > md_mcp_b(sensor_r) )
+              {
+                do{Motor(-sl/2, -sl);} while(mcp_b(sensor_l) > md_mcp_b(sensor_l));
+              }
+            
+            delay(10);
+          }
+        while(encoder.Poss_R() > -new_encoder)
+          {
+            float error_L = map(mcp_b(sensor_l), min_mcp_b(sensor_l), max_mcp_b(sensor_l), 0, 30 );
+            float error_R = map(mcp_b(sensor_r), min_mcp_b(sensor_r), max_mcp_b(sensor_r), 0, 30 );
+            errors = error_R - error_L;      
+            P = errors;
+            I = I + errors;
+            D = errors - previous_error;                    
+            previous_error=errors  ;
+            PID_output = (kp * P) + (0.00001 * I) + (0.15* D); 
+            
+            Motor(-(sl + PID_output), -(sr - PID_output)); delayMicroseconds(50);
+           if(mcp_b(sensor_l-1) < md_mcp_b(sensor_l-1) || mcp_b(sensor_l-2) < md_mcp_b(sensor_l-2) && mcp_b(sensor_l) > md_mcp_b(sensor_l))
+              {
+                do{Motor(-sl, -sl/2);} while(mcp_b(sensor_r) > md_mcp_b(sensor_r));
+              }
+            if(mcp_b(sensor_r+1) < md_mcp_b(sensor_r+1) || mcp_b(sensor_r+2) < md_mcp_b(sensor_r+2) && mcp_b(sensor_r) > md_mcp_b(sensor_r) )
+              {
+                do{Motor(-sl/2, -sl);} while(mcp_b(sensor_l) > md_mcp_b(sensor_l));
+              }
+            
+          }
+          
+      }
+    else
+      {
+        if(sl == 0 && tm == 0)
+          {delay(10);}
+        else
+          {
+            if(ch_p == 0)
+                {
+                   for(int i=0; i<sl; i++)
+                      {
+                        float error_L = map(mcp_b(sensor_l), min_mcp_b(sensor_l), max_mcp_b(sensor_l), 0, 30 );
+                        float error_R = map(mcp_b(sensor_r), min_mcp_b(sensor_r), max_mcp_b(sensor_r), 0, 30 );
+                        errors = error_R - error_L;       
+                        P = errors;
+                        I = I + errors;
+                        D = errors - previous_error;                    
+                        previous_error=errors  ;
+                        PID_output = (kp * P) + (0.00001 * I) + (0.2* D); 
+                        Motor(-(i + PID_output), -(i - PID_output)); 
+                        
+                        if(mcp_b(sensor_l-1) < md_mcp_b(sensor_l-1) || mcp_b(sensor_l-2) < md_mcp_b(sensor_l-2) && mcp_b(sensor_l) > md_mcp_b(sensor_l))
+                          {
+                            do{Motor(-sl, -sl/2);} while(mcp_b(sensor_r) > md_mcp_b(sensor_r));
+                          }
+                        if(mcp_b(sensor_r+1) < md_mcp_b(sensor_r+1) || mcp_b(sensor_r+2) < md_mcp_b(sensor_r+2) && mcp_b(sensor_r) > md_mcp_b(sensor_r) )
+                          {
+                            do{Motor(-sl/2, -sl);} while(mcp_b(sensor_l) > md_mcp_b(sensor_l));
+                          }
+                        
+                        delay(10);
+                      }
+                }
+              
+            while(1)
+              {
+                float error_L = map(mcp_b(sensor_l), min_mcp_b(sensor_l), max_mcp_b(sensor_l), 0, 30 );
+                float error_R = map(mcp_b(sensor_r), min_mcp_b(sensor_r), max_mcp_b(sensor_r), 0, 30 );
+                errors = error_R - error_L;     
+                P = errors;
+                I = I + errors;
+                D = errors - previous_error;                    
+                previous_error=errors  ;
+                PID_output = (kp * P) + (0.00001 * I) + (0.15* D); 
+                Motor(-(sl + PID_output), -(sr - PID_output)); delayMicroseconds(50);
+                
+                if(mcp_b(sensor_l-1) < md_mcp_b(sensor_l-1) || mcp_b(sensor_l-2) < md_mcp_b(sensor_l-2) && mcp_b(sensor_l) > md_mcp_b(sensor_l))
+                  {
+                    do{Motor(-sl, -sl/2);} while(mcp_b(sensor_r) > md_mcp_b(sensor_r));
+                  }
+                if(mcp_b(sensor_r+1) < md_mcp_b(sensor_r+1) || mcp_b(sensor_r+2) < md_mcp_b(sensor_r+2) && mcp_b(sensor_r) > md_mcp_b(sensor_r) )
+                  {
+                    do{Motor(-sl/2, -sl);} while(mcp_b(sensor_l) > md_mcp_b(sensor_l));
+                  }
+                
+                if(sensor == "a0")
+                      {
+                          if(mcp_f(0)<md_mcp_f(0)- 100 )
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a7")
+                      {
+                          if(mcp_f(7)<md_mcp_f(7)- 100 )
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a6")
+                      {
+                          if(mcp_f(6)<md_mcp_f(6) - 100)
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a1")
+                      {
+                          if(mcp_f(1)<md_mcp_f(1) - 100)
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a5")
+                      {
+                          if(mcp_f(5)<md_mcp_f(5) - 100)
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a2")
+                      {
+                          if(mcp_f(2)<md_mcp_f(2) - 100)
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "b0")
+                      {
+                          if(mcp_b(0) < md_mcp_b(0))
+                              {
+                                  break;
+                              }
+                      }
+                  else if(sensor == "b7")
+                      {
+                          if(mcp_b(7) < md_mcp_b(7))
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "b1")
+                      {
+                          if(mcp_b(1) < md_mcp_b(1))
+                              {
+                                  break;
+                              }
+                      }
+                  else if(sensor == "b6")
+                      {
+                          if(mcp_b(6) < md_mcp_b(6))
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "26")
+                      {
+                          if(analogRead(26)<md_adc(26)- 100)
+                              {
+                                  break;
+                              }
+                      }
+                  else if(sensor == "27")
+                      {
+                          if(analogRead(27)<md_adc(27)- 100)
+                              {
+                                  break;
+                              }
+                      }
+              }
+          }
+      }
+
+    ///////////////////////////////////////////////////////////////     
+        if(sp == 'p')
+          {
+            ch_p = 1;
+            while(1)
+              {
+                float error_L = map(mcp_b(sensor_l), min_mcp_b(sensor_l), max_mcp_b(sensor_l), 0, 30 );
+                float error_R = map(mcp_b(sensor_r), min_mcp_b(sensor_r), max_mcp_b(sensor_r), 0, 30 );
+                errors = error_R - error_L;    
+                P = errors;
+                I = I + errors;
+                D = errors - previous_error;                    
+                previous_error=errors  ;
+                PID_output = (kp * P) + (0.00001 * I) + (0.15* D); 
+                Motor(-(sl + PID_output), -(sr - PID_output)); delayMicroseconds(50);
+                //Serial.println(errors);
+
+                if(sensor == "a0")
+                      {
+                          if(mcp_f(0)>md_mcp_f(0))
+                              {
+                                  break;
+                              }
+                      }
+                  else if(sensor == "a7")
+                      {
+                          if(mcp_f(7)>md_mcp_f(7))
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a6")
+                      {
+                          if(mcp_f(6)>md_mcp_f(6) )
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a1")
+                      {
+                          if(mcp_f(1)>md_mcp_f(1) )
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a5")
+                      {
+                          if(mcp_f(5)>md_mcp_f(5) )
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "a2")
+                      {
+                          if(mcp_f(2)>md_mcp_f(2) )
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "b0")
+                      {
+                          if(mcp_b(0) > md_mcp_b(0))
+                              {
+                                  break;
+                              }
+                      }
+                  else if(sensor == "b7")
+                      {
+                          if(mcp_b(7) > md_mcp_b(7))
+                              {
+                                  break;
+                              }
+                      }
+                else if(sensor == "26")
+                      {
+                          if(analogRead(26)>md_adc(26))
+                              {
+                                  break;
+                              }
+                      }
+                  else if(sensor == "27")
+                      {
+                          if(analogRead(27)>md_adc(27))
+                              {
+                                  break;
+                              }
+                      }
+              }
+        unsigned long lasts_timea = millis();
+        while(millis() - lasts_timea < 60)
+          {
+            float error_L = map(mcp_b(sensor_l), min_mcp_b(sensor_l), max_mcp_b(sensor_l), 0, 30 );
+            float error_R = map(mcp_b(sensor_r), min_mcp_b(sensor_r), max_mcp_b(sensor_r), 0, 30 );
+            errors = error_R - error_L;     
+            P = errors;
+            I = I + errors;
+            D = errors - previous_error;                    
+            previous_error=errors  ;
+            PID_output = (kp * P) + (0.00001 * I) + (0.15* D); 
+            Motor(-(sl + PID_output), -(sr - PID_output)); delayMicroseconds(50);
+            //Serial.println(errors);
+  
+          }
+      }
+    else{}
+    if(ofset > 0)
+      {
+        Motor(sl, sr);
         delay(ofset);
         Motor(0, 0);
         delay(50);
