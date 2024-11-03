@@ -1232,6 +1232,20 @@ void fline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
                                   break;
                               }
                       }
+                else if(sensor == "a6")
+                      {
+                          if(mcp_f(6)<md_mcp_f(6) )
+                              {
+                                  break;
+                              }
+                      }
+	        else if(sensor == "a1")
+                      {
+                          if(mcp_f(1)<md_mcp_f(1) )
+                              {
+                                  break;
+                              }
+                      }
                 else if(sensor == "b0")
                       {
                           if(mcp_b(0) < md_mcp_b(0))
@@ -1242,6 +1256,20 @@ void fline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
                   else if(sensor == "b7")
                       {
                           if(mcp_b(7) < md_mcp_b(7))
+                              {
+                                  break;
+                              }
+                      }
+		else if(sensor == "b1")
+                      {
+                          if(mcp_b(1) < md_mcp_b(1))
+                              {
+                                  break;
+                              }
+                      }
+	         else if(sensor == "b6")
+                      {
+                          if(mcp_b(6) < md_mcp_b(6))
                               {
                                   break;
                               }
@@ -1296,6 +1324,20 @@ void fline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
                                   break;
                               }
                       }
+	        else if(sensor == "a6")
+                      {
+                          if(mcp_f(6)>md_mcp_f(6))
+                              {
+                                  break;
+                              }
+                      }
+		else if(sensor == "a1")
+                      {
+                          if(mcp_f(1)>md_mcp_f(1))
+                              {
+                                  break;
+                              }
+                      }
                 else if(sensor == "b0")
                       {
                           if(mcp_b(0) > md_mcp_b(0))
@@ -1306,6 +1348,20 @@ void fline_2sensor(int sl, int sr, float kp, int tm, String line,String sensor, 
                   else if(sensor == "b7")
                       {
                           if(mcp_b(7) > md_mcp_b(7))
+                              {
+                                  break;
+                              }
+                      }
+		else if(sensor == "b7")
+                      {
+                          if(mcp_b(6) > md_mcp_b(6))
+                              {
+                                  break;
+                              }
+                      }
+		else if(sensor == "b1")
+                      {
+                          if(mcp_b(1) > md_mcp_b(1))
                               {
                                   break;
                               }
