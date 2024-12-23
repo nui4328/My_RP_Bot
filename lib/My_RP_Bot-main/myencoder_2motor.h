@@ -35,33 +35,33 @@ if(sr>4095)
                
                   if(sl>0)
                      {
-                        digitalWrite(8,HIGH);
-                        digitalWrite(6,LOW);     
+                        digitalWrite(6,HIGH);
+                        digitalWrite(8,LOW);     
                         analogWrite(7,sl);
                      }
                   else if(sl<0)
                      {    
-                        digitalWrite(8,LOW);
-                        digitalWrite(6,HIGH);
+                        digitalWrite(6,LOW);
+                        digitalWrite(8,HIGH);
                         analogWrite(7,-sl);
                      }
                   else
                      {        
-                        digitalWrite(8,LOW);
                         digitalWrite(6,LOW);
+                        digitalWrite(8,LOW);
                         analogWrite(7,0);
                      }  
             
                   if(sr>0)
                      {
-                        digitalWrite(19,HIGH);
-                        digitalWrite(18,LOW);
+                        digitalWrite(18,HIGH);
+                        digitalWrite(19,LOW);
                         analogWrite(22,sr);
                      }
                   else if(sr<0)
                      {    
-                        digitalWrite(19,LOW);
-                        digitalWrite(18,HIGH);
+                        digitalWrite(18,LOW);
+                        digitalWrite(19,HIGH);
                         analogWrite(22,-sr);
                      }
                   else
