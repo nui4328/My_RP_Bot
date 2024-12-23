@@ -27,7 +27,7 @@ void fw (int spl ,int spr, float kp, float kd, int offset)
               PID_output = (kp * P) + (0.000015 * I) + (kd * D);
           
               // ปรับความเร็วของมอเตอร์ตาม PID
-              Motor(spl - PID_output, spr + PID_output);
+              Motor(spl + PID_output, spr - PID_output);
           
               // หน่วงเวลาเพื่อความเสถียร
               delayMicroseconds(50);  // ปรับค่าหน่วงเวลาให้เหมาะสม
