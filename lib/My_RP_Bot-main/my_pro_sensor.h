@@ -1075,7 +1075,7 @@ uint16_t Position_4()
       bool onLine = false;
       long avg = 0;
       long sum = 0;
-      for (uint8_t i = 0; i < 6 ; i++) 
+      for (uint8_t i = 0; i < 4 ; i++) 
           {              
               long value = map(mcp_f(sensor_pin_F[i]), min_sensor_values_F[i], max_sensor_values_F[i], 1000, 0);                                                                         // จากนั้นก็เก็บเข้าไปยังตัวแป value
 
