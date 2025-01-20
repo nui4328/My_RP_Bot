@@ -120,7 +120,7 @@ void cal_censor(int spcl, int spcr)
    }
 void sensor_set()
    {
-      EEPROM.begin(512); // initialize EEPROM with 512 bytes
+      EEPROM.begin(2048); // initialize EEPROM with 512 bytes
       analogReadResolution(12);
       tft.initR(INITR_MINI160x80);  // Init ST7735S mini display
       tft.setRotation(3);
@@ -175,9 +175,9 @@ uint16_t mcp_f(int sensor)
 
 uint16_t mcp_20(int sensor) 
   {   
-     adc.begin(5, 4, 12, 13 );
+     adc.begin(5, 4, 12, 13 );   
      adc.begin(5, 4, 12, 0 );  
-     adc.begin(5, 4, 12, 20 ); 
+     adc.begin(5, 4, 12, 20 );    // 5=OUT, 4=IN, 12=clk
      return adc.readADC(sensor);     
   } 
 /////////////////////////////////----------------------->>>> 
@@ -1636,8 +1636,8 @@ void check_collors()
               check_color = "red";    
             }
          else if(red < green_eep[0]+0.20 && red > green_eep[0]- 0.20  
-            && green < green_eep[1]+0.20 && green > green_eep[1]- 0.20 
-            && blue < green_eep[2]+0.20 && blue > green_eep[2]- 0.20  )
+            && green < green_eep[1]+0.1\8 && green > green_eep[1]- 0.08
+            && blue < green_eep[2]+0.16 && blue > green_eep[2]- 0.16  )
             {
               check_color = "green";                        
             } 
@@ -1652,7 +1652,7 @@ void check_collors()
             && green < yello_eep[1]+0.20 && green > yello_eep[1]- 0.20 
             && blue < yello_eep[2]+0.20 && blue > yello_eep[2]- 0.20  )
             {
-              check_color = "yello";
+              check_color = "yellow";
             }
           else
             {
@@ -1677,8 +1677,50 @@ String check_collor()
               check_color = "red";    
             }
          else if(red < green_eep[0]+0.20 && red > green_eep[0]- 0.20  
-            && green < green_eep[1]+0.20 && green > green_eep[1]- 0.20 
-            && blue < green_eep[2]+0.20 && blue > green_eep[2]- 0.20  )
+            && green < green_eep[1]+0.1\8 && green > green_eep[1]- 0.08
+            && blue < green_eep[2]+0.16 && blue > green_eep[2]- 0.16  )
+            {
+              check_color = "green";                        
+            }
+         else if(red < green_eep[0]+0.20 && red > green_eep[0]- 0.20  
+            && green < green_eep[1]+0.1 && green > green_eep[1]- 0.1 
+            && blue < green_eep[2]+0.16 && blue > green_eep[2]- 0.16  )
+            {
+              check_color = "blue";
+            }
+         else if(red < yello_eep[0]+0.20 && red > yello_eep[0]- 0.20  
+            && green < yello_eep[1]+0.20 && green > yello_eep[1]- 0.20 
+            && blue < yello_eep[2]+0.20 && blue > yello_eep[2]- 0.20  )
+            {
+              check_color = "yellow";
+            }
+          else
+            {
+              check_color = "none";
+            }
+         return check_color;
+  }
+
+String check_colors()
+  {       
+         float red, green, blue;
+         uint16_t r, g, b, c;
+         tcss.getRawData(&r, &g, &b, &c);
+             
+         float averag = (r+g+b)/3;
+         red = r/averag; ; 
+         green = g/averag; 
+         blue = b/averag;
+                
+         if(red < red_eep[0]+0.20 && red > red_eep[0]- 0.20  
+            && green < red_eep[1]+0.20 && green > red_eep[1]- 0.20 
+            && blue < red_eep[2]+0.20 && blue > red_eep[2]- 0.20  )
+            {
+              check_color = "red";    
+            }
+         else if(red < green_eep[0]+0.20 && red > green_eep[0]- 0.20  
+            && green < green_eep[1]+0.1 && green > green_eep[1]- 0.1 
+            && blue < green_eep[2]+0.16 && blue > green_eep[2]- 0.16  )
             {
               check_color = "green";                        
             } 
@@ -1693,7 +1735,7 @@ String check_collor()
             && green < yello_eep[1]+0.20 && green > yello_eep[1]- 0.20 
             && blue < yello_eep[2]+0.20 && blue > yello_eep[2]- 0.20  )
             {
-              check_color = "yello";
+              check_color = "yellow";
             }
           else
             {
@@ -1701,7 +1743,6 @@ String check_collor()
             }
          return check_color;
   }
-
 
  void add_sensor_M()
   {
@@ -2224,7 +2265,7 @@ void begin_robot()
             while(1)
               {
                 mydisplay_background(black);
-                mydisplay(" Cal-Sensor", 10, 10, 2, white);
+                mydisplay(" Cal-Sensor", 10, 10, 1, white);
                 mydisplay("Press button", 10, 40, 2, white);
                 mydisplay("    GP9   ", 10, 60, 2, white);
                 if(digitalRead(9)==0) 
@@ -2249,7 +2290,7 @@ void begin_robot()
             while(1)
               {
                 mydisplay_background(black);
-                mydisplay(" Cal-Sensor20", 10, 10, 2, white);
+                mydisplay(" Cal-Sensor20", 0, 10, 2, white);
                 mydisplay("Press button", 10, 40, 2, white);
                 mydisplay("    GP9   ", 10, 60, 2, white);
                 if(digitalRead(9)==0) 
@@ -2274,7 +2315,7 @@ void begin_robot()
             while(1)
               {
                 mydisplay_background(black);
-                mydisplay(" Cal-Sensor0", 10, 10, 2, white);
+                mydisplay(" Cal-Sensor_0", 0, 10, 2, white);
                 mydisplay("Press button", 10, 40, 2, white);
                 mydisplay("    GP9   ", 10, 60, 2, white);
                 if(digitalRead(9)==0) 
@@ -2443,5 +2484,37 @@ void begin_robot()
   }
 
  
-
+ void _sw()
+  {
+    bz(100);
+    bz(100);
+    while(digitalRead(9) == 1)
+      {
+        Serial.println(digitalRead(9));
+        delay(10);
+        if(analogRead(29) > 4000 )
+          {
+            bz(100);
+            while(1)
+              {
+                mydisplay_background(black);
+                mydisplay(" Cal-Sensor20", 0, 10, 2, white);
+                mydisplay("Press button", 10, 40, 2, white);
+                mydisplay("    GP9   ", 10, 60, 2, white);
+                if(digitalRead(9)==0) 
+                  {                    
+                    mydisplay_background(black);
+                    mydisplay("Moving ROBOT", 10, 10, 2, white);
+                    mydisplay("     ON     ", 10, 30, 2, white);
+                    mydisplay(" black&white ", 10, 50, 2, white);
+                    add_sensor_B();
+                    break;
+                  }
+               
+                
+              }
+          }
+      }
+    bz(300);
+  }
 #endif
