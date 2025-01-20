@@ -1636,7 +1636,7 @@ void check_collors()
               check_color = "red";    
             }
          else if(red < green_eep[0]+0.20 && red > green_eep[0]- 0.20  
-            && green < green_eep[1]+0.1\8 && green > green_eep[1]- 0.08
+            && green < green_eep[1]+0.08 && green > green_eep[1]- 0.08
             && blue < green_eep[2]+0.16 && blue > green_eep[2]- 0.16  )
             {
               check_color = "green";                        
@@ -1677,11 +1677,11 @@ String check_collor()
               check_color = "red";    
             }
          else if(red < green_eep[0]+0.20 && red > green_eep[0]- 0.20  
-            && green < green_eep[1]+0.1\8 && green > green_eep[1]- 0.08
+            && green < green_eep[1]+0.08 && green > green_eep[1]- 0.08
             && blue < green_eep[2]+0.16 && blue > green_eep[2]- 0.16  )
             {
               check_color = "green";                        
-            }
+            } 
          else if(red < green_eep[0]+0.20 && red > green_eep[0]- 0.20  
             && green < green_eep[1]+0.1 && green > green_eep[1]- 0.1 
             && blue < green_eep[2]+0.16 && blue > green_eep[2]- 0.16  )
@@ -1718,8 +1718,8 @@ String check_colors()
             {
               check_color = "red";    
             }
-         else if(red < green_eep[0]+0.20 && red > green_eep[0]- 0.20  
-            && green < green_eep[1]+0.1 && green > green_eep[1]- 0.1 
+          else if(red < green_eep[0]+0.20 && red > green_eep[0]- 0.20  
+            && green < green_eep[1]+0.08 && green > green_eep[1]- 0.08
             && blue < green_eep[2]+0.16 && blue > green_eep[2]- 0.16  )
             {
               check_color = "green";                        
