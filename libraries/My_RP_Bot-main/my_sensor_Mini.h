@@ -1157,15 +1157,15 @@ float kf(char pid)
       I = I + errors;
       D = errors - previous_error;                    
       previous_error=errors  ;
-      if(pid = 'p')
+      if(pid == 'p')
          {
             return P;
          }
-      else if(pid = 'i')
+      else if(pid == 'i')
          {
             return I;
          } 
-      else if(pid = 'd')
+      else if(pid == 'd')
          {
             return D;
          }  
@@ -1251,15 +1251,15 @@ float kb(char pid)
       I = I + errors;
       D = errors - previous_error;                    
       previous_error=errors  ;
-      if(pid = 'p')
+      if(pid == 'p')
          {
             return P;
          }
-      else if(pid = 'i')
+      else if(pid == 'i')
          {
             return I;
          } 
-      else if(pid = 'd')
+      else if(pid == 'd')
          {
             return D;
          }  
