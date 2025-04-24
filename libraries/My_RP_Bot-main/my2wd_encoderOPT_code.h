@@ -33,12 +33,12 @@ char ch_lrs;
 
 bool set_bb = false;
 int motor_slow = 15;
-int fw_to_rotate = 220;
+int fw_to_rotate = 200;
 
 // กำหนดค่า PID
-float Kp = 0.25;  // Proportional gain
-float Ki = 0.0015; // Integral gain
-float Kd = 0.05;  // Derivative gain
+float Kp = 0.05;  // Proportional gain
+float Ki = 0.000015; // Integral gain
+float Kd = 0.015;  // Derivative gain
 
 // ตัวแปรสำหรับ PID Control
 float previousError = 0;
@@ -52,6 +52,12 @@ void encoderISR(void) ;
 void set_f(int _time);
 
 float lr_kp, lr_ki, lr_kd;
+bool chopsticks  = false;
+unsigned long lastTimes = millis();
+float Kpp = 1.2, Kii = 0.0, Kdd = 0.3;
+float _integral = 0, _prevErr = 0;
+unsigned long prevT;
+
 void set_pid_moveLR(float _lr_kp, float _lr_ki, float _lr_kd)
   {
     lr_kp = _lr_kp;
@@ -70,6 +76,9 @@ void setup_OPT()
      attachInterrupt(digitalPinToInterrupt(20), encoderISR, FALLING);
      mydisplay_background(black);
      mydisplay("MY-MAKERS", 20, 30, 2, white);
+     my.resetAngles();
+      _integral = _prevErr = 0;
+      prevT = millis();
   }
 
   void robot_start()
@@ -188,6 +197,28 @@ void arm_up_down(int _position)  //------------------------>> ฟังก์ช
     Serial.println(encoder_before);
 }
 
+void arm_Slide(int position)
+  {
+    if( position > 0)
+      {
+        servo(29, 180);
+        delay(abs(position));
+        servo(29, 90);
+      }
+    else  if( position < 0)
+      {
+        servo(29, 0);
+        delay(abs(position));
+        servo(29, 90);
+      }
+    else  
+      {
+        do{servo(29, 0);}while(digitalRead(20)==1);
+        servo(29, 90); delay(50);
+        do{servo(29, 180);}while(digitalRead(20)==0);
+        servo(29, 90); delay(50);
+      }
+  }
 void arm_up(int _position)  //------------------------>> ฟังก์ชัน เลื่อนแขนขึ้น
   {
     servo(29, 180);
@@ -203,13 +234,7 @@ void arm_down(int _position)  //------------------------>> ฟังก์ชั
   }
 
 
-void reset_arm()
-  {
-    do{servo(29, 0);}while(digitalRead(20)==1);
-    
-    servo(29, 180); delay(50);
-    servo(29, 90);
-  }
+
 
 void moveLR(int speed, int degree) 
   {
@@ -313,68 +338,6 @@ void moveLR(int speed, int degree)
         delay(10);
   }
 
-void moveLR(int sl, int sr, int degree, int offset) 
-  {
-    
-    my.resetAngles();
-    float sum = 0;
-    for (int i = 0; i < 5; i++) 
-        {
-            sum += my.gyro('z');
-            delay(10);
-        }    
-    // ค่าปัจจุบันของ Gyro Sensor
-    float currentDegree = 0; 
-    // ค่าเริ่มต้นของ Gyro Sensor
-    float initialDegree = sum/5;
-    delay(50);  
-    // ค่าที่ต้องการให้หุ่นยนต์หมุนไปถึง
-    float targetDegree = degree + initialDegree;  // 90+2 = 92    
-    // ตรวจสอบทิศทางการหมุน
-    bool isClockwise = (degree > 0);      
-    while (true) 
-        {
-            // อ่านค่าปัจจุบันจาก Gyro Sensor
-            currentDegree = my.gyro('z');
-            //Serial.println(currentDegree);
-            // คำนวณระยะห่างจากองศาที่ต้องการ
-            float remainingDegree = abs(targetDegree - currentDegree);            
-            // ตรวจสอบว่าหมุนถึงองศาที่กำหนดหรือยัง
-            if (remainingDegree <= 10) 
-                {  // หยุดเมื่อเหลือน้อยกว่า 1 องศา
-                   if (isClockwise) 
-                      {
-                        Motor(-sl, -sr);  // หมุนตามเข็มนาฬิกา
-                        delay(25);
-                      } 
-                   else 
-                      {
-                        Motor(-sl, -sr);  // หมุนทวนเข็มนาฬิกา
-                        delay(25);
-                      }
-                  break;
-                }
-
-              // ควบคุมมอเตอร์ให้หมุน
-              if (isClockwise) 
-                {
-                    Motor(sl, sr);  // หมุนตามเข็มนาฬิกา   
-                } 
-              else 
-                {
-                    Motor(sl, sr);  // หมุนทวนเข็มนาฬิกา
-                }
-      
-            // รอสักครู่เพื่อให้ Gyro Sensor อัปเดตค่า
-            delay(10);
-        }
-    
-    // หยุดมอเตอร์หลังจากหมุนเสร็จ
-  
-    Motor(-1, -1);
-    delay(offset);
-  }
-// ฟังก์ชันสำหรับหมุนหุ่นยนต์ไปยังองศาที่กำหนดพร้อมชะลอความเร็ว
 
 void moveLR(int _line, int speed, int degree) 
   {
@@ -474,413 +437,38 @@ void moveLR(int _line, int speed, int degree)
         delay(10);
   }
   
-  void move_fw(int spl, int spr, int targetDistanceCm, String _line) 
-  {
-    char lr ;
-    lines_fw = true;  
-    lines_bw = false;
-    if(set_bb == true)
-      {
-        targetDistanceCm = targetDistanceCm + 10;
-        set_bb = false;
-      }
-   // คำนวณจำนวนพัลส์เป้าหมายจากระยะทาง
-    float targetPulses = targetDistanceCm * pulsesPerCm;
-    encoder.resetEncoders();
-    if (spl >= 50 && targetDistanceCm >= 40) 
-      {
-        for (int speed = 10; speed <= spl; speed += 2) 
-          {
-              Motor(speed, spr * speed / spl);
-              delay(10);
-          }
-      }      
-    while (true) 
-      {
-        // อ่านค่าจาก Encoder
-        float leftPulses = encoder.Poss_L();
-        float rightPulses = encoder.Poss_R();
-
-        // คำนวณระยะทางที่เคลื่อนที่แล้ว (เฉลี่ยจากล้อซ้ายและขวา)
-        float currentPulses = (leftPulses + rightPulses) / 2;
-        float remainingPulses = targetPulses - currentPulses;
-
-        // **ค่อยๆ ลดความเร็วเมื่อเหลือระยะ 20% ของเป้าหมาย**
-        if (remainingPulses <= targetPulses * 0.3) {  
-            int slowSpeed = map(remainingPulses, 0, targetPulses * 0.3, 15, spl);
-            spl = slowSpeed;
-            spr = slowSpeed;
-        }
-        // **หยุดเมื่อถึงเป้าหมาย**
-        if (currentPulses >= targetPulses) {
-            break;
-        }
-
-        Motor(spl, spr);
-        if (mcp_f(0) < md_mcp_f(0) - 30 && mcp_f(3) > md_mcp_f(3)) 
-          {
-              line_l = false;
-              Motor(spl, -20);
-          } 
-          else if (mcp_f(0) > md_mcp_f(0) && mcp_f(3) < md_mcp_f(3) - 30) 
-          {
-              line_r = false;
-              Motor(-20, spr);
-          } 
-          else if (mcp_f(0) < md_mcp_f(0) && mcp_f(3) < md_mcp_f(3) - 30) 
-          {     
-              Motor(-40, -40);
-              delay(30);
-              Motor(-1, -1);
-              delay(100);           
-              break;
-          }
-     }
-   if(_line == "line")
-      {  
-        while(1)      
-           {    
-              Motor(motor_slow, motor_slow);        
-              if(mcp_f(0) < md_mcp_f(0)-30 && mcp_f(3) > md_mcp_f(3))
-                  {                    
-                    Motor(40, -10);
-                  }
-              else if(mcp_f(0) > md_mcp_f(0) && mcp_f(3) < md_mcp_f(3)-30)
-                  {
-                    Motor(-10, 40);
-                  }
-              else if(mcp_f(1) < md_mcp_f(1) || mcp_f(2) < md_mcp_f(2))
-                  {
-                    Motor(-40, -40); delay(20);  
-                    Motor(-1, -1);delay(10);  
-                    while(1)
-                      {
-                        if(mcp_f(1) < md_mcp_f(1) && mcp_f(2) > md_mcp_f(2)) 
-                          {
-                            lr = 'l';
-                             Motor(-10, 30);        
-                          }
-                        else if(mcp_f(1) > md_mcp_f(1) && mcp_f(2) < md_mcp_f(2))
-                          {
-                            lr = 'r';
-                            Motor(30, -10);           
-                          }
-                        else if(mcp_f(0) < md_mcp_f(0) && mcp_f(3) < md_mcp_f(3)
-                              || mcp_f(1) < md_mcp_f(1) && mcp_f(2) < md_mcp_f(2))
-                          {   
-                            if(lr == 'l')
-                              {
-                                Motor(15, -15);delay(20);
-                                Motor(1, -1);delay(10);
-                                Motor(0, 0); delay(10);
-                                break; 
-                              }
-                            if(lr == 'r')
-                              {
-                                Motor(-15, 15);delay(20);
-                                Motor(-1, 1);delay(10);
-                                Motor(0, 0); delay(10);
-                                break; 
-                              }
-                             else
-                              {
-                                Motor(-15, -15);delay(20);
-                                Motor(1, 1);delay(10);
-                                Motor(0, 0); delay(10);
-                                break;
-                              }            
-                          }
-                         else
-                          {
-                            Motor(motor_slow, motor_slow);
-                          }
-                        }                  
-                      break;                  
-                      
-                  }                  
-          }
-  
-        lines = true;         
-                           
-      } 
-    else
-      {
-        Motor(-1, -1);
-        delay(10);
-        lines = false;
-      }   
-    sett_f = false; 
-    set_bb = false;
-}
-
-
-void move_fw_none(int spl, int spr, int targetDistanceCm, String _line) 
-  {
-    char lr ;
-    lines_fw = true;  
-    lines_bw = false;
-    if(set_bb == true)
-      {
-        targetDistanceCm = targetDistanceCm + 10;
-        set_bb = false;
-      }
-
-    encoder.resetEncoders();
-    if (spl >= 50 && targetDistanceCm >= 40) 
-      {
-        for (int speed = 10; speed <= spl; speed += 2) 
-          {
-              Motor(speed, spr * speed / spl);
-              delay(10);
-          }
-      }
-
-    // คำนวณจำนวนพัลส์เป้าหมายจากระยะทาง
-    float targetPulses = targetDistanceCm * pulsesPerCm;
-      
-    while (true) 
-      {
-        // อ่านค่าจาก Encoder
-        float leftPulses = encoder.Poss_L();
-        float rightPulses = encoder.Poss_R();
-
-        // คำนวณระยะทางที่เคลื่อนที่แล้ว (เฉลี่ยจากล้อซ้ายและขวา)
-        float currentPulses = (leftPulses + rightPulses) / 2;
-        float remainingPulses = targetPulses - currentPulses;
-
-        // **ค่อยๆ ลดความเร็วเมื่อเหลือระยะ 20% ของเป้าหมาย**
-        if (remainingPulses <= targetPulses * 0.3) {  
-            int slowSpeed = map(remainingPulses, 0, targetPulses * 0.3, 15, spl);
-            spl = slowSpeed;
-            spr = slowSpeed;
-        }
-
-        // **หยุดเมื่อถึงเป้าหมาย**
-        if (currentPulses >= targetPulses) {
-            break;
-        }
-        Motor(spl, spr);
-        
-     }
-
-   if(_line == "line")
-      {  
-        while(1)      
-           {    
-              Motor(motor_slow, motor_slow);        
-              if(mcp_f(0) < md_mcp_f(0)-30 && mcp_f(3) > md_mcp_f(3))
-                  {                    
-                    Motor(40, -10);
-                  }
-              else if(mcp_f(0) > md_mcp_f(0) && mcp_f(3) < md_mcp_f(3)-30)
-                  {
-                    Motor(-10, 40);
-                  }
-              else if(mcp_f(1) < md_mcp_f(1) || mcp_f(2) < md_mcp_f(2))
-                  {
-                    Motor(-40, -40); delay(20);  
-                    Motor(-1, -1);delay(10);  
-                    while(1)
-                      {
-                        if(mcp_f(1) < md_mcp_f(1) && mcp_f(2) > md_mcp_f(2)) 
-                          {
-                            lr = 'l';
-                             Motor(-10, 30);        
-                          }
-                        else if(mcp_f(1) > md_mcp_f(1) && mcp_f(2) < md_mcp_f(2))
-                          {
-                            lr = 'r';
-                            Motor(30, -10);           
-                          }
-                        else if(mcp_f(0) < md_mcp_f(0) && mcp_f(3) < md_mcp_f(3)
-                              || mcp_f(1) < md_mcp_f(1) && mcp_f(2) < md_mcp_f(2))
-                          {   
-                            if(lr == 'l')
-                              {
-                                Motor(15, -15);delay(20);
-                                Motor(1, -1);delay(10);
-                                Motor(0, 0); delay(10);
-                                break; 
-                              }
-                            if(lr == 'r')
-                              {
-                                Motor(-15, 15);delay(20);
-                                Motor(-1, 1);delay(10);
-                                Motor(0, 0); delay(10);
-                                break; 
-                              }
-                             else
-                              {
-                                Motor(-15, -15);delay(20);
-                                Motor(1, 1);delay(10);
-                                Motor(0, 0); delay(10);
-                                break;
-                              }            
-                          }
-                         else
-                          {
-                            Motor(motor_slow, motor_slow);
-                          }
-                        }                  
-                      break;                  
-                      
-                  }                  
-          }
-  
-        lines = true;         
-                           
-      } 
-    else
-      {
-        Motor(-1, -1);
-        delay(50);
-        lines = false;
-      }   
-    sett_f = false; 
-    set_bb = false;
-}
-void move_bw(int spl, int spr, int targetDistanceCm, String _line) 
-  {
-    char lr ;
-    lines_bw = true;  
-    lines_fw = false; 
-    encoder.resetEncoders();
-    if (spl > 60 && targetDistanceCm > 50) 
-      {
-        for (int speed = 5; speed <= spl; speed ++) 
-          {
-              Motor(-speed, -(spr * speed / spl));
-              delay(10);
-          }
-      }
-
-    // คำนวณจำนวนพัลส์เป้าหมายจากระยะทาง
-    float targetPulses = targetDistanceCm * pulsesPerCm;
-    while (true) 
-      {
-        // อ่านค่าจาก Encoder
-        float leftPulses = encoder.Poss_L();
-        float rightPulses = encoder.Poss_R();
-
-        // คำนวณระยะทางที่เคลื่อนที่แล้ว (เฉลี่ยจากล้อซ้ายและขวา)
-        float currentPulses = (leftPulses + rightPulses) / 2;
-        float remainingPulses = targetPulses - currentPulses;
-
-         if (remainingPulses <= targetPulses * 0.2) {  
-            int slowSpeed = map(remainingPulses, 0, targetPulses * 0.25, 20, spl);
-            spl = -slowSpeed;
-            spr = -slowSpeed;
-        }
-
-        if (currentPulses <= -targetPulses) 
-          {
-            break;       // ออกจากลูป
-          }
-        
-        Motor(-spl, -spr);
-
-        /*
-        if(mcp_f(7) < md_mcp_f(7) && mcp_f(4) > md_mcp_f(4))
-              {
-                Motor(-spl, 20);
-              }
-        else if(mcp_f(7) > md_mcp_f(7) && mcp_f(4) < md_mcp_f(4))
-              {
-                Motor(20, -spr);
-              }
-        
-        else if( mcp_f(6) < md_mcp_f(6))
-              {
-                Motor(40, 40); delay(30);
-                Motor(1, 1);
-                delay(100);           
-                break;
-              }
-        */    
-     }
-
-   if(_line == "line")
-      {  
-        while(1)      
-           {    
-                      
-              if(mcp_f(4) < md_mcp_f(4)-30 && mcp_f(7) > md_mcp_f(7))
-                  {
-                    Motor(10, -40);
-                  }
-              else if(mcp_f(4) > md_mcp_f(4) && mcp_f(7) < md_mcp_f(7)-30)
-                  {
-                    Motor(-40, 10);
-                  }
-              else if( mcp_f(5) < md_mcp_f(5) || mcp_f(6) < md_mcp_f(6))
-                  {
-                    while(1)
-                      {
-                          if(mcp_f(5) < md_mcp_f(5) && mcp_f(6) > md_mcp_f(6))
-                              {
-                                Motor(-40, 10);
-                              }
-                          else if(mcp_f(5) > md_mcp_f(5) && mcp_f(6) < md_mcp_f(6))
-                              {
-                                Motor(10, -40);
-                              }
-                          else
-                              {
-                                Motor(20, 20); delay(10);  
-                                Motor(-1, -1);delay(100);
-                                Motor(0, 0);delay(10); 
-                                break; 
-                              }
-                      }
-                                       
-                    break;                  
-                  }  
-              else
-                 {
-                   Motor(-motor_slow, -motor_slow);              
-                 }
-          }
-        lines = true;
-        delay(10);
-        Motor(1, 1);
-        delay(10);
-      }  
-    else
-      {
-        
-        Motor(1, 1);
-        delay(20);
-        lines = false;
-      }  
-    sett_f = false; 
-    set_bb = false;
-}
-
-
+ 
 
 // ฟังก์ชัน PID Control
-int computePID(float setpoint, float currentValue) {
-  // คำนวณ error
-  float error = setpoint - currentValue;
-  
-  // คำนวณ integral
-  integral += error;
-  
-  // คำนวณ derivative
-  float derivative = error - previousError;
-  
-  // คำนวณ output
-  float output = (Kp * error) + (Ki * integral) + (Kd * derivative);
-  
-  // อัพเดต previousError
-  previousError = error;
-  
-  return (int)output;
+int computePID(float setpoint, float currentValue) 
+{
+    // คำนวณ error
+    float error = setpoint - currentValue;
+    
+    // คำนวณ integral
+    integral += error;
+    
+    // คำนวณ derivative
+    float derivative = error - previousError;
+    
+    // คำนวณ output
+    float output = (Kp * error) + (Ki * integral) + (Kd * derivative);
+    if(chopsticks  == true)
+      {
+        output = (Kp*1.5 * error) + (Ki * integral) + (Kd * derivative);
+      }
+   
+    
+    
+    // อัพเดต previousError
+    previousError = error;
+    
+    return (int)output;
 }
 
 
 
-void fw_pid(int spl, int spr, int targetDistanceCm, String _line) 
+void fw(int spl, int spr, int targetDistanceCm, String _line) 
   {  
     char lr ;
     Kp = 0.00;  // Proportional gain
@@ -960,7 +548,8 @@ void fw_pid(int spl, int spr, int targetDistanceCm, String _line)
         else if(mcp_f(0) > md_mcp_f(0) && mcp_f(3) < md_mcp_f(3)-30)
           {
              Motor(-1, (spr * adjustedSpeed / spl)/2);
-          }             
+          }   
+        Serial.println(pidOutput);         
      }
 
    if(_line == "line")
@@ -1040,7 +629,7 @@ void fw_pid(int spl, int spr, int targetDistanceCm, String _line)
     set_bb = false;
 }
 
-void fw_pid_distance(int spl, int spr, int target) 
+void fw_distance(int spl, int spr, int target) 
 {  
     // ตั้งค่า PID เริ่มต้น
     Kp = 0.00;  // Proportional gain
@@ -1105,7 +694,7 @@ void fw_pid_distance(int spl, int spr, int target)
    sett_f = false; 
    set_bb = false;
 }
-void bw_pid(int spl, int spr, int targetDistanceCm, String _line) {  
+void bw(int spl, int spr, int targetDistanceCm, String _line) {  
     char lr;
     Kp = 0.00;
     Ki = 0.00;
@@ -1217,7 +806,7 @@ void bw_pid(int spl, int spr, int targetDistanceCm, String _line) {
     set_bb = false;
 }
 
-void fw_pid_distance(int spl, int spr, int target, int _position) 
+void fw_distance(int spl, int spr, int target, int _position) 
 {  
     // ตั้งค่า PID เริ่มต้น
     Kp = 0.00;  // Proportional gain
@@ -1294,7 +883,7 @@ void fw_pid_distance(int spl, int spr, int target, int _position)
    set_bb = false;
 }
 
-void fw_pid(int spl, int spr, int targetDistanceCm, String _line, int _position) 
+void fw(int spl, int spr, int targetDistanceCm, String _line, int _position) 
   {      
     char lr ;
     Kp = 0.00;  // Proportional gain
@@ -1477,7 +1066,7 @@ void fw_pid(int spl, int spr, int targetDistanceCm, String _line, int _position)
 
   }
 
-  void bw_pid(int spl, int spr, int targetDistanceCm, String _line, int _position) {  
+  void bw(int spl, int spr, int targetDistanceCm, String _line, int _position) {  
     char lr;
     Kp = 0.00;
     Ki = 0.00;
@@ -1729,4 +1318,299 @@ void set_b(int _time)
     my.resetAngles();
       
   }
+
+
+void fw_bridge(int spl, int spr, int targetDistanceCm, String _line) 
+  {  
+    char lr ;
+    Kp = 0.00;  // Proportional gain
+    Ki = 0.00; // Integral gain
+    Kd = 0.00;  // Derivative gain
+    lines_fw = true;  
+    lines_bw = false;  
+    if(set_bb == true)
+      {
+        targetDistanceCm = targetDistanceCm + 10;
+        set_bb = false;
+      }   
+      // คำนวณจำนวนพัลส์เป้าหมายจากระยะทาง
+    float targetPulses = targetDistanceCm * pulsesPerCm;
+      // รีเซต Encoder และ Gyro
+    Motor(0,0);delay(50);
+    my.resetAngles();
+    float sum = 0;
+    for (int i = 0; i < 5; i++) {
+          sum += my.gyro('z');
+          delay(10);
+      }
+    // ค่าเริ่มต้นของ Gyro Sensor
+    float initialDegree = sum/5;
+    
+    encoder.resetEncoders();
+    int lastAngle = initialDegree;
+    
+    
+
+    if (spl >= 10 && targetDistanceCm >= 10) 
+      {
+        for (int speed = 5; speed <= spl; speed ++) 
+          {
+              // อ่านค่ามุมจาก Gyro Sensor
+              int currentAngle = my.gyro('z') + lastAngle;
+              
+              // คำนวณ PID เพื่อปรับทิศทาง
+              int pidOutput = computePID(0, currentAngle);  // setpoint = 0 (ต้องการให้หุ่นยนต์เคลื่อนที่ตรง)
+              Motor(speed + pidOutput, (spr * speed / spl)- pidOutput);
+              delay(5);
+          }
+      }    
+      while (true) {
+        // อ่านค่าจาก Encoder
+        float leftPulses = encoder.Poss_L();
+        float rightPulses = encoder.Poss_R();
+        
+        // คำนวณระยะทางที่เคลื่อนที่แล้ว (เฉลี่ยจากล้อซ้ายและขวา)
+        float currentPulses = (leftPulses + rightPulses) / 2;
+        float remainingPulses = targetPulses - currentPulses;
+        
+        // **หยุดเมื่อถึงเป้าหมาย**
+        if (currentPulses >= targetPulses) {
+            break;
+        }       
+    
+        // อ่านค่ามุมจาก Gyro Sensor
+        int currentAngle = my.gyro('z') + lastAngle;
+        
+        // คำนวณ PID เพื่อปรับทิศทาง
+        int pidOutput = computePID(0, currentAngle); 
+    
+        // **ค่อยๆ ลดความเร็วเมื่อเหลือระยะ 20% ของเป้าหมาย**
+        int adjustedSpeed = spl; // เริ่มต้นที่ความเร็วสูงสุด
+        if (remainingPulses <= targetPulses * 0.3) {  
+            adjustedSpeed = map(remainingPulses, targetPulses * 0.3, 0, spl, motor_slow);
+            adjustedSpeed = constrain(adjustedSpeed, motor_slow, spl); // ป้องกันค่าต่ำเกินไป
+        }
+    
+        // ควบคุมมอเตอร์ (ใช้ speed ที่ปรับค่าแล้ว)
+        Motor(adjustedSpeed + pidOutput, (spr * adjustedSpeed / spl) - pidOutput); 
+        if(mcp_f(0) < md_mcp_f(0)-150 && mcp_f(3) > md_mcp_f(3)-150)
+          {                    
+            Motor(adjustedSpeed/3, -1);
+          }
+        else if(mcp_f(0) > md_mcp_f(0)-150 && mcp_f(3) < md_mcp_f(3)-150)
+          {
+             Motor(-1, (spr * adjustedSpeed / spl)/2);
+          }             
+     }
+
+   if(_line == "line")
+      {  
+        while(1)      
+           {    
+              Motor(motor_slow, motor_slow);        
+              if(mcp_f(0) < md_mcp_f(0)-30 && mcp_f(3) > md_mcp_f(3))
+                  {                    
+                    Motor(40, -10);
+                  }
+              else if(mcp_f(0) > md_mcp_f(0) && mcp_f(3) < md_mcp_f(3)-30)
+                  {
+                    Motor(-10, 40);
+                  }
+              else if(mcp_f(1) < md_mcp_f(1) || mcp_f(2) < md_mcp_f(2))
+                  {
+                    Motor(-30, -30); delay(30);  
+                    Motor(-1, -1);delay(10);  
+                    while(1)
+                      {
+                        if(mcp_f(1) < md_mcp_f(1) && mcp_f(2) > md_mcp_f(2)) 
+                          {
+                            lr = 'l';
+                             Motor(-10, 30);        
+                          }
+                        else if(mcp_f(1) > md_mcp_f(1) && mcp_f(2) < md_mcp_f(2))
+                          {
+                            lr = 'r';
+                            Motor(30, -10);           
+                          }
+                        else if(mcp_f(0) < md_mcp_f(0) && mcp_f(3) < md_mcp_f(3)
+                              || mcp_f(1) < md_mcp_f(1) && mcp_f(2) < md_mcp_f(2))
+                          {   
+                            if(lr == 'l')
+                              {
+                                Motor(15, -15);delay(20);
+                                Motor(1, -1);delay(10);
+                                Motor(0, 0); delay(10);
+                                break; 
+                              }
+                            if(lr == 'r')
+                              {
+                                Motor(-15, 15);delay(20);
+                                Motor(-1, 1);delay(10);
+                                Motor(0, 0); delay(10);
+                                break; 
+                              }
+                             else
+                              {
+                                Motor(-15, -15);delay(20);
+                                Motor(1, 1);delay(10);
+                                Motor(0, 0); delay(10);
+                                break;
+                              }            
+                          }
+                         else
+                          {
+                            Motor(motor_slow, motor_slow);
+                          }
+                        }                  
+                      break;                  
+                      
+                  }                  
+          }
+  
+        lines = true;         
+                           
+      } 
+    else
+      {
+        Motor(-1, -1);
+        delay(20);
+        lines = false;
+      }   
+    sett_f = false; 
+    set_bb = false;
+}
+
+
+void fw_chopsticks(int spl, int spr, int targetDistanceCm, String _line) 
+  {  
+    chopsticks  = true;
+    char lr ;
+   
+    
+    lines_fw = true;  
+    lines_bw = false;  
+    if(set_bb == true)
+      {
+        targetDistanceCm = targetDistanceCm + 10;
+        set_bb = false;
+      }   
+      // คำนวณจำนวนพัลส์เป้าหมายจากระยะทาง
+    float targetPulses = targetDistanceCm * pulsesPerCm;
+      // รีเซต Encoder และ Gyro
+    Motor(0,0);delay(50);
+    my.resetAngles();
+   
+   
+      while (true) {
+        // อ่านค่าจาก Encoder
+        float leftPulses = encoder.Poss_L();
+        float rightPulses = encoder.Poss_R();
+        
+        // คำนวณระยะทางที่เคลื่อนที่แล้ว (เฉลี่ยจากล้อซ้ายและขวา)
+        float currentPulses = (leftPulses + rightPulses) / 2;
+        float remainingPulses = targetPulses - currentPulses;
+    
+        unsigned long now = millis();
+        float dt = (now - prevT) / 1000.0;
+        if (dt <= 0) return;
+        prevT = now;
+
+        float yaw = my.gyro('z');
+        float err = yaw;
+
+        _integral += err * dt;
+        float deriv = (err - _prevErr) / dt;
+        _prevErr = err;
+
+        float corr = Kpp*err + Kii*_integral + Kdd*deriv;
+
+        int leftSpeed  = constrain(spl - corr, -100, 100);
+        int rightSpeed = constrain(spr+ corr, -100, 100);
+
+        Motor(leftSpeed , rightSpeed);
+        Serial.println(yaw);
+        if (currentPulses >= targetPulses) {
+                    break;
+                }   
+           
+     }
+
+   if(_line == "line")
+      {  
+        while(1)      
+           {    
+              Motor(motor_slow, motor_slow);        
+              if(mcp_f(0) < md_mcp_f(0)-30 && mcp_f(3) > md_mcp_f(3))
+                  {                    
+                    Motor(40, -10);
+                  }
+              else if(mcp_f(0) > md_mcp_f(0) && mcp_f(3) < md_mcp_f(3)-30)
+                  {
+                    Motor(-10, 40);
+                  }
+              else if(mcp_f(1) < md_mcp_f(1) || mcp_f(2) < md_mcp_f(2))
+                  {
+                    Motor(-30, -30); delay(30);  
+                    Motor(-1, -1);delay(10);  
+                    while(1)
+                      {
+                        if(mcp_f(1) < md_mcp_f(1) && mcp_f(2) > md_mcp_f(2)) 
+                          {
+                            lr = 'l';
+                             Motor(-10, 30);        
+                          }
+                        else if(mcp_f(1) > md_mcp_f(1) && mcp_f(2) < md_mcp_f(2))
+                          {
+                            lr = 'r';
+                            Motor(30, -10);           
+                          }
+                        else if(mcp_f(0) < md_mcp_f(0) && mcp_f(3) < md_mcp_f(3)
+                              || mcp_f(1) < md_mcp_f(1) && mcp_f(2) < md_mcp_f(2))
+                          {   
+                            if(lr == 'l')
+                              {
+                                Motor(15, -15);delay(20);
+                                Motor(1, -1);delay(10);
+                                Motor(0, 0); delay(10);
+                                break; 
+                              }
+                            if(lr == 'r')
+                              {
+                                Motor(-15, 15);delay(20);
+                                Motor(-1, 1);delay(10);
+                                Motor(0, 0); delay(10);
+                                break; 
+                              }
+                             else
+                              {
+                                Motor(-15, -15);delay(20);
+                                Motor(1, 1);delay(10);
+                                Motor(0, 0); delay(10);
+                                break;
+                              }            
+                          }
+                         else
+                          {
+                            Motor(motor_slow, motor_slow);
+                          }
+                        }                  
+                      break;                  
+                      
+                  }                  
+          }
+  
+        lines = true;         
+                           
+      } 
+    else
+      {
+        Motor(-1, -1);
+        delay(20);
+        lines = false;
+      }   
+    sett_f = false; 
+    set_bb = false;
+    chopsticks  = false; 
+}
+
 #endif
