@@ -1386,7 +1386,7 @@ void turn_right_sensor(int distance1, int speed, String sensor, int offset) {
        delayMicroseconds(50); // เวลาหน่วงเพื่อให้มอเตอร์มีเวลาหมุน
      }
    Motor(-1, -1); delay(20); // หยุดมอเตอร์เมื่อหมุนเสร็จ
-  
+   Motor(speed, -speed/4);delay(40);
    for ( int i = 4; i >= sensor_f ; i -- )
       {
         do{ Motor(speed, -speed/4); delayMicroseconds(50);} while( read_sensor(i) > md_sensor(i) ); 
