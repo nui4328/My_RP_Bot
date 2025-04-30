@@ -542,7 +542,7 @@ void add_sensor()
           }
        if (!onLine)        //เมื่อหุ่นยนต์ไม่อยู่หรือไม่เจอเส้นดำ
           {
-            if(last_Position_4 > 700 && last_Position_4 < 2300)
+            if(last_Position_4 > 900 && last_Position_4 < 2100)
               {
                 none_line = true;
               }
@@ -865,6 +865,7 @@ void fw_distance(int sl, int sr, float kp, int distance1, int offset) {
         Motor(current_sl - PID_output, current_sr + PID_output);
         if(none_line == true)
           {
+            none_line = false;
             break;
           }
         
