@@ -48,11 +48,18 @@ int sr = 0;       // ความเร็วของมอเตอร์ข�
 bool _p = false;
 int fq;
 
+
 void setup_robot(void);
 void add_sensor(void);
 void read_eep(void);
 uint16_t read_sensor(int sensor) ;
+bool Add_rear_sensors = true;
+bool none_line = false;
 
+void Add_rear_sensor(bool st)
+  {
+    Add_rear_sensors = st;
+  }
 void servo(int servo,int angle)
 {  
   if (servo==27)
@@ -518,6 +525,7 @@ void add_sensor()
        bool onLine = false;
        long avg = 0;
        long sum = 0;
+       uint16_t last_Position_4 = _lastPosition;
        for (uint8_t i = 0; i < 4 ; i++) 
            {              
                long value = map(read_sensor(sensor_pin[i]), min_sensor_values_F[i], max_sensor_values_F[i], 1000, 0);                                                                         // จากนั้นก็เก็บเข้าไปยังตัวแป value
@@ -534,70 +542,34 @@ void add_sensor()
           }
        if (!onLine)        //เมื่อหุ่นยนต์ไม่อยู่หรือไม่เจอเส้นดำ
           {
-             if (_lastPosition < (numSensor - 1) * 1000 / 2)  // ถ้าค่าก่อนหน้าที่จะไม่เจอเส้นดำหรือหลุดจะให้ค่านั้นเป็น 0
-                {
-                   return 0;
-                }
-             else                                          //แต่ถ้ามากกว่าแสดงว่าหลุดออกอีกฝั่ง ค่าก็จะเป็น 1000 คุณด้วยจำนวนเซ็นเซอร์
-                {
-                  return 3000;                  
- 
-                }
+            if(last_Position_4 > 1000 && last_Position_4 < 2000)
+              {
+                none_line = true;
+              }
+            else  
+              {
+                if (_lastPosition < (numSensor - 1) * 1000 / 2)  // ถ้าค่าก่อนหน้าที่จะไม่เจอเส้นดำหรือหลุดจะให้ค่านั้นเป็น 0
+                    {
+                      return 0;
+                    }
+                else                                          //แต่ถ้ามากกว่าแสดงว่าหลุดออกอีกฝั่ง ค่าก็จะเป็น 1000 คุณด้วยจำนวนเซ็นเซอร์
+                    {
+                      return 3000;                 
+                    }
+                none_line = false;
+              }
+             
  
            }
          _lastPosition = avg / sum;        //นำมาหาค่าเฉลี่ย
- 
+
+        Serial.println(last_Position_4);
          return _lastPosition;            //ส่งค่าที่อ่านได้จากการเฉลี่ยแล้วกลับไปยังฟังก์ชั้น readline
      }
-uint16_t Position_4t()  
-     {        
-        uint16_t min_sensor_values_F[] = { min_sensor(1),min_sensor(2),min_sensor(3),min_sensor(4)  }; //ค่าที่อ่านได้น้อยสุดหรือ สีดำ
-        uint16_t max_sensor_values_F[] = { max_sensor(1),max_sensor(2),max_sensor(3),max_sensor(4)  } ; //ค่าที่อ่านได้มากสุด สีขาว                
-        bool onLine = false;
-        long avg = 0;
-        long sum = 0;
-        for (uint8_t i = 0; i < 4 ; i++) 
-            {              
-                long value = map(read_sensor(sensor_pin[i]), min_sensor_values_F[i], max_sensor_values_F[i], 1000, 0);                                                                         // จากนั้นก็เก็บเข้าไปยังตัวแป value
-  
-                if (value > 200) 
-                   { 
-                      onLine = true;
-                   }
-                if (value > 50)   
-                   {
-                      avg += (long)value * (i * 1000);  
-                      sum += value;                 
-                   }
-           }
-        if (!onLine)        //เมื่อหุ่นยนต์ไม่อยู่หรือไม่เจอเส้นดำ
-           {
-              if (_lastPosition < (numSensor - 1) * 1000 / 2)  // ถ้าค่าก่อนหน้าที่จะไม่เจอเส้นดำหรือหลุดจะให้ค่านั้นเป็น 0
-                 {
-                    return 1500;
-                 }
-              else                                          //แต่ถ้ามากกว่าแสดงว่าหลุดออกอีกฝั่ง ค่าก็จะเป็น 1000 คุณด้วยจำนวนเซ็นเซอร์
-                 {
-                   return 1500;                  
-  
-                 }
-  
-            }
-          _lastPosition = avg / sum;        //นำมาหาค่าเฉลี่ย
-  
-          return _lastPosition;            //ส่งค่าที่อ่านได้จากการเฉลี่ยแล้วกลับไปยังฟังก์ชั้น readline
-      }
-  
+ 
  float error_sensor()
      {
          present_position = Position_4() / ((numSensor - 1) * 10) ;
-         setpoint = 50.0;
-         errors = setpoint - present_position;           
-         return errors;                             
-     }
-float error_sensort()
-     {
-         present_position = Position_4t() / ((numSensor - 1) * 10) ;
          setpoint = 50.0;
          errors = setpoint - present_position;           
          return errors;                             
@@ -775,6 +747,7 @@ void fw_line(int sl, int sr, float kp, char sp, String sensor, int offset)
               {
                 if (read_sensor(0) > md_sensor(0)) 
                   {
+                    delay(20);
                     break;
                   }
               } 
@@ -782,6 +755,7 @@ void fw_line(int sl, int sr, float kp, char sp, String sensor, int offset)
               {
                 if (read_sensor(5) > md_sensor(5)) 
                   {
+                    delay(20);
                     break;
                   }
               }
@@ -820,8 +794,8 @@ void bw_distance(int sl, int sr, int distance1, int offset)
     new_encoder = 440 * distance1 / (circumference /10) ;
     Serial.println(new_encoder);
     encoder.resetEncoders();
-    do{Motor(sl, sr);}while(encoder.Poss_R() < new_encoder || encoder.Poss_L() < new_encoder);
-    Motor(-sl, -sr);
+    do{Motor(-sl, -sr);}while(encoder.Poss_R() > -new_encoder || encoder.Poss_L() > -new_encoder);
+    Motor(sl, sr);
     delay(10);
     Motor(1, 1);
   }
@@ -844,7 +818,7 @@ void fw_distance(int sl, int sr, float kp, int distance1, int offset) {
         time_to_accelerate = time_to_accelerate_map; // เวลาที่ใช้ในการเร่งความเร็ว (เช่น 1 วินาที) 
     }
     
-    while (1) {
+    while (encoder.Poss_R() < new_encoder || encoder.Poss_L() < new_encoder) {
         unsigned long elapsed_time = millis() - start_time;  // เวลาที่ผ่านไป
         
         // คำนวณความเร็วที่ต้องการในช่วงเวลานั้น
@@ -852,11 +826,10 @@ void fw_distance(int sl, int sr, float kp, int distance1, int offset) {
         if (speed_factor > 1.0) speed_factor = 1.0; // จำกัดไม่ให้เกิน 1.0
         
         // ตรวจสอบระยะทางที่เหลือก่อนจะลดความเร็ว
-        int remaining_distanceR = new_encoder - encoder.Poss_R(); // คำนวณระยะทางที่เหลือ
-        int remaining_distanceL = new_encoder - encoder.Poss_L(); // คำนวณระยะทางที่เหลือ
-        if (remaining_distanceR < 3 || remaining_distanceL < 3) {
+        int remaining_distance = new_encoder - encoder.Poss_R(); // คำนวณระยะทางที่เหลือ
+        if (remaining_distance < 3) {
             // คำนวณอัตราการลดความเร็ว (จากความเร็วเต็มที่ไปจนถึง 10)
-            float speed_ratio = float(remaining_distanceL) / 5.0; // คำนวณอัตราการลดความเร็ว (จาก 1 ถึง 0)
+            float speed_ratio = float(remaining_distance) / 5.0; // คำนวณอัตราการลดความเร็ว (จาก 1 ถึง 0)
             int reduced_speed = int(10 + (sl - 10) * speed_ratio);  // ความเร็วที่ลดลงตามระยะทางที่เหลือ
             sl = reduced_speed;
             sr = reduced_speed;
@@ -866,8 +839,6 @@ void fw_distance(int sl, int sr, float kp, int distance1, int offset) {
         int current_sr = int(sr * speed_factor); // คำนวณความเร็วปัจจุบัน
         
         int I_limit = 1000;
-
-        
         if (I > I_limit) {
             I = I_limit;
         } else if (I < -I_limit) {
@@ -875,7 +846,7 @@ void fw_distance(int sl, int sr, float kp, int distance1, int offset) {
         }
         
         delayMicroseconds(50);
-        float errors = error_sensort();
+        float errors = error_sensor();
         float P = errors;
         I = I + errors;
         float D = errors - previous_error;
@@ -891,12 +862,13 @@ void fw_distance(int sl, int sr, float kp, int distance1, int offset) {
         }
         
         // ควบคุมมอเตอร์ให้หมุนตามค่าที่คำนวณได้
-       // Motor(current_sl - PID_output, current_sr + PID_output);
-        Motor(sl - PID_output, sr + PID_output);
-        if(encoder.Poss_R() > new_encoder || encoder.Poss_L() > new_encoder)
+        Motor(current_sl - PID_output, current_sr + PID_output);
+        if(none_line == true)
           {
             break;
           }
+        
+       
     }
     
     // หลังจากเดินทางเสร็จแล้ว
@@ -965,7 +937,15 @@ void bw_distance(int sl, int sr, float kp, int distance1, int offset) {
         }
         
         // ควบคุมมอเตอร์ให้หมุนตามค่าที่คำนวณได้
-        Motor(-(current_sl - PID_output), -(current_sr + PID_output));
+        if(Add_rear_sensors == true)
+          {
+            Motor(-(current_sl - PID_output), -(current_sr + PID_output));
+          }
+        else  
+          {
+            Motor(-current_sl , -current_sr);
+          }
+        
     }
     
     // หลังจากเดินทางเสร็จแล้ว
@@ -976,6 +956,8 @@ void bw_distance(int sl, int sr, float kp, int distance1, int offset) {
         // อื่นๆ
     }
 }
+
+
 
 void fw_2sensor(int sl, int sr, float kp, int distance1, int offset) {
     float circumference = 2 * 3.14 * 24;
