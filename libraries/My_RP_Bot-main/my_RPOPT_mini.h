@@ -1228,7 +1228,7 @@ void turn_left_wheel(int distance1, int speed, String sensor, int offset)
      }
    Motor(-1, -1); delay(20); // หยุดมอเตอร์เมื่อหมุนเสร็จ
    Motor(-speed, speed);delay(25);
-   for ( int i = 0; i <= sensor_f; i++ )
+   for ( int i = 1; i <=sensor_f; i++ )
      {
        do{ Motor(-speed, speed); delayMicroseconds(50);} while( read_sensor(i) > md_sensor(i) ); 
        delayMicroseconds(50);
@@ -1254,13 +1254,14 @@ void turn_left_sensor(int distance1, int speed, float angle, int offset) {
    }
    Motor(-1, -1); delay(20); // หยุดมอเตอร์เมื่อหมุนเสร็จ
    encoder.resetEncoders();
+
    Motor(-15, speed); delay(25);
        while (encoder.Poss_R() < ticks_for_angle) {
            Motor(-15, speed);  // หมุนมอเตอร์ซ้ายไปข้างหน้า, ขวาหยุด
            delayMicroseconds(50);
        }
-  
-   Motor(15, -(speed/2)); delay(offset); 
+
+   Motor(speed/2, -speed); delay(offset); 
    Motor(-1, -1); delay(10); // หยุดมอเตอร์เมื่อหมุนเสร็จ
 }
 
@@ -1279,11 +1280,14 @@ void turn_left_sensor(int distance1, int speed, String sensor, int offset) {
        delayMicroseconds(50); // เวลาหน่วงเพื่อให้มอเตอร์มีเวลาหมุน
      }
    Motor(-1, -1); delay(20); // หยุดมอเตอร์เมื่อหมุนเสร็จ
-   Motor(-15, speed); delay(25);
-       do{ Motor(-15, speed);  delayMicroseconds(50);} while( read_sensor(sensor_f) > md_sensor(sensor_f) ); 
+   encoder.resetEncoders();
+   for ( int i = 1; i <= sensor_f; i++ )
+     {
+       do{ Motor(-speed/2, speed); delayMicroseconds(50);} while( read_sensor(i) > md_sensor(i) ); 
        delayMicroseconds(50);
+     }
        
-   Motor(15, -(speed/2)); delay(offset); 
+   Motor(speed/2, -(speed)); delay(offset); 
    Motor(-1, -1); delay(10); // หยุดมอเตอร์เมื่อหมุนเสร็จ
 }
 
@@ -1330,7 +1334,7 @@ void turn_right_wheel(int distance1, int speed, String sensor, int offset) {
      }
    Motor(-1, -1); delay(20); // หยุดมอเตอร์เมื่อหมุนเสร็จ
    Motor(speed, -speed); delay(50);
-   for ( int i = 5; i >= sensor_f; i -- )
+   for ( int i = 4; i >= sensor_f; i -- )
      {
        do{ Motor(speed, -speed); delayMicroseconds(50);} while( read_sensor(i) > md_sensor(i) ); 
        delayMicroseconds(50);
@@ -1383,10 +1387,13 @@ void turn_right_sensor(int distance1, int speed, String sensor, int offset) {
      }
    Motor(-1, -1); delay(20); // หยุดมอเตอร์เมื่อหมุนเสร็จ
   
-       do{ Motor(speed, -15 );  delayMicroseconds(50);} while( read_sensor(sensor_f) > md_sensor(sensor_f) ); 
-       delayMicroseconds(50);
+   for ( int i = 4; i >= sensor_f ; i -- )
+      {
+        do{ Motor(speed, -speed/4); delayMicroseconds(50);} while( read_sensor(i) > md_sensor(i) ); 
+        delayMicroseconds(50);
+      } 
       
-   Motor(-(speed/2), 15); delay(offset); 
+   Motor(-(speed), speed/2); delay(offset); 
    Motor(-1, -1); delay(10); // หยุดมอเตอร์เมื่อหมุนเสร็จ
 }
 
