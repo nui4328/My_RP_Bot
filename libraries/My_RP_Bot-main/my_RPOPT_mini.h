@@ -542,7 +542,7 @@ void add_sensor()
           }
        if (!onLine)        //เมื่อหุ่นยนต์ไม่อยู่หรือไม่เจอเส้นดำ
           {
-            if(last_Position_4 > 1000 && last_Position_4 < 2000)
+            if(last_Position_4 > 700 && last_Position_4 < 2300)
               {
                 none_line = true;
               }
