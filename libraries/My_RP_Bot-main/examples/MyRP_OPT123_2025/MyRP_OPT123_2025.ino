@@ -4,9 +4,10 @@
 
 void setup()
   {
-    set_pid_moveLR(1.35, 0.00015, 0.040);   //------->> ตั้งค่า pid สำหรับหมุนตัว
-    set_pid_chopsticks(0.6, 0.00001, 0.15); //------->> ตั้งค่า pid สำหรับขึ้นตะเกียบ
+    Acceptable_values_moveLR(1.0,  5);     //------->> ตั้งค่า error  output ที่ยอมรับได้ในการหมุน
+    set_pid_moveLR(1.50, 0.0001, 0.0450);   //------->> ตั้งค่า pid สำหรับหมุนตัว
     set_move_before_moveLR(190);   //------->> ตั้งค่า เดินหน้า ถอยหลัง ก่อนการหมุน
+
     setup_OPT();
     pinMode(20, INPUT_PULLUP);
     
@@ -27,49 +28,50 @@ void setup()
     //reset_arm();
     ///----------------------------------------------------->> เขียนโค๊ดที่นี้
     
+    
 
    for(int i=0; i<5; i++)
     {
-     fw(50, 50, 0.85, 90, "none_line");
+     fw(70, 70, 0.95, 90, "none_line");
 
      moveLR(75, 90);
 
-     fw(60, 60, 0.35, 50, "line");
+     fw(60, 60, 0.95, 50, "line");
      moveLR(75, 90);
 
-    fw(50, 50, 0.35, 25, "line");
+    fw(50, 50, 0.95, 30, "line");
      moveLR(75, 90);
 
-     fw(50, 50, 0.35, 26, "none_line");
+     fw(50, 50, 0.95, 30, "none_line");
      moveLR(80, -90);
      set_b(1);
-     fw(50, 50, 0.35, 25, "none_line");
-     moveLR(80, -90);
+     fw(50, 50, 0.95, 25, "none_line");
+     moveLR(80, -91);
      set_b(5);
-     fw_bridge(50, 50, 0.55, 175, "line");
-     moveLR(70, -185);
+     fw_bridge(50, 50, 1.25, 175, "line");
+     moveLR(70, -180);
      set_b(3);
 
-     fw_bridge(70, 70, 0.35, 170, "line");
+     fw_bridge(80, 80, 0.95, 175, "line");
      moveLR(75, 90);
 
-     fw(50, 52, 0.35, 25, "line");
+     fw(50, 52, 0.95, 25, "line");
      moveLR(80, 90);
 
-     fw(50, 50, 0.35, 25, "none_line");
+     fw(50, 50, 0.95, 30, "none_line");
      moveLR(80, -90);
 
-     fw(50, 50, 0.35, 25, "line");
+     fw(50, 50, 0.95, 25, "line");
      moveLR(75, -90);
+     set_b(2);
+
+     fw(70, 70, 0.95, 50, "line");
+     moveLR(75, -91);
      set_b(1);
 
-     fw(70, 70, 0.35, 50, "line");
-     moveLR(75, -90);
-     set_b(1);
+     fw(70, 70, 0.95, 90, "line");
 
-     fw(70, 70, 0.35, 90, "line");
-
-     moveLR(70, -183);
+     moveLR(70, -180);
      set_b(3);
     }
 
