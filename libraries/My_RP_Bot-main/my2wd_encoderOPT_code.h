@@ -54,7 +54,7 @@ void set_f(int _time);
 float lr_kp, lr_ki, lr_kd;
 bool chopsticks  = false;
 unsigned long lastTimes = millis();
-float Kpp = 0.8, Kii = 0.0, Kdd = 0.3;
+float Kpp = 0.35, Kii = 0.00001, Kdd = 0.03;
 float _integral = 0, _prevErr = 0;
 unsigned long prevT;
 
@@ -502,6 +502,9 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line)
     _integral = 0;
     _prevErr = 0;
     prevT = millis();
+    Kpp = 0.00; 
+    Kii = 0.00;
+    Kdd = 0.00;
 
     // เตรียมตัวสำหรับการเร่งช้าๆ
     float rampUpDistance = targetPulses * 0.2;   // ช่วงเร่ง 20% แรก
@@ -709,6 +712,9 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
     _integral = 0;
     _prevErr = 0;
     prevT = millis();
+    Kpp = 0.00; 
+    Kii = 0.00;
+    Kdd = 0.00;
 
     // เตรียมตัวสำหรับการเร่งช้าๆ
     float rampUpDistance = targetPulses * 0.2;   // ช่วงเร่ง 20% แรก
@@ -910,9 +916,6 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line)
   {
     // เริ่มต้นตั้งค่า
     char lr;
-    float Kp = kps;
-    float Ki = 0.0;
-    float Kd = 0.0;
 
     lines_fw = false;   
     lines_bw = true;
@@ -934,6 +937,9 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line)
     _integral = 0;
     _prevErr = 0;
     prevT = millis();
+    Kpp = 0.00; 
+    Kii = 0.00;
+    Kdd = 0.00;
 
     // กำหนดช่วงเร่งและผ่อน
     float rampUpDistance = targetPulses * 0.2;
@@ -964,7 +970,7 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line)
         float deriv = (err - _prevErr) / dt;
         _prevErr = err;
 
-        float corr = Kp * err + Ki * _integral + Kd * deriv;
+        float corr = kps * err + Kii * _integral + Kdd * deriv;
 
         // Ramp-up / Ramp-down
         int baseLeftSpeed = maxLeftSpeed;
@@ -1053,9 +1059,6 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
   {
     // เริ่มต้นตั้งค่า
     char lr;
-    float Kp = kps;
-    float Ki = 0.0;
-    float Kd = 0.0;
 
     lines_fw = false;   
     lines_bw = true;
@@ -1077,6 +1080,9 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
     _integral = 0;
     _prevErr = 0;
     prevT = millis();
+    Kpp = 0.00; 
+    Kii = 0.00;
+    Kdd = 0.00;
 
     // กำหนดช่วงเร่งและผ่อน
     float rampUpDistance = targetPulses * 0.2;
@@ -1108,7 +1114,7 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
         float deriv = (err - _prevErr) / dt;
         _prevErr = err;
 
-        float corr = Kp * err + Ki * _integral + Kd * deriv;
+        float corr = kps * err + Kii * _integral + Kdd * deriv;
 
         // Ramp-up / Ramp-down
         int baseLeftSpeed = maxLeftSpeed;
@@ -1231,6 +1237,9 @@ void fw_chopsticks(int spl, int spr, float kps, int targetDistanceCm, String _li
     _integral = 0;
     _prevErr = 0;
     prevT = millis();
+    Kpp = 0.00; 
+    Kii = 0.00;
+    Kdd = 0.00;
    
    
       while (true) {
@@ -1371,6 +1380,9 @@ void fw_bridge(int spl, int spr, float kps, int targetDistanceCm, String _line)
   _integral = 0;
   _prevErr = 0;
   prevT = millis();
+  Kpp = 0.00; 
+  Kii = 0.00;
+  Kdd = 0.00;
 
   // เตรียมตัวสำหรับการเร่งช้าๆ
   float rampUpDistance = targetPulses * 0.2;   // ช่วงเร่ง 20% แรก
