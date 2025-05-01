@@ -57,12 +57,17 @@ unsigned long lastTimes = millis();
 float Kpp = 0.35, Kii = 0.00001, Kdd = 0.03;
 float _integral = 0, _prevErr = 0;
 unsigned long prevT;
-
+float error_moveLR , output_moveLR;
 void set_move_before_moveLR(int _val)
   {
     fw_to_rotate = _val;
   }
 
+void Acceptable_values_moveLR(float errors_moveLR,  float outputs_moveLR)
+  {
+    error_moveLR = errors_moveLR;
+    output_moveLR = outputs_moveLR;
+  }
 void set_pid_moveLR(float _lr_kp, float _lr_ki, float _lr_kd)
   {
     lr_kp = _lr_kp;
@@ -306,8 +311,8 @@ void moveLR(int speed, int degree)
             currentDegree = my.gyro('z');  // อ่านค่ามุมปัจจุบัน
             error = targetDegree - currentDegree;  // คำนวณความผิดพลาด
     
-            // ตรวจสอบเงื่อนไขการหยุดเมื่อใกล้ถึงมุมที่ต้องการ
-            if (abs(error) < 1.0 && abs(output) < 5) break;
+            // ตรวจสอบเงื่อนไขการหยุดเมื่อใกล้ถึงมุมที่ต้องการ  error_moveLR , output_moveLR;
+            if (abs(error) < error_moveLR && abs(output) < output_moveLR) break;
     
             unsigned long now = millis();
             float dt = (now - lastTime) / 1000.0;
@@ -407,7 +412,7 @@ void moveLR(int _line, int speed, int degree)
             error = targetDegree - currentDegree;  // คำนวณความผิดพลาด
     
             // ตรวจสอบเงื่อนไขการหยุดเมื่อใกล้ถึงมุมที่ต้องการ
-            if (abs(error) < 1.0 && abs(output) < 5) break;
+            if (abs(error) < error_moveLR && abs(output) < output_moveLR) break;
     
             unsigned long now = millis();
             float dt = (now - lastTime) / 1000.0;
@@ -502,9 +507,6 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line)
     _integral = 0;
     _prevErr = 0;
     prevT = millis();
-    Kpp = 0.00; 
-    Kii = 0.00;
-    Kdd = 0.00;
 
     // เตรียมตัวสำหรับการเร่งช้าๆ
     float rampUpDistance = targetPulses * 0.2;   // ช่วงเร่ง 20% แรก
@@ -711,10 +713,7 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
     float yaw_offset = my.gyro('z'); // << เก็บค่าตอนเริ่มต้น
     _integral = 0;
     _prevErr = 0;
-    prevT = millis();
-    Kpp = 0.00; 
-    Kii = 0.00;
-    Kdd = 0.00;
+    prevT = millis();    
 
     // เตรียมตัวสำหรับการเร่งช้าๆ
     float rampUpDistance = targetPulses * 0.2;   // ช่วงเร่ง 20% แรก
@@ -937,9 +936,6 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line)
     _integral = 0;
     _prevErr = 0;
     prevT = millis();
-    Kpp = 0.00; 
-    Kii = 0.00;
-    Kdd = 0.00;
 
     // กำหนดช่วงเร่งและผ่อน
     float rampUpDistance = targetPulses * 0.2;
@@ -1080,9 +1076,6 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
     _integral = 0;
     _prevErr = 0;
     prevT = millis();
-    Kpp = 0.00; 
-    Kii = 0.00;
-    Kdd = 0.00;
 
     // กำหนดช่วงเร่งและผ่อน
     float rampUpDistance = targetPulses * 0.2;
@@ -1237,9 +1230,6 @@ void fw_chopsticks(int spl, int spr, float kps, int targetDistanceCm, String _li
     _integral = 0;
     _prevErr = 0;
     prevT = millis();
-    Kpp = 0.00; 
-    Kii = 0.00;
-    Kdd = 0.00;
    
    
       while (true) {
@@ -1380,9 +1370,6 @@ void fw_bridge(int spl, int spr, float kps, int targetDistanceCm, String _line)
   _integral = 0;
   _prevErr = 0;
   prevT = millis();
-  Kpp = 0.00; 
-  Kii = 0.00;
-  Kdd = 0.00;
 
   // เตรียมตัวสำหรับการเร่งช้าๆ
   float rampUpDistance = targetPulses * 0.2;   // ช่วงเร่ง 20% แรก
