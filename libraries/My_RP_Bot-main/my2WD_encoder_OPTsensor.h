@@ -350,8 +350,10 @@ void add_sensor_F()
             sensor_F7[i] = mcp_f(7);   
             delay(10);                
          }
-      Motor(1, 1); delay(100);  
-      Motor(0, 0); delay(10); 
+         bz(500);
+         delay(1000);
+         bz(50);
+         bz(50);
       Serial.println(" ");
       for(int i = 0; i< 502; i++)
         {
@@ -364,74 +366,72 @@ void add_sensor_F()
          {                                
             sensor_26[i] = analogRead(26);
             sensor_27[i] = analogRead(27); 
-            delay(10);               
+            //delay(10);               
          }
       for (int i = 50; i < 100; i ++)         
          {  
                               
             sensor_26[i] = analogRead(26);
             sensor_27[i] = analogRead(27);  
-            delay(10);                
+            //delay(10);                
          }
        for (int i = 100; i < 150; i ++)         
          {  
                            
             sensor_26[i] = analogRead(26);
             sensor_27[i] = analogRead(27); 
-            delay(10);                
+           // delay(10);                
          }
       for (int i = 150; i < 200; i ++)         
          {  
                               
             sensor_26[i] = analogRead(26);
             sensor_27[i] = analogRead(27); 
-            delay(10);                
+            //delay(10);                
          }
       for (int i = 200; i < 250; i ++)         
          {  
                              
             sensor_26[i] = analogRead(26);
             sensor_27[i] = analogRead(27);
-            delay(10);                
+           // delay(10);                
          }
        for (int i = 250; i < 300; i ++)         
          {  
                               
             sensor_26[i] = analogRead(26);
             sensor_27[i] = analogRead(27);  
-            delay(10);                
+           // delay(10);                
          }
        for (int i = 300; i < 350; i ++)         
          {  
                              
             sensor_26[i] = analogRead(26);
             sensor_27[i] = analogRead(27);
-            delay(10);                
+           // delay(10);                
          }
        for (int i = 350; i < 400; i ++)         
          {  
                               
             sensor_26[i] = analogRead(26);
             sensor_27[i] = analogRead(27);  
-            delay(10);                
+           // delay(10);                
          }
       for (int i = 400; i < 450; i ++)         
          {  
                              
             sensor_26[i] = analogRead(26);
             sensor_27[i] = analogRead(27);  
-            delay(10);                
+           // delay(10);                
          }
        for (int i = 450; i < 502; i ++)         
          {  
                               
             sensor_26[i] = analogRead(26);
             sensor_27[i] = analogRead(27);   
-            delay(10);                
+           // delay(10);                
          }
-      Motor(1, 1); delay(100);  
-      Motor(0, 0); delay(10); 
-      bz(300);
+
       for(int i = 0; i< 502; i++)
         {
           Serial.print(sensor_26[i]);
@@ -624,8 +624,7 @@ void add_sensor_F()
         }
       Serial.println("  ");
     
-      bz(100);
-      bz(100);
+     
       Serial.println(" ent--->  ");
   }
 
