@@ -6,6 +6,7 @@ void setup()
   {
     set_pid_moveLR(1.35, 0.00015, 0.040);   //------->> ตั้งค่า pid สำหรับหมุนตัว
     set_pid_chopsticks(0.6, 0.00001, 0.15); //------->> ตั้งค่า pid สำหรับขึ้นตะเกียบ
+    set_move_before_moveLR(190);   //------->> ตั้งค่า เดินหน้า ถอยหลัง ก่อนการหมุน
     setup_OPT();
     pinMode(20, INPUT_PULLUP);
     
@@ -46,7 +47,7 @@ void setup()
      moveLR(80, -90);
      set_b(5);
      fw_bridge(50, 50, 0.55, 175, "line");
-     moveLR(60, -185);
+     moveLR(70, -185);
      set_b(3);
 
      fw_bridge(70, 70, 0.35, 170, "line");
@@ -68,7 +69,7 @@ void setup()
 
      fw(70, 70, 0.35, 90, "line");
 
-     moveLR(60, -180);
+     moveLR(70, -183);
      set_b(3);
     }
 
