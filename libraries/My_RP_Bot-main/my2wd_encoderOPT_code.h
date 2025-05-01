@@ -58,6 +58,11 @@ float Kpp = 0.8, Kii = 0.0, Kdd = 0.3;
 float _integral = 0, _prevErr = 0;
 unsigned long prevT;
 
+void set_move_before_moveLR(int _val)
+  {
+    fw_to_rotate = _val;
+  }
+
 void set_pid_moveLR(float _lr_kp, float _lr_ki, float _lr_kd)
   {
     lr_kp = _lr_kp;
