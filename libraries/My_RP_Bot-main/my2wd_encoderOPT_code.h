@@ -214,25 +214,43 @@ void arm_up_down(int _position)  //------------------------>> ฟังก์ช
 
 void arm_Slide(int position)
   {
-    if( position > 0)
-      {
-        servo(29, 180);
-        delay(abs(position));
-        servo(29, 90);
-      }
-    else  if( position < 0)
-      {
-        servo(29, 0);
-        delay(abs(position));
-        servo(29, 90);
-      }
-    else  
-      {
-        do{servo(29, 0);}while(digitalRead(20)==1);
-        servo(29, 90); delay(50);
-        do{servo(29, 180);}while(digitalRead(20)==0);
-        servo(29, 90); delay(50);
-      }
+    int servo_pos = abs(position);
+    unsigned long startTime = millis(); // ใช้จับเวลาเผื่อหลุดลูป
+   
+          if( position > 0)
+            {
+              do{servo(29, 180);}while(millis() - startTime < servo_pos);
+              servo(29, 90); 
+            }
+          else  if( position < 0)
+            {
+              while(millis() - startTime < servo_pos)
+                {
+                  servo(29, 0);
+                  if(digitalRead(20)==0)
+                    {
+                      do{servo(29, 0);}while(digitalRead(20)==1);
+                      servo(29, 90); delay(50);
+                      do{servo(29, 180);}while(digitalRead(20)==0);
+                      servo(29, 90); delay(50);
+                          break;
+                     }                                             
+                      
+                   
+                }
+              servo(29, 90); 
+
+            }
+          else
+            {
+              do{servo(29, 0);}while(digitalRead(20)==1);
+              servo(29, 90); delay(50);
+              do{servo(29, 180);}while(digitalRead(20)==0);
+              servo(29, 90); delay(50);
+            }
+     
+    
+    
   }
 void arm_up(int _position)  //------------------------>> ฟังก์ชัน เลื่อนแขนขึ้น
   {
@@ -1220,79 +1238,80 @@ void fw_chopsticks(int spl, int spr, float kps, int targetDistanceCm, String _li
         targetDistanceCm = targetDistanceCm + 10;
         set_bb = false;
       }   
-     encoder.resetEncoders();
+      // คำนวณจำนวนพัลส์เป้าหมายจากระยะทาง
+      encoder.resetEncoders();
     
-    // คำนวณจำนวนพัลส์เป้าหมายจากระยะทาง
-    float targetPulses = targetDistanceCm * pulsesPerCm;
-
-    // รีเซต Motor และ Gyro
-    Motor(-1, -1); delay(10);
-    my.resetAngles();
-
-    // *** เริ่มต้นตั้งค่าตัวแปรสำหรับ PID ***
-    float yaw_offset = my.gyro('z'); // << เก็บค่าตอนเริ่มต้น
-    _integral = 0;
-    _prevErr = 0;
-    prevT = millis();    
-
-    // เตรียมตัวสำหรับการเร่งช้าๆ
-    float rampUpDistance = targetPulses * 0.2;   // ช่วงเร่ง 20% แรก
-    float rampDownDistance = targetPulses * 0.8; // ช่วงเริ่มผ่อน 20% ท้าย
-    int minSpeed = 10; // กำหนดสปีดขั้นต่ำ
-    int maxLeftSpeed = spl;
-    int maxRightSpeed = spr;
-
-    while (true) {
-        // อ่านค่าจาก Encoder
-        float leftPulses = encoder.Poss_L();
-        float rightPulses = encoder.Poss_R();
-
-        // คำนวณระยะทางที่เคลื่อนที่แล้ว
-        float currentPulses = (leftPulses + rightPulses) / 2;
-        float remainingPulses = targetPulses - currentPulses;
-
-        // อ่านเวลา
-        unsigned long now = millis();
-        float dt = (now - prevT) / 1000.0;
-        if (dt <= 0) dt = 0.001; // ป้องกันหาร 0
-        prevT = now;
-
-        // อ่าน Gyro และคำนวณ Error
-        float yaw = my.gyro('z') - yaw_offset;
-        float err = yaw;
-
-        // PID
-        _integral += err * dt;
-        float deriv = (err - _prevErr) / dt;
-        _prevErr = err;
-        float corr = kps * err + 0.00001 * _integral + 0.035 * deriv;
-
-        // คำนวณสปีดพื้นฐาน
-        int baseLeftSpeed = maxLeftSpeed;
-        int baseRightSpeed = maxRightSpeed;
-
-        // ทำ Ramp-up และ Ramp-down
-        if (currentPulses < rampUpDistance) {
-            float rampFactor = currentPulses / rampUpDistance;
-            baseLeftSpeed = minSpeed + (maxLeftSpeed - minSpeed) * rampFactor;
-            baseRightSpeed = minSpeed + (maxRightSpeed - minSpeed) * rampFactor;
-        }
-        else if (currentPulses > rampDownDistance) {
-            float rampFactor = (targetPulses - currentPulses) / (targetPulses - rampDownDistance);
-            baseLeftSpeed = minSpeed + (maxLeftSpeed - minSpeed) * rampFactor;
-            baseRightSpeed = minSpeed + (maxRightSpeed - minSpeed) * rampFactor;
-        }
-
-        // สั่งมอเตอร์ โดยชดเชย PID correction
-        int leftSpeed = constrain(baseLeftSpeed - corr, -100, 100);
-        int rightSpeed = constrain(baseRightSpeed + corr, -100, 100);
-
-        Motor(leftSpeed, rightSpeed);
-
-            
-            if (currentPulses >= targetPulses) {
-                        break;
-                    }    
+      // คำนวณจำนวนพัลส์เป้าหมายจากระยะทาง
+      float targetPulses = targetDistanceCm * pulsesPerCm;
+  
+      // รีเซต Motor และ Gyro
+      Motor(-1, -1); delay(10);
+      my.resetAngles();
+  
+      // *** เริ่มต้นตั้งค่าตัวแปรสำหรับ PID ***
+      float yaw_offset = my.gyro('z'); // << เก็บค่าตอนเริ่มต้น
+      _integral = 0;
+      _prevErr = 0;
+      prevT = millis();    
+  
+      // เตรียมตัวสำหรับการเร่งช้าๆ
+      float rampUpDistance = targetPulses * 0.2;   // ช่วงเร่ง 20% แรก
+      float rampDownDistance = targetPulses * 0.8; // ช่วงเริ่มผ่อน 20% ท้าย
+      int minSpeed = 10; // กำหนดสปีดขั้นต่ำ
+      int maxLeftSpeed = spl;
+      int maxRightSpeed = spr;
+  
+      while (true) {
+          // อ่านค่าจาก Encoder
+          float leftPulses = encoder.Poss_L();
+          float rightPulses = encoder.Poss_R();
+  
+          // คำนวณระยะทางที่เคลื่อนที่แล้ว
+          float currentPulses = (leftPulses + rightPulses) / 2;
+          float remainingPulses = targetPulses - currentPulses;
+  
+          // อ่านเวลา
+          unsigned long now = millis();
+          float dt = (now - prevT) / 1000.0;
+          if (dt <= 0) dt = 0.001; // ป้องกันหาร 0
+          prevT = now;
+  
+          // อ่าน Gyro และคำนวณ Error
+          float yaw = my.gyro('z') - yaw_offset;
+          float err = yaw;
+  
+          // PID
+          _integral += err * dt;
+          float deriv = (err - _prevErr) / dt;
+          _prevErr = err;
+          float corr = kps * err + 0.00001 * _integral + 0.035 * deriv;
+  
+          // คำนวณสปีดพื้นฐาน
+          int baseLeftSpeed = maxLeftSpeed;
+          int baseRightSpeed = maxRightSpeed;
+  
+          // ทำ Ramp-up และ Ramp-down
+          if (currentPulses < rampUpDistance) {
+              float rampFactor = currentPulses / rampUpDistance;
+              baseLeftSpeed = minSpeed + (maxLeftSpeed - minSpeed) * rampFactor;
+              baseRightSpeed = minSpeed + (maxRightSpeed - minSpeed) * rampFactor;
+          }
+          else if (currentPulses > rampDownDistance) {
+              float rampFactor = (targetPulses - currentPulses) / (targetPulses - rampDownDistance);
+              baseLeftSpeed = minSpeed + (maxLeftSpeed - minSpeed) * rampFactor;
+              baseRightSpeed = minSpeed + (maxRightSpeed - minSpeed) * rampFactor;
+          }
+  
+          // สั่งมอเตอร์ โดยชดเชย PID correction
+          int leftSpeed = constrain(baseLeftSpeed - corr, -100, 100);
+          int rightSpeed = constrain(baseRightSpeed + corr, -100, 100);
+  
+          Motor(leftSpeed, rightSpeed);
+  
+              
+              if (currentPulses >= targetPulses) {
+                          break;
+                      }   
            
      }
 
@@ -1470,7 +1489,7 @@ void fw_bridge(int spl, int spr, float kps, int targetDistanceCm, String _line)
           Motor(2, rightSpeed);
           my.resetAngles();
         }
-      else if (mcp_f(1) < md_mcp_f(1) -100  || mcp_f(2) < md_mcp_f(2) -100 ) 
+      else if (mcp_f(1) < min_mcp_f(1) -100  || mcp_f(2) < min_mcp_f(2) -100 ) 
         {
           Motor(-30, -30); delay(30);  
           Motor(-1, -1); delay(10);  
