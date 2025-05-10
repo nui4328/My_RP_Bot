@@ -1007,7 +1007,7 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line)
         Motor(-leftSpeed, -rightSpeed);
 
         // ตรวจว่าเดินถึงระยะหรือยัง
-        if (abs(currentPulses) >= targetPulses) {
+        if (abs(currentPulses) <= -targetPulses) {
             break;
         }
 
@@ -1148,7 +1148,7 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
         Motor(-leftSpeed, -rightSpeed);
 
         // ตรวจว่าเดินถึงระยะหรือยัง
-        if (abs(currentPulses) >= targetPulses) {
+        if (abs(currentPulses) <= -targetPulses) {
             break;
         }
 
