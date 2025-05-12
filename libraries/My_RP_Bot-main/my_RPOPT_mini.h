@@ -6,6 +6,8 @@
 #define EEPROM_ADDR 0x50
 #include "my_MCP3008.h"
 my_MCP3008 adc;
+#include <my_GYRO.h>
+my_GYRO my;
 
 #include "EncoderLibrary.h"
 EncoderLibrary encoder(6, 7, 15, 20);
@@ -48,6 +50,16 @@ int sr = 0;       // ความเร็วของมอเตอร์ข�
 bool _p = false;
 int fq;
 
+// ค่าคงที่สำหรับการคำนวณ
+const float wheelDiameter = 5.0;                      // เส้นผ่านศูนย์กลางล้อ (เซนติเมตร)
+const float wheelCircumference = PI * wheelDiameter;  // เส้นรอบวงล้อ
+const int pulsesPerRevolution = 450;                  // จำนวนพัลส์ต่อรอบ
+const float pulsesPerCm = pulsesPerRevolution / wheelCircumference; // พัลส์ต่อเซนติเมตร
+
+unsigned long lastTimes = millis();
+float Kpp = 0.8, Kii = 0.0, Kdd = 0.3;
+float _integral = 0, _prevErr = 0;
+unsigned long prevT;
 
 void setup_robot(void);
 void add_sensor(void);
@@ -104,6 +116,8 @@ void setup_robot()
        analogReadResolution(12);     
        adc.begin(2, 4, 3, 13 );   ///adc.begin(5, 4, 12, 20 );    // 5=clk, 4=IN, 12=out      
        read_eep();  //--->ดึงค่าเซนเซอร์ที่เก็บไวใน eep
+       my.begin();
+       my.resetAngles();
        delay(50);
    }
 
@@ -583,7 +597,7 @@ void add_sensor()
           }
        if (!onLine)        //เมื่อหุ่นยนต์ไม่อยู่หรือไม่เจอเส้นดำ
           {
-            if(last_Position_4 > 400 && last_Position_4 < 2600)
+            if(last_Position_4 > 200 && last_Position_4 < 2800)
               {
                 none_line = true;
               }
@@ -591,11 +605,13 @@ void add_sensor()
               {
                 if (_lastPosition < (numSensor - 1) * 1000 / 2)  // ถ้าค่าก่อนหน้าที่จะไม่เจอเส้นดำหรือหลุดจะให้ค่านั้นเป็น 0
                     {
-                      return 0;
+                      none_line = true;
+                      return 1500;
                     }
                 else                                          //แต่ถ้ามากกว่าแสดงว่าหลุดออกอีกฝั่ง ค่าก็จะเป็น 1000 คุณด้วยจำนวนเซ็นเซอร์
                     {
-                      return 3000;                 
+                      none_line = true;
+                      return 1500;                 
                     }
                 none_line = false;
               }
@@ -678,6 +694,7 @@ void Motor(int spl,int spr)
    }
 
 //-------------------------------------->> Moverobot
+
 void fw_line(int sl, int sr, float kp, char sp, String sensor, int offset) 
   {
     char sensors[4];  // Declare a char array to store the converted string
@@ -757,45 +774,15 @@ void fw_line(int sl, int sr, float kp, char sp, String sensor, int offset)
     if (sp == 'p') 
       {
         _p = true;
-        while (1) 
-          {            
-            int I_limit = 1000;
-            if (I > I_limit) 
-              {
-                I = I_limit;
-              } 
-            else if (I < -I_limit) 
-              {
-                I = -I_limit;
-              }
-            
-            delayMicroseconds(50);
-            float errors = error_sensor();
-            float P = errors;
-            I = I + errors;
-            float D = errors - previous_error;
-            previous_error = errors;
-            
-            float PID_output = (kp * P) + (0.00001 * I) + (0.05 * D);
-            
-            // จำกัดการควบคุมมอเตอร์ไม่ให้เกินค่าที่กำหนด
-            if (PID_output > 100) 
-              {
-                PID_output = 100;
-              } 
-            else if (PID_output < -100) 
-              {
-                PID_output = -100;
-              }
-            
-            // ควบคุมมอเตอร์ให้หมุนตามค่าที่คำนวณได้
-            Motor(sl - PID_output, sr + PID_output);
+        while(1)
+          {
+            Motor(sl, sr);
             
             if (sensor == "a0") 
               {
                 if (read_sensor(0) > md_sensor(0)) 
                   {
-                    delay(20);
+                    delay(50);
                     break;
                   }
               } 
@@ -803,11 +790,11 @@ void fw_line(int sl, int sr, float kp, char sp, String sensor, int offset)
               {
                 if (read_sensor(5) > md_sensor(5)) 
                   {
-                    delay(20);
+                    delay(50);
                     break;
                   }
               }
-          }
+            }
       }
     else
       {
@@ -823,6 +810,84 @@ void fw_line(int sl, int sr, float kp, char sp, String sensor, int offset)
         // อื่นๆ
     }
 }
+
+void fw_line(int sl, int sr, float kps, char sp, int offset) 
+  {  
+    // รีเซต Motor และ Gyro
+    Motor(-1, -1); delay(100);
+    my.resetAngles();
+    // *** เริ่มต้นตั้งค่าตัวแปรสำหรับ PID ***
+    float yaw_offset = my.gyro('z'); // << เก็บค่าตอนเริ่มต้น
+    _integral = 0;
+    _prevErr = 0;
+    prevT = millis();    
+
+    while (true) 
+      {
+          
+          // อ่านเวลา
+          unsigned long now = millis();
+          float dt = (now - prevT) / 1000.0;
+          if (dt <= 0) dt = 0.001; // ป้องกันหาร 0
+          prevT = now;
+
+          // อ่าน Gyro และคำนวณ Error
+          float yaw = my.gyro('z') - yaw_offset;
+          float err = yaw;
+
+          // PID
+          _integral += err * dt;
+          float deriv = (err - _prevErr) / dt;
+          _prevErr = err;
+          float corr = kps * err + 0.00001 * _integral + 0.035 * deriv;
+
+          Motor(sl+corr, sr+corr);
+          if (read_sensor(0) < min_sensor(0)+80 || read_sensor(5) < min_sensor(5)+80 ) 
+            {
+                Motor(-20, -20);delay(20);
+                Motor(0, 0);delay(20);
+                
+                while(1)
+                  {
+                    if(read_sensor(0) < min_sensor(0)+80  && read_sensor(5) > min_sensor(5)+80) 
+                      {
+                        do{Motor(-2, 30);}while(read_sensor(5) > min_sensor(5)+80);   
+                        do{Motor(10, 10);}while(read_sensor(5) < min_sensor(5)+80); 
+                        delay(50);  
+                        break;    
+                      }
+                    else if(read_sensor(0) > min_sensor(0)+80  && read_sensor(5) < min_sensor(5)+80) 
+                      {
+                        do{Motor(30, -2);}while(read_sensor(0) > min_sensor(0)+80);   
+                        do{Motor(10, 10);}while(read_sensor(0) < min_sensor(0)+80);
+                        delay(50);  
+                        break;          
+                      }
+                  else if(read_sensor(0) < min_sensor(0)+80  && read_sensor(5) < min_sensor(5)+80) 
+                    {   
+                      while(1)
+                        {
+                          Motor(10, 10);
+                          if(read_sensor(0) > min_sensor(0)+80  && read_sensor(5) > min_sensor(5)+80)
+                            {
+                              delay(50);
+                              break; 
+                            }
+                        } 
+                        break;          
+                    }
+
+                  }
+                break;
+            }        
+
+         }
+    Motor(-1, -1);delay(20);
+    Motor(1, 1);delay(10);
+    Motor(0, 0); delay(10);
+
+}
+
 
 ///------------------------------------>>> Move encoder
 void fw_distance(int sl, int sr, int distance1, int offset)
@@ -847,6 +912,19 @@ void bw_distance(int sl, int sr, int distance1, int offset)
     delay(10);
     Motor(1, 1);
   }
+
+void fw_chopsticks(int sl, int sr, int distance1, int offset)
+  {
+    float circumference = 2 * 3.14 * 24;
+    new_encoder = 440 * distance1 / (circumference /10) ;
+    Serial.println(new_encoder);
+    encoder.resetEncoders();
+    do{Motor(sl, sr);}while(encoder.Poss_R() < new_encoder || encoder.Poss_L() < new_encoder);
+    Motor(-sl, -sr);
+    delay(10);
+    Motor(1, 1);
+  }
+
 void fw_distance(int sl, int sr, float kp, int distance1, int offset) {
     float circumference = 2 * 3.14 * 24;
     new_encoder = 440 * distance1 / (circumference / 10);
@@ -917,11 +995,13 @@ void fw_distance(int sl, int sr, float kp, int distance1, int offset) {
         
         // ควบคุมมอเตอร์ให้หมุนตามค่าที่คำนวณได้
         Motor(current_sl - PID_output, current_sr + PID_output);
+
         if(none_line == true)
           {
             none_line = false;
             break;
           }
+        
         Serial.print(new_encoder);
         Serial.print("  ");
         Serial.print(encoder.Poss_L());
@@ -1283,11 +1363,11 @@ void turn_left_sensor(int distance1, int speed, String sensor, int offset) {
    encoder.resetEncoders();
    for ( int i = 1; i <= sensor_f; i++ )
      {
-       do{ Motor(-speed/4, speed); delayMicroseconds(50);} while( read_sensor(i) > md_sensor(i) ); 
+       do{ Motor(-(speed/4), speed); delayMicroseconds(50);} while( read_sensor(i) > md_sensor(i) ); 
        delayMicroseconds(50);
      }
        
-   Motor(speed/4, -(speed)); delay(offset); 
+   Motor(speed/4, -speed); delay(offset); 
    Motor(-1, -1); delay(10); // หยุดมอเตอร์เมื่อหมุนเสร็จ
 }
 
@@ -1386,17 +1466,339 @@ void turn_right_sensor(int distance1, int speed, String sensor, int offset) {
        delayMicroseconds(50); // เวลาหน่วงเพื่อให้มอเตอร์มีเวลาหมุน
      }
    Motor(-1, -1); delay(20); // หยุดมอเตอร์เมื่อหมุนเสร็จ
-   Motor(speed, -speed/4);delay(40);
+   Motor(speed, -(speed/4));delay(40);
    for ( int i = 4; i >= sensor_f ; i -- )
       {
-        do{ Motor(speed, -speed/4); delayMicroseconds(50);} while( read_sensor(i) > md_sensor(i) ); 
+        do{ Motor(speed, -(speed/4)); delayMicroseconds(50);} while( read_sensor(i) > md_sensor(i) ); 
         delayMicroseconds(50);
       } 
       
-   Motor(-(speed), speed/2); delay(offset); 
+   Motor(-(speed), speed/4); delay(offset); 
    Motor(-1, -1); delay(10); // หยุดมอเตอร์เมื่อหมุนเสร็จ
 }
 
 //---------------------------------------------------------------->>
 
+void fw_chopsticks(int spl, int spr, float kps, int targetDistanceCm, int offset) 
+  { 
+   
+    encoder.resetEncoders();
+    
+    // คำนวณจำนวนพัลส์เป้าหมายจากระยะทาง
+    float targetPulses = targetDistanceCm * pulsesPerCm;
+
+    // รีเซต Motor และ Gyro
+    Motor(-1, -1); delay(10);
+    my.resetAngles();
+
+    // *** เริ่มต้นตั้งค่าตัวแปรสำหรับ PID ***
+    float yaw_offset = my.gyro('z'); // << เก็บค่าตอนเริ่มต้น
+    _integral = 0;
+    _prevErr = 0;
+    prevT = millis();    
+
+    // เตรียมตัวสำหรับการเร่งช้าๆ
+    float rampUpDistance = targetPulses * 0.1;   // ช่วงเร่ง 20% แรก
+    float rampDownDistance = targetPulses * 0.8; // ช่วงเริ่มผ่อน 20% ท้าย
+    int minSpeed = 15; // กำหนดสปีดขั้นต่ำ
+    int maxLeftSpeed = spl;
+    int maxRightSpeed = spr;
+
+    while (true) 
+      {
+        // อ่านค่าจาก Encoder
+        float leftPulses = encoder.Poss_L();
+        float rightPulses = encoder.Poss_R();
+
+        // คำนวณระยะทางที่เคลื่อนที่แล้ว
+        float currentPulses = (leftPulses + rightPulses) / 2;
+        float remainingPulses = targetPulses - currentPulses;
+
+        // อ่านเวลา
+        unsigned long now = millis();
+        float dt = (now - prevT) / 1000.0;
+        if (dt <= 0) dt = 0.001; // ป้องกันหาร 0
+        prevT = now;
+
+        // อ่าน Gyro และคำนวณ Error
+        float yaw = my.gyro('z') - yaw_offset;
+        float err = yaw;
+
+        // PID
+        _integral += err * dt;
+        float deriv = (err - _prevErr) / dt;
+        _prevErr = err;
+        float corr = kps * err + 0.00001 * _integral + 0.035 * deriv;
+
+        // คำนวณสปีดพื้นฐาน
+        int baseLeftSpeed = maxLeftSpeed;
+        int baseRightSpeed = maxRightSpeed;
+
+        // ทำ Ramp-up และ Ramp-down
+        if (currentPulses < rampUpDistance) {
+            float rampFactor = currentPulses / rampUpDistance;
+            baseLeftSpeed = minSpeed + (maxLeftSpeed - minSpeed) * rampFactor;
+            baseRightSpeed = minSpeed + (maxRightSpeed - minSpeed) * rampFactor;
+        }
+        else if (currentPulses > rampDownDistance) {
+            float rampFactor = (targetPulses - currentPulses) / (targetPulses - rampDownDistance);
+            baseLeftSpeed = minSpeed + (maxLeftSpeed - minSpeed) * rampFactor;
+            baseRightSpeed = minSpeed + (maxRightSpeed - minSpeed) * rampFactor;
+        }
+
+        // สั่งมอเตอร์ โดยชดเชย PID correction
+        int leftSpeed = constrain(baseLeftSpeed - corr, -100, 100);
+        int rightSpeed = constrain(baseRightSpeed + corr, -100, 100);
+
+        Motor(leftSpeed, rightSpeed);
+        if (read_sensor(0) < min_sensor(0)+80 || read_sensor(5) < min_sensor(5)+80 ) 
+        {
+            Motor(-20, -20);delay(20);
+            Motor(0, 0);delay(20);
+            
+            while(1)
+              {
+                if(read_sensor(0) < min_sensor(0)+80  && read_sensor(5) > min_sensor(5)+80) 
+                  {
+                    do{Motor(-2, 30);}while(read_sensor(5) > min_sensor(5)+80);   
+                    do{Motor(10, 10);}while(read_sensor(5) < min_sensor(5)+80); 
+                    delay(50);  
+                    break;    
+                  }
+                else if(read_sensor(0) > min_sensor(0)+80  && read_sensor(5) < min_sensor(5)+80) 
+                  {
+                    do{Motor(30, -2);}while(read_sensor(0) > min_sensor(0)+80);   
+                    do{Motor(10, 10);}while(read_sensor(0) < min_sensor(0)+80);
+                    delay(50);  
+                    break;          
+                  }
+                else if(read_sensor(0) < min_sensor(0)+80  && read_sensor(5) < min_sensor(5)+80) 
+                  {   
+                    while(1)
+                      {
+                        Motor(10, 10);
+                        if(read_sensor(0) > min_sensor(0)+80  && read_sensor(5) > min_sensor(5)+80)
+                          {
+                            delay(50);
+                            break; 
+                          }
+                      } 
+                      break;          
+                  }
+
+              }
+            break;
+        } 
+            
+        if (currentPulses >= targetPulses) 
+          {
+            break;
+          }   
+              
+      }
+     Motor(-1, -1);
+     delay(offset);  
+     bz(50); 
+
+}
+
+void turn_gyro_wheel(int distance1, int speed, int degree, int offset) 
+{
+   // คำนวณจำนวน encoder ticks ที่ต้องการสำหรับการหมุนที่ระยะ angle
+   float circumference = 2 * 3.14 * 24; // ความยาวรอบวงล้อ (24 มม. เป็นขนาดล้อสมมุติ)   
+   new_encoder = 360 * distance1 / (circumference / 10);
+   encoder.resetEncoders(); // รีเซ็ต encoder ก่อนเริ่มหมุน
+   while (encoder.Poss_L() < new_encoder || encoder.Poss_R() < new_encoder) {
+       Motor(10, 10); // หมุนมอเตอร์ (หมุนซ้าย)
+       delayMicroseconds(50); // เวลาหน่วงเพื่อให้มอเตอร์มีเวลาหมุน
+   }
+      // เริ่มต้นการหมุน
+      encoder.resetEncoders();
+      
+        Motor(-1, -1);
+        delay(50);
+        my.resetAngles();
+        delay(10);
+    
+        // คำนวณค่ามุมเริ่มต้น
+        float initialDegree = 0;
+        for (int i = 0; i < 5; i++) {
+            initialDegree += my.gyro('z');  // ใช้ค่าที่อ่านได้จากเซ็นเซอร์
+            delay(10);
+        }
+        initialDegree /= 5.0;
+    
+        // คำนวณมุมเป้าหมาย
+        float targetDegree = initialDegree + degree;
+    
+        // กำหนดค่าของ PID
+        
+        float lr_kp  = 1.250;  // ปรับค่า Kp เพื่อให้การหมุนเร็วขึ้น
+        float lr_ki  = 0.0001;  // ค่า Ki ปรับตามความแม่นยำในการหยุด
+        float lr_kd = 0.05; // ปรับค่า Kd เพื่อให้การหยุดมีความแม่นยำขึ้น
+        
+        float error = 0, previous_error = 0;
+        float integral = 0, output = 0;
+        float currentDegree = 0;
+    
+        unsigned long lastTime = millis();
+        unsigned long timeout = 500;  // กำหนดเวลา timeout
+        unsigned long startTime = millis();
+    
+        while (true) {
+            currentDegree = my.gyro('z');  // อ่านค่ามุมปัจจุบัน
+            error = targetDegree - currentDegree;  // คำนวณความผิดพลาด
+    
+            // ตรวจสอบเงื่อนไขการหยุดเมื่อใกล้ถึงมุมที่ต้องการ
+            if (abs(error) < 5 && abs(output) < 5) break;
+    
+            unsigned long now = millis();
+            float dt = (now - lastTime) / 1000.0;
+            lastTime = now;
+    
+            if (dt > 0) {
+                integral += error * dt;
+                float derivative = (error - previous_error) / dt;
+                previous_error = error;
+    
+                output = lr_kp * error + lr_ki * integral + lr_kd * derivative;
+            }
+    
+            // จำกัดค่าของ output ให้อยู่ในช่วงความเร็วที่ต้องการ
+            output = constrain(output, -speed, speed);
+    
+            // ควบคุมมอเตอร์ให้หมุนตาม PID ที่คำนวณ
+            Motor(output, -output);  
+            delay(5);
+    
+            // ตรวจจับ timeout หากใช้เวลานานเกินไป
+            if (millis() - startTime > timeout) {
+                break;  // ออกจาก loop หากเวลาผ่านไปนานเกินไป
+            }
+        }
+    
+        // หยุดมอเตอร์หลังจากหมุนเสร็จ
+        
+            Motor(-output, output);  
+            delay(offset);
+          
+        Motor(-1, -1);
+        delay(10);
+  }
+
+void turn_gyro_sensor(int distance1, int speed, int degree, int offset) 
+  {
+    // คำนวณจำนวน encoder ticks ที่ต้องการสำหรับการหมุนที่ระยะ angle
+   float circumference = 2 * 3.14 * 24; // ความยาวรอบวงล้อ (24 มม. เป็นขนาดล้อสมมุติ)   
+   new_encoder = 360 * distance1 / (circumference / 10);
+   encoder.resetEncoders(); // รีเซ็ต encoder ก่อนเริ่มหมุน
+   while (encoder.Poss_L() < new_encoder || encoder.Poss_R() < new_encoder) {
+       Motor(15, 15); // หมุนมอเตอร์ (หมุนซ้าย)
+       delayMicroseconds(50); // เวลาหน่วงเพื่อให้มอเตอร์มีเวลาหมุน
+   }
+      // เริ่มต้นการหมุน
+      encoder.resetEncoders();
+      
+        Motor(-5, -5);
+        delay(30);
+        Motor(-1, -1);
+        delay(50);
+        my.resetAngles();
+        delay(10);
+    
+        // คำนวณค่ามุมเริ่มต้น
+        float initialDegree = 0;
+        for (int i = 0; i < 5; i++) {
+            initialDegree += my.gyro('z');  // ใช้ค่าที่อ่านได้จากเซ็นเซอร์
+            delay(10);
+        }
+        initialDegree /= 5.0;
+    
+        // คำนวณมุมเป้าหมาย
+        float targetDegree = initialDegree + degree;
+    
+        // กำหนดค่าของ PID
+        
+        float lr_kp  = 2.05;  // ปรับค่า Kp เพื่อให้การหมุนเร็วขึ้น
+        float lr_ki  = 0.00001;  // ค่า Ki ปรับตามความแม่นยำในการหยุด
+        float lr_kd = 0.015; // ปรับค่า Kd เพื่อให้การหยุดมีความแม่นยำขึ้น
+        
+        float error = 0, previous_error = 0;
+        float integral = 0, output = 0;
+        float currentDegree = 0;
+    
+        unsigned long lastTime = millis();
+        unsigned long timeout = 500;  // กำหนดเวลา timeout
+        unsigned long startTime = millis();
+    
+        while (true) {
+            currentDegree = my.gyro('z');  // อ่านค่ามุมปัจจุบัน
+            error = targetDegree - currentDegree;  // คำนวณความผิดพลาด
+    
+            // ตรวจสอบเงื่อนไขการหยุดเมื่อใกล้ถึงมุมที่ต้องการ
+            if (abs(error) < 1 && abs(output) < 5) break;
+    
+            unsigned long now = millis();
+            float dt = (now - lastTime) / 1000.0;
+            lastTime = now;
+    
+            if (dt > 0) {
+                integral += error * dt;
+                float derivative = (error - previous_error) / dt;
+                previous_error = error;
+    
+                output = lr_kp * error + lr_ki * integral + lr_kd * derivative;
+            }
+    
+            // จำกัดค่าของ output ให้อยู่ในช่วงความเร็วที่ต้องการ
+            output = constrain(output, -speed, speed);
+    
+            // ควบคุมมอเตอร์ให้หมุนตาม PID ที่คำนวณ
+            if(degree > 0)
+              {
+                Motor(output, -(output/4));  
+                delay(5);
+              }
+              else
+              {
+                Motor(output/4, -output);  
+                delay(5);
+              }
+    
+            // ตรวจจับ timeout หากใช้เวลานานเกินไป
+            if (millis() - startTime > timeout) {
+                break;  // ออกจาก loop หากเวลาผ่านไปนานเกินไป
+            }
+        }
+    
+        // หยุดมอเตอร์หลังจากหมุนเสร็จ
+        if(degree>0)
+          {
+            Motor(output, -(output/4)); 
+            delay(offset);
+          }
+        else
+          {
+            Motor(output/4, -output);
+            delay(offset);
+          }
+        Motor(-1, -1);
+        delay(10);
+  }
+
+
+void set_center()
+  {
+    
+        if(read_sensor(0) < md_sensor(0))
+          {
+            do{Motor(-1, 20);}while(read_sensor(2) < md_sensor(2));
+          }
+        else if(read_sensor(5) < md_sensor(5))
+          {
+            do{Motor(20, -1);}while(read_sensor(3) < md_sensor(3));
+          }
+      
+    
+  }
 #endif
