@@ -1,16 +1,20 @@
 
-int servo_down = 47;      //-------------------->> ตั้งค่า มื่อจับลงขนานกับพื้น
-int servo_close = 150;    //-------------------->> ตั้งค่า ฝ่ามือให้ปลายเข้ามาแตะกันพอดี
+
 
 void arm_ready()
   {
     servo(28, servo_down);
-    servo(27, servo_close-100);
+    servo(27, servo_close-80);
   }
 
+void arm_down_close()
+  {
+    servo(28, servo_down);
+    servo(27, servo_close);
+  }
 void arm_slow_down()
   {
-    for(int i=servo_down + 50; i>servo_down + 10; i--)
+    for(int i=servo_down + 70; i>servo_down + 20; i--)
       {
         servo(28, i);
         delay(5);
@@ -20,24 +24,23 @@ void arm_slow_down()
 void arm_close_up()
   {
     servo(27, servo_close);
-    delay(400);
+    delay(200);
     servo(28, servo_down + 70);
-    delay(400);
+    delay(50);
   }
 
 void arm_open_up()
   {
     servo(27, servo_close-60);
-    delay(400);
-    servo(28, servo_down + 70);
-    delay(400);
+    delay(200);
+    servo(28, servo_down + 90);
+    delay(200);
   }
 void arm_down_open_up()
   {    
     servo(28, servo_down);
-    delay(400);
+    delay(300);
     servo(27, servo_close-60);
-    delay(400);
+    delay(300);
     servo(28, servo_down+90);
-    delay(400);
   }
