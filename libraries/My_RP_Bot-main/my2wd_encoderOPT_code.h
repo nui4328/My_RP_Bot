@@ -528,8 +528,8 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line)
 
     // เตรียมตัวสำหรับการเร่งช้าๆ
     float rampUpDistance = targetPulses * 0.2;   // ช่วงเร่ง 20% แรก
-    float rampDownDistance = targetPulses * 0.8; // ช่วงเริ่มผ่อน 20% ท้าย
-    int minSpeed = 20; // กำหนดสปีดขั้นต่ำ
+    float rampDownDistance = targetPulses * 0.7; // ช่วงเริ่มผ่อน 20% ท้าย
+    int minSpeed = 15; // กำหนดสปีดขั้นต่ำ
     int maxLeftSpeed = spl;
     int maxRightSpeed = spr;
 
@@ -1123,11 +1123,11 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line)
 
         // ตรวจ MCP (ปรับทิศ)
         if (mcp_f(4) < md_mcp_f(4) - 30 && mcp_f(7) > md_mcp_f(7)) {
-            Motor(-leftSpeed / 2, -rightSpeed);
+            Motor(-(leftSpeed / 3), -rightSpeed);
             my.resetAngles();
         } 
         else if (mcp_f(4) > md_mcp_f(4) && mcp_f(7) < md_mcp_f(7) - 30) {
-            Motor(-leftSpeed, -rightSpeed / 2);
+            Motor(-leftSpeed, -(rightSpeed / 3));
             my.resetAngles();
         }
 
@@ -1185,27 +1185,27 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line)
           {
             Motor(-motor_slow, -motor_slow);
 
-            if (mcp_f(4) < md_mcp_f(4) - 50 && mcp_f(7) > md_mcp_f(7)) {                    
+            if (mcp_f(4) < md_mcp_f(4)  && mcp_f(7) > md_mcp_f(7)) {                    
                 Motor(-40, 10);
             }
-            else if (mcp_f(4) > md_mcp_f(4) && mcp_f(7) < md_mcp_f(7) - 50 ){
+            else if (mcp_f(4) > md_mcp_f(4) && mcp_f(7) < md_mcp_f(7) ){
                 Motor(10, -40);
             }
-            else if (mcp_f(5) < md_mcp_f(5) - 50 || mcp_f(6) < md_mcp_f(6) - 50) {
+            else if (mcp_f(5) < md_mcp_f(5)  || mcp_f(6) < md_mcp_f(6) ) {
                 Motor(30, 30); delay(30);  
                 Motor(1, 1); delay(10);  
 
                 while (1) {
-                    if (mcp_f(5) < md_mcp_f(5)- 50 && mcp_f(6) > md_mcp_f(6)) {
-                        lr = 'l';
-                        Motor(10, -30);        
+                    if (mcp_f(5) < md_mcp_f(5) && mcp_f(6) > md_mcp_f(6)) {
+                        lr = 'l';                        
+                        Motor(-30, 10);         
                     }
-                    else if (mcp_f(5) > md_mcp_f(5) && mcp_f(6) < md_mcp_f(6)- 50) {
+                    else if (mcp_f(5) > md_mcp_f(5) && mcp_f(6) < md_mcp_f(6)) {
                         lr = 'r';
-                        Motor(-30, 10);           
+                        Motor(10, -30);         
                     }
-                    else if ((mcp_f(4) < md_mcp_f(4) - 50 && mcp_f(7) < md_mcp_f(7)- 50)
-                             || (mcp_f(5) < md_mcp_f(5)- 50 && mcp_f(6) < md_mcp_f(6)- 50)) {
+                    else if ((mcp_f(4) < md_mcp_f(4) - 50 && mcp_f(7) < md_mcp_f(7))
+                             || (mcp_f(5) < md_mcp_f(5)- 50 && mcp_f(6) < md_mcp_f(6))) {
                         if (lr == 'l') {
                             Motor(-15, 15); delay(20);
                             Motor(1, 1); delay(10);
@@ -1362,11 +1362,11 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
             while (1) {
                 if (mcp_f(5) < md_mcp_f(5)-50 && mcp_f(6) > md_mcp_f(6)) {
                     lr = 'l';
-                    Motor(10, -30); // หมุนซ้าย
+                    Motor(-30, 10); // หมุนขวา
                 }
                 else if (mcp_f(5) > md_mcp_f(5) && mcp_f(6) < md_mcp_f(6)-50) {
                     lr = 'r';
-                    Motor(-30, 10); // หมุนขวา
+                    Motor(10, -30); // หมุนซ้ายMotor(-30, 10); // หมุนขวา
                 }
                 else if ((mcp_f(4) < md_mcp_f(4)-50 && mcp_f(7) < md_mcp_f(7)-50)
                          || (mcp_f(5) < md_mcp_f(5)-50 && mcp_f(6) < md_mcp_f(6)-50)) {
@@ -1421,11 +1421,11 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
                 while (1) {
                     if (mcp_f(5) < md_mcp_f(5)- 50 && mcp_f(6) > md_mcp_f(6)) {
                         lr = 'l';
-                        Motor(10, -30);        
+                        Motor(-30, 10);       
                     }
                     else if (mcp_f(5) > md_mcp_f(5) && mcp_f(6) < md_mcp_f(6)- 50) {
                         lr = 'r';
-                        Motor(-30, 10);           
+                        Motor(10, -30);            
                     }
                     else if ((mcp_f(4) < md_mcp_f(4) - 50 && mcp_f(7) < md_mcp_f(7)- 50)
                              || (mcp_f(5) < md_mcp_f(5)- 50 && mcp_f(6) < md_mcp_f(6)- 50)) {
@@ -1636,6 +1636,160 @@ void fw_chopsticks(int spl, int spr, float kps, int targetDistanceCm, String _li
 }
 
 
+
+void bw_chopsticks(int spl, int spr, float kps, int targetDistanceCm, String _line) 
+{  
+   char lr; // ตัวแปรเก็บทิศทางซ้าย/ขวา
+    encoder.resetEncoders(); // รีเซตค่า Encoder
+    lines_fw = false; // ไม่ใช่การเดินหน้า
+    lines_bw = true; // เป็นการถอยหลัง
+
+    // ถ้ามีการตั้งค่า set_bb ให้เพิ่มระยะทาง 10 ซม.
+    if (set_bb == true) {
+        targetDistanceCm = targetDistanceCm + 10;
+        set_bb = false;
+    }
+
+    // แปลงระยะทางเป็นจำนวนพัลส์
+    float targetPulses = targetDistanceCm * pulsesPerCm;
+
+    // รีเซตมอเตอร์และไจโร
+    Motor(1, 1); delay(10); // หยุดมอเตอร์ชั่วคราว
+    my.resetAngles(); // รีเซทมุมไจโร
+
+    // ตั้งค่าตัวแปร PID
+    float yaw_offset = my.gyro('z'); // เก็บค่า yaw เริ่มต้น
+    _integral = 0; // รีเซต integral
+    _prevErr = 0; // รีเซต error ก่อนหน้า
+    prevT = millis(); // เก็บเวลาเริ่มต้น
+
+    // กำหนดช่วงเร่งและลดความเร็ว
+    float rampUpDistance = targetPulses * 0.2; // 20% แรกสำหรับเร่ง
+    float rampDownDistance = targetPulses * 0.8; // 20% สุดท้ายสำหรับลด
+    int minSpeed = 20; // ความเร็วขั้นต่ำ
+    int maxLeftSpeed = spl; // ความเร็วสูงสุดซ้าย
+    int maxRightSpeed = spr; // ความเร็วสูงสุดขวา
+
+    while (true) {
+        // อ่านค่า Encoder
+        float leftPulses = encoder.Poss_L();
+        float rightPulses = encoder.Poss_R();
+
+        // คำนวณระยะทางที่เคลื่อนที่แล้ว (ใช้ค่า absolute)
+        float currentPulses = abs((leftPulses + rightPulses) / 2);
+        float remainingPulses = targetPulses - currentPulses;
+
+        // อ่านเวลาและคำนวณ delta time
+        unsigned long now = millis();
+        float dt = (now - prevT) / 1000.0;
+        if (dt <= 0) dt = 0.001; // ป้องกันการหารด้วย 0
+        prevT = now;
+
+        // อ่านค่าไจโรและคำนวณ error (กลับทิศ)
+        float yaw = my.gyro('z') - yaw_offset;
+        float err = yaw; // กลับทิศของ yaw เพื่อแก้สลับทิศ
+
+        // ดีบัก: พิมพ์ค่า yaw เพื่อตรวจสอบ
+        Serial.print("Yaw: "); Serial.println(err);
+
+        // คำนวณ PID
+        _integral += err * dt;
+        float deriv = (err - _prevErr) / dt;
+        _prevErr = err;
+        float corr = kps * err + Kii * _integral + Kdd * deriv;
+
+        // กำหนดความเร็วพื้นฐาน
+        int baseLeftSpeed = maxLeftSpeed;
+        int baseRightSpeed = maxRightSpeed;
+
+        // ปรับความเร็วแบบ Ramp-up และ Ramp-down
+        if (currentPulses < rampUpDistance) {
+            float rampFactor = currentPulses / rampUpDistance;
+            baseLeftSpeed = minSpeed + (maxLeftSpeed - minSpeed) * rampFactor;
+            baseRightSpeed = minSpeed + (maxRightSpeed - minSpeed) * rampFactor;
+        }
+        else if (currentPulses > rampDownDistance) {
+            float rampFactor = (targetPulses - currentPulses) / (targetPulses - rampDownDistance);
+            baseLeftSpeed = minSpeed + (maxLeftSpeed - minSpeed) * rampFactor;
+            baseRightSpeed = minSpeed + (maxRightSpeed - minSpeed) * rampFactor;
+        }
+
+        // สั่งมอเตอร์ (ถอยหลัง, กลับเครื่องหมาย corr)
+        int leftSpeed = constrain(baseLeftSpeed + corr, -100, 100); // เปลี่ยน - เป็น +
+        int rightSpeed = constrain(baseRightSpeed - corr, -100, 100); // เปลี่ยน + เป็น -
+        Motor(-leftSpeed, -rightSpeed); // ความเร็วเป็นลบเพื่อถอยหลัง
+
+        // ตรวจสอบว่าถึงระยะทางเป้าหมายหรือยัง
+        if (currentPulses >= targetPulses) {
+            break;
+        }
+
+    }
+
+    // ถ้าต้องจับเส้นต่อ
+    if (_line == "line") 
+      {
+        while (1) 
+          {
+            Motor(-motor_slow, -motor_slow);
+
+            if (mcp_f(4) < md_mcp_f(4) - 50 && mcp_f(7) > md_mcp_f(7)) {                    
+                Motor(-40, 10);
+            }
+            else if (mcp_f(4) > md_mcp_f(4) && mcp_f(7) < md_mcp_f(7) - 50 ){
+                Motor(10, -40);
+            }
+            else if (mcp_f(5) < md_mcp_f(5) - 50 || mcp_f(6) < md_mcp_f(6) - 50) {
+                Motor(30, 30); delay(30);  
+                Motor(1, 1); delay(10);  
+
+                while (1) {
+                    if (mcp_f(5) < md_mcp_f(5)- 50 && mcp_f(6) > md_mcp_f(6)) {
+                        lr = 'l';
+                        Motor(-30, 10);        
+                    }
+                    else if (mcp_f(5) > md_mcp_f(5) && mcp_f(6) < md_mcp_f(6)- 50) {
+                        lr = 'r';
+                        Motor(10, -30);            
+                    }
+                    else if ((mcp_f(4) < md_mcp_f(4) - 50 && mcp_f(7) < md_mcp_f(7)- 50)
+                             || (mcp_f(5) < md_mcp_f(5)- 50 && mcp_f(6) < md_mcp_f(6)- 50)) {
+                        if (lr == 'l') {
+                            Motor(-15, 15); delay(20);
+                            Motor(1, 1); delay(10);
+                            Motor(0, 0); delay(10);
+                            break; 
+                        }
+                        if (lr == 'r') {
+                            Motor(15, -15); delay(20);
+                            Motor(-1, 1); delay(10);
+                            Motor(0, 0); delay(10);
+                            break; 
+                        }
+                        else {
+                            Motor(15, 15); delay(20);
+                            Motor(1, 1); delay(10);
+                            Motor(0, 0); delay(10);
+                            break;
+                        }
+                    }
+                    else {
+                        Motor(-motor_slow, -motor_slow);
+                    }
+                }                  
+                break;                  
+            }                  
+        }
+        lines = true;
+      } 
+    else {
+        Motor(1, 1); delay(20);
+        lines = false;
+    }
+
+    sett_f = false;
+    set_bb = false;
+}
 
 void fw_bridge(int spl, int spr, float kps, int targetDistanceCm, String _line) 
 {  
