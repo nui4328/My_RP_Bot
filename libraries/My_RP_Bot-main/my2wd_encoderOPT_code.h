@@ -230,9 +230,9 @@ void arm_Slide(int position)
                   if(digitalRead(20)==0)
                     {
                       do{servo(29, 0);}while(digitalRead(20)==1);
-                      servo(29, 90); delay(50);
+                      servo(29, 90); delay(150);
                       do{servo(29, 180);}while(digitalRead(20)==0);
-                      servo(29, 90); delay(50);
+                      servo(29, 90); 
                           break;
                      }                                             
                       
@@ -801,11 +801,19 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
           {
             servo(29, 0);
           }        
-        //if (millis() - lastTime >= abs(positions) || digitalRead(20)==1) 
         if (millis() - lastTime >= abs(positions) ) 
           {
               servo(29, 90);              
           }
+        if(digitalRead(20)==0)
+          {
+              do{servo(29, 0);}while(digitalRead(20)==1);
+              servo(29, 90); 
+              do{servo(29, 180);}while(digitalRead(20)==0);
+              servo(29, 90); 
+            } 
+
+
         if (mcp_f(0) < md_mcp_f(0)-30 && mcp_f(3) > md_mcp_f(3)) 
           {
             Motor(leftSpeed, rightSpeed/2);
@@ -1338,12 +1346,17 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
           {
             servo(29, 0);
           }        
-        //if (millis() - lastTime >= abs(positions) || digitalRead(20)==1) 
         if (millis() - lastTime >= abs(positions) ) 
           {
-              servo(29, 90);
-              
-          }  
+              servo(29, 90);              
+          }
+        if(digitalRead(20)==0)
+          {
+              do{servo(29, 0);}while(digitalRead(20)==1);
+              servo(29, 90); 
+              do{servo(29, 180);}while(digitalRead(20)==0);
+              servo(29, 90); 
+            }   
         // ตรวจ MCP (ปรับทิศ)
         if (mcp_f(4) < md_mcp_f(4) - 30 && mcp_f(7) > md_mcp_f(7)) {
             Motor(-leftSpeed / 2, -rightSpeed);
