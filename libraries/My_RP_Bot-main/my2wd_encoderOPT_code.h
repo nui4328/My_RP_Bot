@@ -509,7 +509,7 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line)
     lines_bw = false;  
 
     if (set_bb == true) {
-        targetDistanceCm = targetDistanceCm + 10;
+        targetDistanceCm = targetDistanceCm + 5;
         set_bb = false;
     }
 
@@ -1042,7 +1042,7 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line)
     lines_bw = true; // เป็นการถอยหลัง
 
     // ถ้ามีการตั้งค่า set_bb ให้เพิ่มระยะทาง 10 ซม.
-    if (set_bb == true) {
+    if (set_bb == true || sett_f == true) {
         targetDistanceCm = targetDistanceCm + 10;
         set_bb = false;
     }
@@ -1185,11 +1185,11 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line)
           {
             Motor(-motor_slow, -motor_slow);
 
-            if (mcp_f(4) < md_mcp_f(4)  && mcp_f(7) > md_mcp_f(7)) {                    
-                Motor(-40, 10);
+            if (mcp_f(4) < md_mcp_f(4) - 50 && mcp_f(7) > md_mcp_f(7)) {                    
+                Motor(-2, -40);
             }
-            else if (mcp_f(4) > md_mcp_f(4) && mcp_f(7) < md_mcp_f(7) ){
-                Motor(10, -40);
+            else if (mcp_f(4) > md_mcp_f(4) && mcp_f(7) < md_mcp_f(7) - 50 ){
+                Motor(-40, -2);
             }
             else if (mcp_f(5) < md_mcp_f(5)  || mcp_f(6) < md_mcp_f(6) ) {
                 Motor(30, 30); delay(30);  
@@ -1409,10 +1409,10 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
             Motor(-motor_slow, -motor_slow);
 
             if (mcp_f(4) < md_mcp_f(4) - 50 && mcp_f(7) > md_mcp_f(7)) {                    
-                Motor(-40, 10);
+                Motor(-2, -40);
             }
             else if (mcp_f(4) > md_mcp_f(4) && mcp_f(7) < md_mcp_f(7) - 50 ){
-                Motor(10, -40);
+                Motor(-40, -2);
             }
             else if (mcp_f(5) < md_mcp_f(5) - 50 || mcp_f(6) < md_mcp_f(6) - 50) {
                 Motor(30, 30); delay(30);  
@@ -1734,10 +1734,10 @@ void bw_chopsticks(int spl, int spr, float kps, int targetDistanceCm, String _li
             Motor(-motor_slow, -motor_slow);
 
             if (mcp_f(4) < md_mcp_f(4) - 50 && mcp_f(7) > md_mcp_f(7)) {                    
-                Motor(-40, 10);
+                Motor(10, -40);
             }
             else if (mcp_f(4) > md_mcp_f(4) && mcp_f(7) < md_mcp_f(7) - 50 ){
-                Motor(10, -40);
+                Motor(-40, 10);
             }
             else if (mcp_f(5) < md_mcp_f(5) - 50 || mcp_f(6) < md_mcp_f(6) - 50) {
                 Motor(30, 30); delay(30);  
