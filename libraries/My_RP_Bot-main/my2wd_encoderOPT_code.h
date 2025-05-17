@@ -44,8 +44,7 @@ float Kd = 0.015;  // Derivative gain
 float previousError = 0;
 float integral = 0;
 
-int servo_28_close = 135;   // แขนซ้าย
-int servo_27_close = 130;   // แขนขวา
+
 unsigned long lastTime = millis();
 bool error_servo  = false;
 void encoderISR(void) ;
@@ -232,6 +231,7 @@ void arm_Slide(int position)
                       do{servo(29, 0);}while(digitalRead(20)==1);
                       servo(29, 90); delay(150);
                       do{servo(29, 180);}while(digitalRead(20)==0);
+                      delay(100);
                       servo(29, 90); 
                           break;
                      }                                             
@@ -246,7 +246,8 @@ void arm_Slide(int position)
               do{servo(29, 0);}while(digitalRead(20)==1);
               servo(29, 90); delay(50);
               do{servo(29, 180);}while(digitalRead(20)==0);
-              servo(29, 90); delay(50);
+              delay(100);
+              servo(29, 90);
             }
      
     
@@ -739,9 +740,10 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
     int minSpeed = 20; // กำหนดสปีดขั้นต่ำ
     int maxLeftSpeed = spl;
     int maxRightSpeed = spr;
-    lastTime = millis();  
-
+    int time_used = 0;
+    lastTime = millis();
     while (true) {
+        time_used = millis() - lastTime;
         // อ่านค่าจาก Encoder
         float leftPulses = encoder.Poss_L();
         float rightPulses = encoder.Poss_R();
@@ -931,7 +933,19 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
         delay(50);
         lines = false;
     }
-
+    if(time_used < abs(positions))
+      {
+        while(1)
+          {
+                do{servo(29, 0);}while(digitalRead(20)==1);
+                servo(29, 90); 
+                do{servo(29, 180);}while(digitalRead(20)==0);                
+                delay(100);
+                servo(29, 90); delay(50);
+                break;
+              
+          }          
+      }
     sett_f = false;
     set_bb = false;
 }
@@ -1017,6 +1031,8 @@ void fw_distance(int spl, int spr, float kps, int dis, int positions)
        // Serial.println(yaw); // Debug ดูค่า yaw
 
         if (currentPulses >= targetPulses) {
+            Motor(leftSpeed, rightSpeed);
+            delay(500);
             break;
           }
         if(positions > 0)
@@ -1034,6 +1050,9 @@ void fw_distance(int spl, int spr, float kps, int dis, int positions)
           }
         
     }
+  
+  Motor(-10, -10);
+  delay(30);
   Motor(-1, -1);
   delay(50);
   lines = false;  
@@ -1284,8 +1303,10 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
     int minSpeed = 20; // ความเร็วขั้นต่ำ
     int maxLeftSpeed = spl; // ความเร็วสูงสุดซ้าย
     int maxRightSpeed = spr; // ความเร็วสูงสุดขวา
+    int time_used = 0;
     lastTime = millis();
     while (true) {
+        time_used = millis() - lastTime;
         // อ่านค่า Encoder
         float leftPulses = encoder.Poss_L();
         float rightPulses = encoder.Poss_R();
@@ -1346,17 +1367,20 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
           {
             servo(29, 0);
           }        
-        if (millis() - lastTime >= abs(positions) ) 
+        if (millis() - lastTime >= abs(positions) || digitalRead(20)==0) 
           {
-              servo(29, 90);              
+              servo(29, 90);   
+              if(digitalRead(20)==0)
+                {
+                  do{servo(29, 0);}while(digitalRead(20)==1);
+                  servo(29, 90); 
+                  do{servo(29, 180);}while(digitalRead(20)==0);
+                  delay(50);
+                  servo(29, 90); 
+                }            
           }
-        if(digitalRead(20)==0)
-          {
-              do{servo(29, 0);}while(digitalRead(20)==1);
-              servo(29, 90); 
-              do{servo(29, 180);}while(digitalRead(20)==0);
-              servo(29, 90); 
-            }   
+                  
+          
         // ตรวจ MCP (ปรับทิศ)
         if (mcp_f(4) < md_mcp_f(4) - 30 && mcp_f(7) > md_mcp_f(7)) {
             Motor(-leftSpeed / 2, -rightSpeed);
@@ -1470,11 +1494,25 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
         }
         lines = true;
       } 
-    else {
+    else 
+      {
         Motor(1, 1); delay(20);
         lines = false;
-    }
-
+      }
+    if(time_used < abs(positions))
+      {
+        while(1)
+          {
+                do{servo(29, 0);}while(digitalRead(20)==1);
+                servo(29, 90); 
+                do{servo(29, 180);}while(digitalRead(20)==0);
+                delay(100);
+                servo(29, 90); 
+                break;
+              
+          }          
+      }
+    
     sett_f = false;
     set_bb = false;
 }
