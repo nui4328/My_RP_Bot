@@ -35,7 +35,7 @@ void servo(int servo,int angle)
     }
   else if (servo==29)
     {
-        servo_pico29.attach(sevopico29);
+        servo_pico29.attach(sevopico29,500, 2500);
         servo_pico29.write(angle);       
     }
   
