@@ -1,4 +1,3 @@
-
 void st1()  
   {
     fw(50, 50, 1.5, 90, "none_line"); 
@@ -21,12 +20,12 @@ void st1()
     moveLR(70, 90); 
     set_b(1);
 
-    fw_chopsticks (30, 30, 2.5, 60, "none_line");
+    fw_chopsticks (20, 20, 2.0, 60, "none_line");
     fw(50, 50, 1.5, 30, "line");
     
     set_f(2);
-    bw(50, 50, 1.5, 40, "none_line");
-    bw_chopsticks (30, 30, 2.0, 60, "line");
+    bw(40, 40, 1.5, 40, "none_line");
+    bw_chopsticks (20, 20, 2.0, 60, "line");
 
     moveLR(70, 90); 
     set_b(1);
