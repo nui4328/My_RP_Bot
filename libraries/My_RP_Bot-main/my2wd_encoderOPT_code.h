@@ -218,7 +218,7 @@ void arm_Slide(int position)
    
           if( position > 0)
             {
-              do{servo(29, 180);}while(millis() - startTime < servo_pos);
+              do{servo(29, 190);}while(millis() - startTime < servo_pos);
               servo(29, 90); 
             }
           else  if( position < 0)
@@ -228,8 +228,7 @@ void arm_Slide(int position)
                   servo(29, 0);
                   if(digitalRead(20)==0)
                     {
-                      do{servo(29, 0);}while(digitalRead(20)==1);
-                      servo(29, 90); delay(150);
+                      
                       do{servo(29, 180);}while(digitalRead(20)==0);
                       delay(100);
                       servo(29, 90); 
@@ -244,7 +243,7 @@ void arm_Slide(int position)
           else
             {
               do{servo(29, 0);}while(digitalRead(20)==1);
-              servo(29, 90); delay(50);
+              servo(29, 90); 
               do{servo(29, 180);}while(digitalRead(20)==0);
               delay(100);
               servo(29, 90);
@@ -285,7 +284,7 @@ void moveLR(int speed, int degree)
           else if(lines_bw == true ||set_bb == true)
             {
                 encoder.resetEncoders();
-                do{Motor(20, 20);}while(encoder.Poss_L() < fw_to_rotate);
+                do{Motor(20, 20);}while(encoder.Poss_L() < fw_to_rotate-100);
                 Motor(-20, -20); delay(20);
                 Motor(1, 1);
                 delay(10); 
@@ -953,7 +952,7 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
 
 void fw_distance(int spl, int spr, float kps, int dis, int positions) 
   {  
-    int targetDistanceCm = 20;
+    int targetDistanceCm = 25;
     char lr;
     encoder.resetEncoders();
     lines_fw = true;  
@@ -1030,9 +1029,18 @@ void fw_distance(int spl, int spr, float kps, int dis, int positions)
         
        // Serial.println(yaw); // Debug ดูค่า yaw
 
-        if (currentPulses >= targetPulses) {
-            Motor(leftSpeed, rightSpeed);
-            delay(500);
+        if (currentPulses >= targetPulses) 
+          {
+            if(analogRead(26) < dis)
+              {
+                do{Motor(leftSpeed, rightSpeed);}while(analogRead(26) < dis);
+              }
+            
+            //delay(500);
+            break;
+          }
+        if(analogRead(26) > dis)
+          {
             break;
           }
         if(positions > 0)
@@ -2085,6 +2093,7 @@ void set_f(int _time)
           }
       }
       Motor(0, 0); delay(50);
+      lines = false;
   }
 void set_b(int _time)
   {    
@@ -2143,6 +2152,7 @@ void set_b(int _time)
           }
       }
     my.resetAngles();
+    lines = false;
       
   }
 
