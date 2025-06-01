@@ -230,7 +230,7 @@ void arm_Slide(int position)
                     {
                       
                       do{servo(29, 180);}while(digitalRead(20)==0);
-                      delay(100);
+                      delay(50);
                       servo(29, 90); 
                           break;
                      }                                             
@@ -245,7 +245,7 @@ void arm_Slide(int position)
               do{servo(29, 0);}while(digitalRead(20)==1);
               servo(29, 90); 
               do{servo(29, 180);}while(digitalRead(20)==0);
-              delay(100);
+              delay(50);
               servo(29, 90);
             }
      
@@ -527,9 +527,16 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line)
     prevT = millis();
 
     // เตรียมตัวสำหรับการเร่งช้าๆ
+
     float rampUpDistance = targetPulses * 0.2;   // ช่วงเร่ง 20% แรก
     float rampDownDistance = targetPulses * 0.7; // ช่วงเริ่มผ่อน 20% ท้าย
     int minSpeed = 15; // กำหนดสปีดขั้นต่ำ
+    if(targetDistanceCm  > 60)
+      {
+        rampUpDistance = targetPulses * 0.1;   // ช่วงเร่ง 20% แรก
+        rampDownDistance = targetPulses * 0.9; // ช่วงเริ่มผ่อน 20% ท้าย
+        minSpeed = 15; // กำหนดสปีดขั้นต่ำ
+      }
     int maxLeftSpeed = spl;
     int maxRightSpeed = spr;
 
@@ -735,8 +742,14 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
 
     // เตรียมตัวสำหรับการเร่งช้าๆ
     float rampUpDistance = targetPulses * 0.2;   // ช่วงเร่ง 20% แรก
-    float rampDownDistance = targetPulses * 0.8; // ช่วงเริ่มผ่อน 20% ท้าย
-    int minSpeed = 20; // กำหนดสปีดขั้นต่ำ
+    float rampDownDistance = targetPulses * 0.7; // ช่วงเริ่มผ่อน 20% ท้าย
+    int minSpeed = 15; // กำหนดสปีดขั้นต่ำ
+    if(targetDistanceCm  > 60)
+      {
+        rampUpDistance = targetPulses * 0.1;   // ช่วงเร่ง 20% แรก
+        rampDownDistance = targetPulses * 0.9; // ช่วงเริ่มผ่อน 20% ท้าย
+        minSpeed = 15; // กำหนดสปีดขั้นต่ำ
+      }
     int maxLeftSpeed = spl;
     int maxRightSpeed = spr;
     int time_used = 0;
@@ -939,7 +952,7 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
                 do{servo(29, 0);}while(digitalRead(20)==1);
                 servo(29, 90); 
                 do{servo(29, 180);}while(digitalRead(20)==0);                
-                delay(100);
+                delay(50);
                 servo(29, 90); delay(50);
                 break;
               
@@ -952,7 +965,7 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
 
 void fw_distance(int spl, int spr, float kps, int dis, int positions) 
   {  
-    int targetDistanceCm = 25;
+    int targetDistanceCm = 15;
     char lr;
     encoder.resetEncoders();
     lines_fw = true;  
@@ -1096,9 +1109,15 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line)
     prevT = millis(); // เก็บเวลาเริ่มต้น
 
     // กำหนดช่วงเร่งและลดความเร็ว
-    float rampUpDistance = targetPulses * 0.2; // 20% แรกสำหรับเร่ง
-    float rampDownDistance = targetPulses * 0.8; // 20% สุดท้ายสำหรับลด
-    int minSpeed = 20; // ความเร็วขั้นต่ำ
+    float rampUpDistance = targetPulses * 0.2;   // ช่วงเร่ง 20% แรก
+    float rampDownDistance = targetPulses * 0.7; // ช่วงเริ่มผ่อน 20% ท้าย
+    int minSpeed = 15; // กำหนดสปีดขั้นต่ำ
+    if(targetDistanceCm  > 60)
+      {
+        rampUpDistance = targetPulses * 0.1;   // ช่วงเร่ง 20% แรก
+        rampDownDistance = targetPulses * 0.9; // ช่วงเริ่มผ่อน 20% ท้าย
+        minSpeed = 15; // กำหนดสปีดขั้นต่ำ
+      }
     int maxLeftSpeed = spl; // ความเร็วสูงสุดซ้าย
     int maxRightSpeed = spr; // ความเร็วสูงสุดขวา
 
@@ -1306,9 +1325,15 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
     prevT = millis(); // เก็บเวลาเริ่มต้น
 
     // กำหนดช่วงเร่งและลดความเร็ว
-    float rampUpDistance = targetPulses * 0.2; // 20% แรกสำหรับเร่ง
-    float rampDownDistance = targetPulses * 0.8; // 20% สุดท้ายสำหรับลด
-    int minSpeed = 20; // ความเร็วขั้นต่ำ
+    float rampUpDistance = targetPulses * 0.2;   // ช่วงเร่ง 20% แรก
+    float rampDownDistance = targetPulses * 0.7; // ช่วงเริ่มผ่อน 20% ท้าย
+    int minSpeed = 15; // กำหนดสปีดขั้นต่ำ
+    if(targetDistanceCm  > 60)
+      {
+        rampUpDistance = targetPulses * 0.1;   // ช่วงเร่ง 20% แรก
+        rampDownDistance = targetPulses * 0.9; // ช่วงเริ่มผ่อน 20% ท้าย
+        minSpeed = 15; // กำหนดสปีดขั้นต่ำ
+      }
     int maxLeftSpeed = spl; // ความเร็วสูงสุดซ้าย
     int maxRightSpeed = spr; // ความเร็วสูงสุดขวา
     int time_used = 0;
@@ -1383,7 +1408,6 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
                   do{servo(29, 0);}while(digitalRead(20)==1);
                   servo(29, 90); 
                   do{servo(29, 180);}while(digitalRead(20)==0);
-                  delay(50);
                   servo(29, 90); 
                 }            
           }
@@ -1514,7 +1538,6 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
                 do{servo(29, 0);}while(digitalRead(20)==1);
                 servo(29, 90); 
                 do{servo(29, 180);}while(digitalRead(20)==0);
-                delay(100);
                 servo(29, 90); 
                 break;
               
