@@ -1,117 +1,224 @@
 #include "my_GYRO.h"
 
-my_GYRO::my_GYRO() {
-  gyroOffsetX = 0;
-  gyroOffsetY = 0;
-  gyroOffsetZ = 0;
-  angleX = 0;
-  angleY = 0;
-  angleZ = 0;
-  lastTime = 0;
-}
+// กำหนดออบเจกต์
+my_GYRO my;
 
+// ค่าคงที่
+const float my_GYRO::GYRO_THRESHOLD = 0.3; // ลด threshold เพื่อความเข้มงวด
+const float my_GYRO::ALPHA = 0.95; // ลด ALPHA เพื่อให้ accelerometer มีผลมากขึ้น
+const float my_GYRO::ACCEL_FILTER_ALPHA = 0.1; // สำหรับกรอง accelerometer
+
+// ตัวแปร static
+unsigned long my_GYRO::_lastTime = 0;
+float my_GYRO::_angleX = 0.0;
+float my_GYRO::_angleY = 0.0;
+float my_GYRO::_angleZ = 0.0;
+float my_GYRO::_gyroOffsetX = 0.0;
+float my_GYRO::_gyroOffsetY = 0.0;
+float my_GYRO::_gyroOffsetZ = 0.0;
+float my_GYRO::_accelX_prev = 0.0;
+float my_GYRO::_accelY_prev = 0.0;
+float my_GYRO::_accelZ_prev = 0.0;
+
+// เริ่มต้นเซ็นเซอร์
 bool my_GYRO::begin() {
-  Wire.begin();
-  if (!initGYRO()) {
+  Wire.begin(); // เริ่ม I2C
+
+  // ตรวจสอบ chip ID
+  Wire.beginTransmission(_address);
+  Wire.write(my_GYRO_CHIP_ID);
+  Wire.endTransmission();
+  Wire.requestFrom(_address, (uint8_t)1);
+  if (Wire.available()) {
+    uint8_t chipID = Wire.read();
+    if (chipID != 0xD1) { // Chip ID = 0xD1
+      return false;
+    }
+  } else {
     return false;
   }
-  calibrateGyro();
+
+  // รีเซ็ตเซ็นเซอร์
+  writeRegister(my_GYRO_CMD, 0xB6); // Soft reset
+  delay(100);
+
+  // ตั้งค่า accelerometer (±2g, ODR 400Hz)
+  writeRegister(my_GYRO_ACCEL_CONF, 0x2A); // ODR = 400Hz
+  writeRegister(my_GYRO_ACCEL_RANGE, 0x03); // ±2g
+
+  // ตั้งค่า gyroscope (±2000 dps, ODR 400Hz)
+  writeRegister(my_GYRO_GYRO_CONF, 0x2A); // ODR = 400Hz
+  writeRegister(my_GYRO_GYRO_RANGE, 0x00); // ±2000 dps
+
+  // เริ่ม accelerometer และ gyroscope
+  writeRegister(my_GYRO_CMD, 0x11); // เริ่ม accelerometer
+  delay(50);
+  writeRegister(my_GYRO_CMD, 0x15); // เริ่ม gyroscope
+  delay(50);
+
+  // คำนวณ offset ของ gyroscope
+  if (!calibrateGyro()) {
+    return false;
+  }
+  _lastTime = micros();
   return true;
 }
 
-float my_GYRO::gyro(char xyz) {
-  int16_t gx, gy, gz;
-  readGyro(gx, gy, gz);
+// อ่านค่ามุม (roll, pitch, yaw) ในหน่วยองศา
+void my_GYRO::readAngles(float &roll, float &pitch, float &yaw) {
+  // อ่านข้อมูล accelerometer และ gyroscope
+  int16_t ax, ay, az, gx, gy, gz;
+  readAccelGyro(&ax, &ay, &az, &gx, &gy, &gz);
 
-  // ปรับค่าด้วยออฟเซ็ตจากการคาริเบรท
-  gx -= gyroOffsetX;
-  gy -= gyroOffsetY;
-  gz -= gyroOffsetZ;
+  // แปลงค่า accelerometer เป็น g (±2g -> 16384 LSB/g)
+  float accelX = ax / 16384.0;
+  float accelY = ay / 16384.0;
+  float accelZ = az / 16384.0;
 
-  // คำนวณมุมจากไจโรสโคป
+  // กรอง accelerometer ด้วย low-pass filter
+  accelX = ACCEL_FILTER_ALPHA * accelX + (1.0 - ACCEL_FILTER_ALPHA) * _accelX_prev;
+  accelY = ACCEL_FILTER_ALPHA * accelY + (1.0 - ACCEL_FILTER_ALPHA) * _accelY_prev;
+  accelZ = ACCEL_FILTER_ALPHA * accelZ + (1.0 - ACCEL_FILTER_ALPHA) * _accelZ_prev;
+  _accelX_prev = accelX;
+  _accelY_prev = accelY;
+  _accelZ_prev = accelZ;
+
+  // แปลงค่า gyroscope เป็น dps (±2000 dps -> 16.4 LSB/dps) และลบ offset
+  float gyroX = (gx / 16.4) - _gyroOffsetX;
+  float gyroY = (gy / 16.4) - _gyroOffsetY;
+  float gyroZ = (gz / 16.4) - _gyroOffsetZ;
+
+  // ใช้ threshold เพื่อตัด noise
+  if (abs(gyroX) < GYRO_THRESHOLD) gyroX = 0.0;
+  if (abs(gyroY) < GYRO_THRESHOLD) gyroY = 0.0;
+  if (abs(gyroZ) < GYRO_THRESHOLD) gyroZ = 0.0;
+
+  // คำนวณมุมจาก accelerometer (roll และ pitch)
+  float accelRoll = atan2(accelY, accelZ) * 180.0 / PI;
+  float accelPitch = atan2(-accelX, sqrt(accelY * accelY + accelZ * accelZ)) * 180.0 / PI;
+
+  // คำนวณเวลา (วินาที)
   unsigned long currentTime = micros();
-  float dt = (currentTime - lastTime) / 1000000.0;  // แปลงเวลาเป็นวินาที
-  lastTime = currentTime;
+  float deltaTime = (currentTime - _lastTime) / 1000000.0;
+  _lastTime = currentTime;
 
-  // คำนวณมุม (ใช้ sensitivity scale factor 65.5 สำหรับ ±500 dps)
-  angleX += (gx / 65) * dt;
-  angleY += (gy / 65) * dt;
-  angleZ += (gz / 17) * dt;  // ใช้ 65.5 สำหรับ ±500 dps
+  // คำนวณมุมจาก gyroscope
+  float gyroAngleX = _angleX + gyroX * deltaTime;
+  float gyroAngleY = _angleY + gyroY * deltaTime;
+  float gyroAngleZ = _angleZ + gyroZ * deltaTime;
 
-  // คืนค่ามุมตามแกนที่ต้องการ
-  switch (xyz) {
-    case 'x': return angleX;
-    case 'y': return angleY;
-    case 'z': return angleZ;
-    default: return 0.0;
+  // ใช้ complementary filter สำหรับ roll และ pitch
+  _angleX = ALPHA * gyroAngleX + (1.0 - ALPHA) * accelRoll;
+  _angleY = ALPHA * gyroAngleY + (1.0 - ALPHA) * accelPitch;
+  _angleZ = gyroAngleZ; // yaw ไม่ใช้ accelerometer
+
+  // ส่งคืนค่ามุม
+  roll = _angleX;
+  pitch = _angleY;
+  yaw = _angleZ;
+}
+
+// อ่านค่ามุมตามแกน ('x' = roll, 'y' = pitch, 'z' = yaw)
+float my_GYRO::gyro(char axis) {
+  float roll, pitch, yaw;
+  readAngles(roll, pitch, yaw); // อัปเดตค่ามุมล่าสุด
+  switch (axis) {
+    case 'x':
+    case 'X':
+      return roll;
+    case 'y':
+    case 'Y':
+      return pitch;
+    case 'z':
+    case 'Z':
+      return yaw;
+    default:
+      return 0.0; // คืนค่า 0.0 หากแกนไม่ถูกต้อง
   }
 }
 
+// รีเซ็ตค่า Yaw เป็นศูนย์
+void my_GYRO::resetYaw() {
+  _angleZ = 0.0;
+}
+
+// รีเซ็ตมุมทั้งหมด (roll, pitch, yaw) เป็นศูนย์
 void my_GYRO::resetAngles() {
-  angleX = 0;
-  angleY = 0;
-  angleZ = 0;
+  _angleX = 0.0;
+  _angleY = 0.0;
+  _angleZ = 0.0;
 }
 
-void my_GYRO::calibrateGyro() {
-  int16_t gxSum = 0, gySum = 0, gzSum = 0;
-  const int numSamples = 500;
-
-  for (int i = 0; i < numSamples; i++) {
-    int16_t gx, gy, gz;
-    readGyro(gx, gy, gz);
-
-    gxSum += gx;
-    gySum += gy;
-    gzSum += gz;
-
-    delay(5);
-  }
-
-  // คำนวณออฟเซ็ต
-  gyroOffsetX = gxSum / numSamples;
-  gyroOffsetY = gySum / numSamples;
-  gyroOffsetZ = gzSum / numSamples;
-}
-
-bool my_GYRO::initGYRO() {
-  uint8_t id = readRegister(0x00);
-  if (id != 0xD1) {  // GYRO มี ID 0xD1
-    return false;
-  }
-
-  // ตั้งค่าโหมดปกติ (เปิดเฉพาะไจโรสโคป)
-  writeRegister(0x7E, 0x15);  // เปิดไจโรสโคป
-  delay(50);  // รอให้เซ็นเซอร์เริ่มต้น
-
-  return true;
-}
-
-void my_GYRO::readGyro(int16_t &gx, int16_t &gy, int16_t &gz) {
-  gx = readRegister16(0x0C);  // อ่านค่าไจโรสโคป X
-  gy = readRegister16(0x0E);  // อ่านค่าไจโรสโคป Y
-  gz = readRegister16(0x10);  // อ่านค่าไจโรสโคป Z
-}
-
+// ฟังก์ชันเขียนรีจิสเตอร์
 void my_GYRO::writeRegister(uint8_t reg, uint8_t value) {
-  Wire.beginTransmission(my_ADDRESS);
+  Wire.beginTransmission(_address);
   Wire.write(reg);
   Wire.write(value);
   Wire.endTransmission();
 }
 
-uint8_t my_GYRO::readRegister(uint8_t reg) {
-  Wire.beginTransmission(my_ADDRESS);
-  Wire.write(reg);
+// ฟังก์ชันอ่าน accelerometer และ gyroscope
+void my_GYRO::readAccelGyro(int16_t *ax, int16_t *ay, int16_t *az, int16_t *gx, int16_t *gy, int16_t *gz) {
+  Wire.beginTransmission(_address);
+  Wire.write(my_GYRO_GYRO_DATA);
   Wire.endTransmission();
-  Wire.requestFrom(my_ADDRESS, 1);
-  return Wire.read();
+  Wire.requestFrom(_address, (uint8_t)12);
+
+  if (Wire.available() == 12) {
+    *gx = (Wire.read() | (Wire.read() << 8));
+    *gy = (Wire.read() | (Wire.read() << 8));
+    *gz = (Wire.read() | (Wire.read() << 8));
+    *ax = (Wire.read() | (Wire.read() << 8));
+    *ay = (Wire.read() | (Wire.read() << 8));
+    *az = (Wire.read() | (Wire.read() << 8));
+  }
 }
 
-int16_t my_GYRO::readRegister16(uint8_t reg) {
-  Wire.beginTransmission(my_ADDRESS);
-  Wire.write(reg);
-  Wire.endTransmission();
-  Wire.requestFrom(my_ADDRESS, 2);
-  return (int16_t)(Wire.read() | (Wire.read() << 8));
+// ฟังก์ชันคำนวณ offset ของ gyroscope
+bool my_GYRO::calibrateGyro() {
+  const int CALIBRATION_SAMPLES = 200; // เพิ่มจำนวนตัวอย่าง
+  float sumX = 0.0, sumY = 0.0, sumZ = 0.0;
+  float sumAX = 0.0, sumAY = 0.0, sumAZ = 0.0;
+  float varX = 0.0, varY = 0.0, varZ = 0.0;
+  int16_t gx, gy, gz;
+
+  for (int i = 0; i < CALIBRATION_SAMPLES; i++) {
+    int16_t ax, ay, az;
+    readAccelGyro(&ax, &ay, &az, &gx, &gy, &gz);
+    float gX = gx / 16.4;
+    float gY = gy / 16.4;
+    float gZ = gz / 16.4;
+    float aX = ax / 16384.0;
+    float aY = ay / 16384.0;
+    float aZ = az / 16384.0;
+    sumX += gX;
+    sumY += gY;
+    sumZ += gZ;
+    sumAX += aX;
+    sumAY += aY;
+    sumAZ += aZ;
+    varX += gX * gX;
+    varY += gY * gY;
+    varZ += gZ * gZ;
+    delay(5); // ปรับให้ตรงกับ ODR 400Hz
+  }
+
+  // ตรวจสอบความนิ่งของเซ็นเซอร์
+  float meanX = sumX / CALIBRATION_SAMPLES;
+  float meanY = sumY / CALIBRATION_SAMPLES;
+  float meanZ = sumZ / CALIBRATION_SAMPLES;
+  varX = varX / CALIBRATION_SAMPLES - meanX * meanX;
+  varY = varY / CALIBRATION_SAMPLES - meanY * meanY;
+  varZ = varZ / CALIBRATION_SAMPLES - meanZ * meanZ;
+  if (varX > 0.1 || varY > 0.1 || varZ > 0.1) {
+    return false; // เซ็นเซอร์ไม่นิ่ง
+  }
+
+  _gyroOffsetX = meanX;
+  _gyroOffsetY = meanY;
+  _gyroOffsetZ = meanZ;
+  _accelX_prev = sumAX / CALIBRATION_SAMPLES;
+  _accelY_prev = sumAY / CALIBRATION_SAMPLES;
+  _accelZ_prev = sumAZ / CALIBRATION_SAMPLES;
+  return true;
 }
