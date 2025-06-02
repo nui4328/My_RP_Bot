@@ -5,7 +5,7 @@
 #include "my2WD_encoder_OPTsensor.h"
 #include "my_servo_optM.h"
 #include <my_GYRO.h>
-my_GYRO my;
+//my_GYRO my;
 
 #define ENCODER_PIN 20  // ขารับสัญญาณ encoder
 volatile long encoderCount = 0;
@@ -85,12 +85,14 @@ void setup_OPT()
   {    
      Serial.begin(9600);
      sensor_set();              // ค่าเริ่มต้น eeprom, bit_analogRead=>12   
-     my.begin();
+     // เริ่มต้นเซ็นเซอร์
+     my_GYRO::begin();
+       my_GYRO::resetAngles();
+    // my.begin();
      pinMode(25, OUTPUT);
      pinMode(20, INPUT_PULLUP);
      mydisplay_background(black);
      mydisplay("MY-MAKERS", 20, 30, 2, white);
-     my.resetAngles();
       _integral = _prevErr = 0;
       prevT = millis();
   }
@@ -297,7 +299,7 @@ void moveLR(int speed, int degree)
         } 
         Motor(-2, -2);
         delay(20);
-        my.resetAngles();
+         my_GYRO::resetAngles();
         delay(10);
     
         // คำนวณค่ามุมเริ่มต้น
@@ -360,12 +362,12 @@ void moveLR(int speed, int degree)
         // หยุดมอเตอร์หลังจากหมุนเสร็จ
         if(degree>0)
           {
-            Motor(-10, 10);
+            Motor(-20, 20);
             delay(20);
           }
         else
           {
-            Motor(10, -10);
+            Motor(20, -20);
             delay(20);
           }
         Motor(-1, -1);
@@ -397,7 +399,7 @@ void moveLR(int _line, int speed, int degree)
         set_bb = false;
         Motor(-1, -1);
         delay(50);
-        my.resetAngles();
+         my_GYRO::resetAngles();
         delay(10);
     
         // คำนวณค่ามุมเริ่มต้น
@@ -518,7 +520,7 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line)
 
     // รีเซต Motor และ Gyro
     Motor(-1, -1); delay(10);
-    my.resetAngles();
+     my_GYRO::resetAngles();
 
     // *** เริ่มต้นตั้งค่าตัวแปรสำหรับ PID ***
     float yaw_offset = my.gyro('z'); // << เก็บค่าตอนเริ่มต้น
@@ -595,12 +597,12 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line)
         if (mcp_f(0) < md_mcp_f(0)-30 && mcp_f(3) > md_mcp_f(3)) 
           {
             Motor(leftSpeed, rightSpeed/2);
-            my.resetAngles();
+             my_GYRO::resetAngles();
           } 
         else if (mcp_f(0) > md_mcp_f(0) && mcp_f(3) < md_mcp_f(3)-30) 
           {
             Motor(leftSpeed/2, rightSpeed);
-            my.resetAngles();
+             my_GYRO::resetAngles();
           }
         else if (mcp_f(1) < md_mcp_f(1) - 50 || mcp_f(2) < md_mcp_f(2) - 50) 
           {
@@ -732,7 +734,7 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
 
     // รีเซต Motor และ Gyro
     Motor(-1, -1); delay(10);
-    my.resetAngles();
+     my_GYRO::resetAngles();
 
     // *** เริ่มต้นตั้งค่าตัวแปรสำหรับ PID ***
     float yaw_offset = my.gyro('z'); // << เก็บค่าตอนเริ่มต้น
@@ -831,12 +833,12 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
         if (mcp_f(0) < md_mcp_f(0)-30 && mcp_f(3) > md_mcp_f(3)) 
           {
             Motor(leftSpeed, rightSpeed/2);
-            my.resetAngles();
+             my_GYRO::resetAngles();
           } 
         else if (mcp_f(0) > md_mcp_f(0) && mcp_f(3) < md_mcp_f(3)-30) 
           {
             Motor(leftSpeed/2, rightSpeed);
-            my.resetAngles();
+             my_GYRO::resetAngles();
           }
         else if (mcp_f(1) < md_mcp_f(1) - 50 || mcp_f(2) < md_mcp_f(2) - 50) 
           {
@@ -977,7 +979,7 @@ void fw_distance(int spl, int spr, float kps, int dis, int positions)
 
     // รีเซต Motor และ Gyro
     Motor(-1, -1); delay(10);
-    my.resetAngles();
+     my_GYRO::resetAngles();
 
     // *** เริ่มต้นตั้งค่าตัวแปรสำหรับ PID ***
     float yaw_offset = my.gyro('z'); // << เก็บค่าตอนเริ่มต้น
@@ -1100,7 +1102,7 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line)
 
     // รีเซตมอเตอร์และไจโร
     Motor(1, 1); delay(10); // หยุดมอเตอร์ชั่วคราว
-    my.resetAngles(); // รีเซทมุมไจโร
+     my_GYRO::resetAngles(); // รีเซทมุมไจโร
 
     // ตั้งค่าตัวแปร PID
     float yaw_offset = my.gyro('z'); // เก็บค่า yaw เริ่มต้น
@@ -1110,12 +1112,12 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line)
 
     // กำหนดช่วงเร่งและลดความเร็ว
     float rampUpDistance = targetPulses * 0.2;   // ช่วงเร่ง 20% แรก
-    float rampDownDistance = targetPulses * 0.7; // ช่วงเริ่มผ่อน 20% ท้าย
+    float rampDownDistance = targetPulses * 0.6; // ช่วงเริ่มผ่อน 20% ท้าย
     int minSpeed = 15; // กำหนดสปีดขั้นต่ำ
     if(targetDistanceCm  > 60)
       {
         rampUpDistance = targetPulses * 0.1;   // ช่วงเร่ง 20% แรก
-        rampDownDistance = targetPulses * 0.9; // ช่วงเริ่มผ่อน 20% ท้าย
+        rampDownDistance = targetPulses * 0.8; // ช่วงเริ่มผ่อน 20% ท้าย
         minSpeed = 15; // กำหนดสปีดขั้นต่ำ
       }
     int maxLeftSpeed = spl; // ความเร็วสูงสุดซ้าย
@@ -1178,11 +1180,11 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line)
         // ตรวจ MCP (ปรับทิศ)
         if (mcp_f(4) < md_mcp_f(4) - 30 && mcp_f(7) > md_mcp_f(7)) {
             Motor(-(leftSpeed / 3), -rightSpeed);
-            my.resetAngles();
+             my_GYRO::resetAngles();
         } 
         else if (mcp_f(4) > md_mcp_f(4) && mcp_f(7) < md_mcp_f(7) - 30) {
             Motor(-leftSpeed, -(rightSpeed / 3));
-            my.resetAngles();
+             my_GYRO::resetAngles();
         }
 
         else if (mcp_f(5) < md_mcp_f(5) - 50 || mcp_f(6) < md_mcp_f(6) - 50) 
@@ -1316,7 +1318,7 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
 
     // รีเซตมอเตอร์และไจโร
     Motor(1, 1); delay(10); // หยุดมอเตอร์ชั่วคราว
-    my.resetAngles(); // รีเซทมุมไจโร
+     my_GYRO::resetAngles(); // รีเซทมุมไจโร
 
     // ตั้งค่าตัวแปร PID
     float yaw_offset = my.gyro('z'); // เก็บค่า yaw เริ่มต้น
@@ -1416,11 +1418,11 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
         // ตรวจ MCP (ปรับทิศ)
         if (mcp_f(4) < md_mcp_f(4) - 30 && mcp_f(7) > md_mcp_f(7)) {
             Motor(-leftSpeed / 2, -rightSpeed);
-            my.resetAngles();
+             my_GYRO::resetAngles();
         } 
         else if (mcp_f(4) > md_mcp_f(4) && mcp_f(7) < md_mcp_f(7) - 30) {
             Motor(-leftSpeed, -rightSpeed / 2);
-            my.resetAngles();
+             my_GYRO::resetAngles();
         }
 
         else if (mcp_f(5) < md_mcp_f(5) - 50 || mcp_f(6) < md_mcp_f(6) - 50) 
@@ -1570,7 +1572,7 @@ void fw_chopsticks(int spl, int spr, float kps, int targetDistanceCm, String _li
   
       // รีเซต Motor และ Gyro
       Motor(-1, -1); delay(10);
-      my.resetAngles();
+       my_GYRO::resetAngles();
   
       // *** เริ่มต้นตั้งค่าตัวแปรสำหรับ PID ***
       float yaw_offset = my.gyro('z'); // << เก็บค่าตอนเริ่มต้น
@@ -1737,7 +1739,7 @@ void bw_chopsticks(int spl, int spr, float kps, int targetDistanceCm, String _li
 
     // รีเซตมอเตอร์และไจโร
     Motor(1, 1); delay(10); // หยุดมอเตอร์ชั่วคราว
-    my.resetAngles(); // รีเซทมุมไจโร
+     my_GYRO::resetAngles(); // รีเซทมุมไจโร
 
     // ตั้งค่าตัวแปร PID
     float yaw_offset = my.gyro('z'); // เก็บค่า yaw เริ่มต้น
@@ -1746,9 +1748,16 @@ void bw_chopsticks(int spl, int spr, float kps, int targetDistanceCm, String _li
     prevT = millis(); // เก็บเวลาเริ่มต้น
 
     // กำหนดช่วงเร่งและลดความเร็ว
-    float rampUpDistance = targetPulses * 0.2; // 20% แรกสำหรับเร่ง
-    float rampDownDistance = targetPulses * 0.8; // 20% สุดท้ายสำหรับลด
-    int minSpeed = 20; // ความเร็วขั้นต่ำ
+    float rampUpDistance = targetPulses * 0.2;   // ช่วงเร่ง 20% แรก
+    float rampDownDistance = targetPulses * 0.6; // ช่วงเริ่มผ่อน 20% ท้าย
+    int minSpeed = 15; // กำหนดสปีดขั้นต่ำ
+    if(targetDistanceCm  > 60)
+      {
+        rampUpDistance = targetPulses * 0.1;   // ช่วงเร่ง 20% แรก
+        rampDownDistance = targetPulses * 0.8; // ช่วงเริ่มผ่อน 20% ท้าย
+        minSpeed = 15; // กำหนดสปีดขั้นต่ำ
+      }// กำหนดช่วงเร่งและลดความเร็ว
+
     int maxLeftSpeed = spl; // ความเร็วสูงสุดซ้าย
     int maxRightSpeed = spr; // ความเร็วสูงสุดขวา
 
@@ -1890,7 +1899,7 @@ void fw_bridge(int spl, int spr, float kps, int targetDistanceCm, String _line)
 
   // รีเซต Motor และ Gyro
   Motor(-1, -1); delay(10);
-  my.resetAngles();
+   my_GYRO::resetAngles();
 
   // *** เริ่มต้นตั้งค่าตัวแปรสำหรับ PID ***
   float yaw_offset = my.gyro('z'); // << เก็บค่าตอนเริ่มต้น
@@ -1960,12 +1969,12 @@ void fw_bridge(int spl, int spr, float kps, int targetDistanceCm, String _line)
       if (mcp_f(0) < md_mcp_f(0)-100 && mcp_f(3) > md_mcp_f(3)) 
         {
           Motor(leftSpeed, 2);
-          my.resetAngles();
+           my_GYRO::resetAngles();
         } 
       else if (mcp_f(0) > md_mcp_f(0) && mcp_f(3) < md_mcp_f(3)-100 ) 
         {
           Motor(2, rightSpeed);
-          my.resetAngles();
+           my_GYRO::resetAngles();
         }
       else if (mcp_f(1) < min_mcp_f(1) -100  || mcp_f(2) < min_mcp_f(2) -100 ) 
         {
@@ -2174,7 +2183,7 @@ void set_b(int _time)
               }
           }
       }
-    my.resetAngles();
+     my_GYRO::resetAngles();
     lines = false;
       
   }
