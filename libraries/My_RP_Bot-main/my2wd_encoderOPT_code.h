@@ -316,7 +316,7 @@ void moveLR(int speed, int degree)
   float integral = 0, output = 0;
 
   unsigned long lastTime = millis();
-  unsigned long timeout = 2000;
+  unsigned long timeout = 500;
   unsigned long startTime = millis();
 
   while (true) {
@@ -336,7 +336,7 @@ void moveLR(int speed, int degree)
 
     // 🔸 จำกัด output เมื่อใกล้มุมเป้าหมาย เพื่อเบรกไม่ให้เลย
     if (abs(error) < 15) {
-      output = constrain(output, -20, 20);
+      output = constrain(output, -30, 30);
     } else {
       output = constrain(output, -speed, speed);
     }
