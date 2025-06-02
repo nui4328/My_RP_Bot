@@ -1,7 +1,7 @@
 #include "my_GYRO.h"
 
 // กำหนดออบเจกต์
-my_GYRO my;
+//my_GYRO my;
 
 // ค่าคงที่
 const float my_GYRO::GYRO_THRESHOLD = 0.3; // ลด threshold เพื่อความเข้มงวด
