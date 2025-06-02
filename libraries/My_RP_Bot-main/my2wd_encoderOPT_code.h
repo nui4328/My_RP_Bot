@@ -297,81 +297,76 @@ void moveLR(int speed, int degree)
             Motor(-2, -2);
             delay(10); 
         } 
-        Motor(-2, -2);
-        delay(20);
-         my_GYRO::resetAngles();
-        delay(10);
-    
-        // คำนวณค่ามุมเริ่มต้น
-        float initialDegree = 0;
-        for (int i = 0; i < 5; i++) {
-            initialDegree += my.gyro('z');  // ใช้ค่าที่อ่านได้จากเซ็นเซอร์
-            delay(5);
-        }
-        initialDegree /= 5.0;
-    
-        // คำนวณมุมเป้าหมาย
-        float targetDegree = initialDegree + degree;
-    
-        // กำหนดค่าของ PID
-        /*
-        lr_kp  = 1.20;  // ปรับค่า Kp เพื่อให้การหมุนเร็วขึ้น
-        lr_kp  = 0.0001;  // ค่า Ki ปรับตามความแม่นยำในการหยุด
-        flr_kp = 0.03; // ปรับค่า Kd เพื่อให้การหยุดมีความแม่นยำขึ้น
-        */
-        float error = 0, previous_error = 0;
-        float integral = 0, output = 0;
-        float currentDegree = 0;
-    
-        unsigned long lastTime = millis();
-        unsigned long timeout = 300;  // กำหนดเวลา timeout
-        unsigned long startTime = millis();
-    
-        while (true) {
-            currentDegree = my.gyro('z');  // อ่านค่ามุมปัจจุบัน
-            error = targetDegree - currentDegree;  // คำนวณความผิดพลาด
-    
-            // ตรวจสอบเงื่อนไขการหยุดเมื่อใกล้ถึงมุมที่ต้องการ  error_moveLR , output_moveLR;
-            if (abs(error) < error_moveLR && abs(output) < output_moveLR) break;
-    
-            unsigned long now = millis();
-            float dt = (now - lastTime) / 1000.0;
-            lastTime = now;
-    
-            if (dt > 0) {
-                integral += error * dt;
-                float derivative = (error - previous_error) / dt;
-                previous_error = error;
-    
-                output = lr_kp * error + lr_ki * integral + lr_kd * derivative;
-            }
-    
-            // จำกัดค่าของ output ให้อยู่ในช่วงความเร็วที่ต้องการ
-            output = constrain(output, -speed, speed);
-    
-            // ควบคุมมอเตอร์ให้หมุนตาม PID ที่คำนวณ
-            Motor(output, -output);  
-            delay(5);
-    
-            // ตรวจจับ timeout หากใช้เวลานานเกินไป
-            if (millis() - startTime > timeout) {
-                break;  // ออกจาก loop หากเวลาผ่านไปนานเกินไป
-            }
-        }
-    
-        // หยุดมอเตอร์หลังจากหมุนเสร็จ
-        if(degree>0)
-          {
-            Motor(-20, 20);
-            delay(20);
-          }
-        else
-          {
-            Motor(20, -20);
-            delay(20);
-          }
         Motor(-1, -1);
-        delay(10);
+        delay(120);
+  my_GYRO::resetAngles();
+  delay(10);
+
+  // อ่านมุมเริ่มต้นแบบเฉลี่ย
+  float initialDegree = 0;
+  for (int i = 0; i < 10; i++) {
+    initialDegree += my.gyro('z');
+    delay(5);
+  }
+  initialDegree /= 10.0;
+
+  // ตั้งมุมเป้าหมาย
+  float targetDegree = initialDegree + degree;
+  float error = 0, previous_error = 0;
+  float integral = 0, output = 0;
+
+  unsigned long lastTime = millis();
+  unsigned long timeout = 2000;
+  unsigned long startTime = millis();
+
+  while (true) {
+    float currentDegree = my.gyro('z');
+    error = targetDegree - currentDegree;
+
+    unsigned long now = millis();
+    float dt = (now - lastTime) / 1000.0;
+    lastTime = now;
+
+    if (dt > 0) {
+      integral += error * dt;
+      float derivative = (error - previous_error) / dt;
+      previous_error = error;
+      output = lr_kp * error + lr_ki * integral + lr_kd * derivative;
+    }
+
+    // 🔸 จำกัด output เมื่อใกล้มุมเป้าหมาย เพื่อเบรกไม่ให้เลย
+    if (abs(error) < 15) {
+      output = constrain(output, -20, 20);
+    } else {
+      output = constrain(output, -speed, speed);
+    }
+
+    Motor(output, -output); // ซ้ายบวก ขวาลบ
+    delay(5);
+
+    // 🔸 ปรับเงื่อนไขหยุดให้แม่นขึ้น
+    if (abs(error) < 3 && abs(output) < 5) break;
+    if (millis() - startTime > timeout) break;
+
+    // Debug
+    Serial.print("Error: ");
+    Serial.print(error);
+    Serial.print(" deg, Output: ");
+    Serial.print(output);
+    Serial.println("%");
+  }
+
+  // หยุดมอเตอร์
+  Motor(0, 0);
+  delay(50);
+
+  // แสดงมุมสุดท้าย
+  float finalDegree = my.gyro('z');
+  Serial.print("Final angle: ");
+  Serial.print(finalDegree);
+  Serial.print(" deg, Target: ");
+  Serial.print(targetDegree);
+  Serial.println(" deg");
   }
 
 
@@ -1248,28 +1243,28 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line)
                 Motor(-40, -2);
             }
             else if (mcp_f(5) < md_mcp_f(5)  || mcp_f(6) < md_mcp_f(6) ) {
-                Motor(30, 30); delay(30);  
+                Motor(30, 30); delay(20);  
                 Motor(1, 1); delay(10);  
 
                 while (1) {
                     if (mcp_f(5) < md_mcp_f(5) && mcp_f(6) > md_mcp_f(6)) {
                         lr = 'l';                        
-                        Motor(-30, 10);         
+                        Motor(-20, 5);         
                     }
                     else if (mcp_f(5) > md_mcp_f(5) && mcp_f(6) < md_mcp_f(6)) {
                         lr = 'r';
-                        Motor(10, -30);         
+                        Motor(5, -20);         
                     }
                     else if ((mcp_f(4) < md_mcp_f(4) - 50 && mcp_f(7) < md_mcp_f(7))
                              || (mcp_f(5) < md_mcp_f(5)- 50 && mcp_f(6) < md_mcp_f(6))) {
                         if (lr == 'l') {
-                            Motor(-15, 15); delay(20);
+                            Motor(-15, 15); delay(10);
                             Motor(1, 1); delay(10);
                             Motor(0, 0); delay(10);
                             break; 
                         }
                         if (lr == 'r') {
-                            Motor(15, -15); delay(20);
+                            Motor(15, -15); delay(10);
                             Motor(-1, 1); delay(10);
                             Motor(0, 0); delay(10);
                             break; 
