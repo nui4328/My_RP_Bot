@@ -286,7 +286,7 @@ void moveLR(int speed, int degree)
           else if(lines_bw == true ||set_bb == true)
             {
                 encoder.resetEncoders();
-                do{Motor(20, 20);}while(encoder.Poss_L() < fw_to_rotate-100);
+                do{Motor(20, 20);}while(encoder.Poss_L() < fw_to_rotate);
                 Motor(-20, -20); delay(20);
                 Motor(1, 1);
                 delay(10); 
