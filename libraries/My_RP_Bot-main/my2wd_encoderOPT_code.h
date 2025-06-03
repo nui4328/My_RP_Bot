@@ -230,7 +230,7 @@ void arm_Slide(int position)
                   servo(29, 0);
                   if(digitalRead(20)==0)
                     {
-                      
+                      servo(29, 90); 
                       do{servo(29, 180);}while(digitalRead(20)==0);
                       delay(150);
                       servo(29, 90); 
@@ -1045,6 +1045,89 @@ void fw_distance(int spl, int spr, float kps, int dis, int positions)
           {
               servo(29, 90);              
           }
+        
+    }
+  
+  Motor(-10, -10);
+  delay(30);
+  Motor(-1, -1);
+  delay(50);
+  lines = false;  
+
+  sett_f = false;
+  set_bb = false;
+}
+
+void fw_distance(int spl, int spr, float kps) 
+  {  
+    int targetDistanceCm = 10;
+    char lr;
+    encoder.resetEncoders();
+    lines_fw = true;  
+    lines_bw = false;  
+
+
+    // คำนวณจำนวนพัลส์เป้าหมายจากระยะทาง
+    float targetPulses = targetDistanceCm * pulsesPerCm;
+
+    // รีเซต Motor และ Gyro
+    Motor(-1, -1); delay(10);
+     my_GYRO::resetAngles();
+
+    // *** เริ่มต้นตั้งค่าตัวแปรสำหรับ PID ***
+    float yaw_offset = my.gyro('z'); // << เก็บค่าตอนเริ่มต้น
+    _integral = 0;
+    _prevErr = 0;
+    prevT = millis();
+
+    // เตรียมตัวสำหรับการเร่งช้าๆ
+    float rampUpDistance = targetPulses * 0.1;   // ช่วงเร่ง 20% แรก
+    float rampDownDistance = targetPulses * 0.5; // ช่วงเริ่มผ่อน 20% ท้าย
+    int minSpeed = 10; // กำหนดสปีดขั้นต่ำ
+    int maxLeftSpeed = spl;
+    int maxRightSpeed = spr;
+    lastTime = millis();  
+
+    while (true) {
+
+        // อ่านเวลา
+        unsigned long now = millis();
+        float dt = (now - prevT) / 1000.0;
+        if (dt <= 0) dt = 0.001; // ป้องกันหาร 0
+        prevT = now;
+
+        // อ่าน Gyro และคำนวณ Error
+        float yaw = my.gyro('z') - yaw_offset;
+        float err = yaw;
+
+        // PID
+        _integral += err * dt;
+        float deriv = (err - _prevErr) / dt;
+        _prevErr = err;
+        float corr = kps * err + Kii * _integral + Kdd * deriv;
+
+        // คำนวณสปีดพื้นฐาน
+        int baseLeftSpeed = maxLeftSpeed;
+        int baseRightSpeed = maxRightSpeed;
+
+        // สั่งมอเตอร์ โดยชดเชย PID correction
+        int leftSpeed = constrain(baseLeftSpeed - corr, -100, 100);
+        int rightSpeed = constrain(baseRightSpeed + corr, -100, 100);
+
+        if(analogRead(26) > dis-500)
+          {
+            leftSpeed = 10;
+            rightSpeed = 10;
+          }
+        Motor(leftSpeed, rightSpeed);
+        
+       // Serial.println(yaw); // Debug ดูค่า yaw
+
+        if(analogRead(26) > dis)
+          {
+            break;
+          }
+
         
     }
   
