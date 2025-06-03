@@ -800,7 +800,7 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
         Motor(leftSpeed, rightSpeed);
         
        // Serial.println(yaw); // Debug ดูค่า yaw
-
+        
         if (currentPulses >= targetPulses) {
             break;
           }
@@ -811,8 +811,9 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
         else
           {
             servo(29, 0);
-          }        
-        if (millis() - lastTime >= abs(positions) ) 
+          } 
+        Serial.println(millis() - lastTime);       
+        if (millis() - lastTime > abs(positions) ) 
           {
               servo(29, 90);              
           }
@@ -962,7 +963,7 @@ void fw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
 
 void fw_distance(int spl, int spr, float kps, int dis, int positions) 
   {  
-    int targetDistanceCm = 15;
+    int targetDistanceCm = 10;
     char lr;
     encoder.resetEncoders();
     lines_fw = true;  
@@ -991,13 +992,6 @@ void fw_distance(int spl, int spr, float kps, int dis, int positions)
     lastTime = millis();  
 
     while (true) {
-        // อ่านค่าจาก Encoder
-        float leftPulses = encoder.Poss_L();
-        float rightPulses = encoder.Poss_R();
-
-        // คำนวณระยะทางที่เคลื่อนที่แล้ว
-        float currentPulses = (leftPulses + rightPulses) / 2;
-        float remainingPulses = targetPulses - currentPulses;
 
         // อ่านเวลา
         unsigned long now = millis();
@@ -1019,36 +1013,19 @@ void fw_distance(int spl, int spr, float kps, int dis, int positions)
         int baseLeftSpeed = maxLeftSpeed;
         int baseRightSpeed = maxRightSpeed;
 
-        // ทำ Ramp-up และ Ramp-down
-        if (currentPulses < rampUpDistance) {
-            float rampFactor = currentPulses / rampUpDistance;
-            baseLeftSpeed = minSpeed + (maxLeftSpeed - minSpeed) * rampFactor;
-            baseRightSpeed = minSpeed + (maxRightSpeed - minSpeed) * rampFactor;
-        }
-        else if (currentPulses > rampDownDistance) {
-            float rampFactor = (targetPulses - currentPulses) / (targetPulses - rampDownDistance);
-            baseLeftSpeed = minSpeed + (maxLeftSpeed - minSpeed) * rampFactor;
-            baseRightSpeed = minSpeed + (maxRightSpeed - minSpeed) * rampFactor;
-        }
-
         // สั่งมอเตอร์ โดยชดเชย PID correction
         int leftSpeed = constrain(baseLeftSpeed - corr, -100, 100);
         int rightSpeed = constrain(baseRightSpeed + corr, -100, 100);
 
+        if(analogRead(26) > dis-500)
+          {
+            leftSpeed = 10;
+            rightSpeed = 10;
+          }
         Motor(leftSpeed, rightSpeed);
         
        // Serial.println(yaw); // Debug ดูค่า yaw
 
-        if (currentPulses >= targetPulses) 
-          {
-            if(analogRead(26) < dis)
-              {
-                do{Motor(leftSpeed, rightSpeed);}while(analogRead(26) < dis);
-              }
-            
-            //delay(500);
-            break;
-          }
         if(analogRead(26) > dis)
           {
             break;
@@ -1062,6 +1039,8 @@ void fw_distance(int spl, int spr, float kps, int dis, int positions)
             servo(29, 0);
           }        
         //if (millis() - lastTime >= abs(positions) || digitalRead(20)==1) 
+        Serial.println(millis() - lastTime);
+        //Serial.println(millis() - lastTime >= abs(positions));
         if (millis() - lastTime >= abs(positions) ) 
           {
               servo(29, 90);              
@@ -1396,7 +1375,8 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
         else
           {
             servo(29, 0);
-          }        
+          }  
+        Serial.println(millis() - lastTime);      
         if (millis() - lastTime >= abs(positions) || digitalRead(20)==0) 
           {
               servo(29, 90);   
