@@ -1058,7 +1058,7 @@ void fw_distance(int spl, int spr, float kps, int dis, int positions)
   set_bb = false;
 }
 
-void fw_distance(int spl, int spr, float kps) 
+void fw_distance(int spl, int spr, float kps, int dis) 
   {  
     int targetDistanceCm = 10;
     char lr;
