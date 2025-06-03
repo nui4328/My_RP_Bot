@@ -232,7 +232,7 @@ void arm_Slide(int position)
                     {
                       
                       do{servo(29, 180);}while(digitalRead(20)==0);
-                      delay(50);
+                      delay(150);
                       servo(29, 90); 
                           break;
                      }                                             
@@ -247,7 +247,7 @@ void arm_Slide(int position)
               do{servo(29, 0);}while(digitalRead(20)==1);
               servo(29, 90); 
               do{servo(29, 180);}while(digitalRead(20)==0);
-              delay(50);
+              delay(150);
               servo(29, 90);
             }
      
