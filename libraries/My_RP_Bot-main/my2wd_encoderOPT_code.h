@@ -87,7 +87,7 @@ void setup_OPT()
      sensor_set();              // ค่าเริ่มต้น eeprom, bit_analogRead=>12   
      // เริ่มต้นเซ็นเซอร์
      my_GYRO::begin();
-       my_GYRO::resetAngles();
+     my_GYRO::resetAngles();
     // my.begin();
      pinMode(25, OUTPUT);
      pinMode(20, INPUT_PULLUP);
@@ -1468,6 +1468,7 @@ void bw(int spl, int spr, float kps, int targetDistanceCm, String _line, int pos
                   do{servo(29, 0);}while(digitalRead(20)==1);
                   servo(29, 90); 
                   do{servo(29, 180);}while(digitalRead(20)==0);
+                  delay(150);
                   servo(29, 90); 
                 }            
           }
