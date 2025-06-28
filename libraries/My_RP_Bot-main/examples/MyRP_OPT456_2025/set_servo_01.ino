@@ -32,3 +32,49 @@ void test_slide()
     servo(29, 180); delay(1000);
     servo(29, 90); delay(1000);
   }
+
+
+void shake_servo_L(int angle, int _num)
+  {
+    _servo(0, angle);delay(300);
+    servo(27, servo_27_close-40); delay(100);
+    for(int i=0; i<_num; i++)
+      {
+        for(int i = angle-15; i<angle+15; i++)
+          {
+            _servo(0, i);
+            delay(10);
+          }
+        
+        for(int i = angle + 15; i>angle - 15; i--)
+          {
+            _servo(0, i);
+            delay(10);
+          }
+        
+      }
+    _servo(0, angle);delay(200);
+    servo(27, servo_27_close-100); delay(200);
+  }
+void shake_servo_R(int angle, int _num)
+  {
+    _servo(1, angle);delay(300);
+    servo(28, servo_28_close-40); delay(100);
+    for(int i=0; i<_num; i++)
+      {
+        for(int i = angle-15; i<angle+15; i++)
+          {
+            _servo(1, i);
+            delay(10);
+          }
+        
+        for(int i = angle + 15; i>angle - 15; i--)
+          {
+            _servo(1, i);
+            delay(10);
+          }
+        
+      }
+    _servo(1, angle);delay(200);
+     servo(28, servo_28_close-100);  delay(200);
+  }
