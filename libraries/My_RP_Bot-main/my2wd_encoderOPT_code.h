@@ -57,6 +57,14 @@ float Kpp = 0.35, Kii = 0.00001, Kdd = 0.03;
 float _integral = 0, _prevErr = 0;
 unsigned long prevT;
 float error_moveLR , output_moveLR;
+
+
+int set_dis = 10;
+
+void dis_to_stand(int diss)
+  {
+    set_dis = diss;
+  }
 void set_move_before_moveLR(int _val)
   {
     fw_to_rotate = _val;
@@ -244,8 +252,9 @@ void arm_Slide(int position)
             }
           else
             {
+              
               do{servo(29, 0);}while(digitalRead(20)==1);
-              servo(29, 90); 
+              servo(29, 90);
               do{servo(29, 180);}while(digitalRead(20)==0);
               delay(150);
               servo(29, 90);
@@ -1017,11 +1026,7 @@ void fw_distance(int spl, int spr, float kps, int dis, int positions)
         int leftSpeed = constrain(baseLeftSpeed - corr, -100, 100);
         int rightSpeed = constrain(baseRightSpeed + corr, -100, 100);
 
-        if(analogRead(26) > dis-500)
-          {
-            leftSpeed = 10;
-            rightSpeed = 10;
-          }
+
         Motor(leftSpeed, rightSpeed);
         
        // Serial.println(yaw); // Debug ดูค่า yaw
@@ -1114,11 +1119,7 @@ void fw_distance(int spl, int spr, float kps, int dis)
         int leftSpeed = constrain(baseLeftSpeed - corr, -100, 100);
         int rightSpeed = constrain(baseRightSpeed + corr, -100, 100);
 
-        if(analogRead(26) > dis-500)
-          {
-            leftSpeed = 10;
-            rightSpeed = 10;
-          }
+
         Motor(leftSpeed, rightSpeed);
         
        // Serial.println(yaw); // Debug ดูค่า yaw
@@ -1130,7 +1131,9 @@ void fw_distance(int spl, int spr, float kps, int dis)
 
         
     }
-  
+  encoder.resetEncoders();
+  do{Motor(10, 10);}while(encoder.Poss_L() <= set_dis);
+  Motor(10, 10); delay(300);
   Motor(-10, -10);
   delay(30);
   Motor(-1, -1);
