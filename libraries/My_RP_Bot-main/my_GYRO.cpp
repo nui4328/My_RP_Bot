@@ -64,18 +64,14 @@ bool my_GYRO::begin() {
   return true;
 }
 
-// อ่านค่ามุม (roll, pitch, yaw) ในหน่วยองศา
 void my_GYRO::readAngles(float &roll, float &pitch, float &yaw) {
-  // อ่านข้อมูล accelerometer และ gyroscope
   int16_t ax, ay, az, gx, gy, gz;
   readAccelGyro(&ax, &ay, &az, &gx, &gy, &gz);
 
-  // แปลงค่า accelerometer เป็น g (±2g -> 16384 LSB/g)
   float accelX = ax / 16384.0;
   float accelY = ay / 16384.0;
   float accelZ = az / 16384.0;
 
-  // กรอง accelerometer ด้วย low-pass filter
   accelX = ACCEL_FILTER_ALPHA * accelX + (1.0 - ACCEL_FILTER_ALPHA) * _accelX_prev;
   accelY = ACCEL_FILTER_ALPHA * accelY + (1.0 - ACCEL_FILTER_ALPHA) * _accelY_prev;
   accelZ = ACCEL_FILTER_ALPHA * accelZ + (1.0 - ACCEL_FILTER_ALPHA) * _accelZ_prev;
@@ -83,40 +79,35 @@ void my_GYRO::readAngles(float &roll, float &pitch, float &yaw) {
   _accelY_prev = accelY;
   _accelZ_prev = accelZ;
 
-  // แปลงค่า gyroscope เป็น dps (±2000 dps -> 16.4 LSB/dps) และลบ offset
   float gyroX = (gx / 16.4) - _gyroOffsetX;
   float gyroY = (gy / 16.4) - _gyroOffsetY;
   float gyroZ = (gz / 16.4) - _gyroOffsetZ;
 
-  // ใช้ threshold เพื่อตัด noise
   if (abs(gyroX) < GYRO_THRESHOLD) gyroX = 0.0;
   if (abs(gyroY) < GYRO_THRESHOLD) gyroY = 0.0;
   if (abs(gyroZ) < GYRO_THRESHOLD) gyroZ = 0.0;
 
-  // คำนวณมุมจาก accelerometer (roll และ pitch)
   float accelRoll = atan2(accelY, accelZ) * 180.0 / PI;
   float accelPitch = atan2(-accelX, sqrt(accelY * accelY + accelZ * accelZ)) * 180.0 / PI;
 
-  // คำนวณเวลา (วินาที)
   unsigned long currentTime = micros();
   float deltaTime = (currentTime - _lastTime) / 1000000.0;
+  if (deltaTime > 0.1) deltaTime = 0.1; // จำกัดค่า deltaTime
   _lastTime = currentTime;
 
-  // คำนวณมุมจาก gyroscope
   float gyroAngleX = _angleX + gyroX * deltaTime;
   float gyroAngleY = _angleY + gyroY * deltaTime;
   float gyroAngleZ = _angleZ + gyroZ * deltaTime;
 
-  // ใช้ complementary filter สำหรับ roll และ pitch
   _angleX = ALPHA * gyroAngleX + (1.0 - ALPHA) * accelRoll;
   _angleY = ALPHA * gyroAngleY + (1.0 - ALPHA) * accelPitch;
-  _angleZ = gyroAngleZ; // yaw ไม่ใช้ accelerometer
+  _angleZ = gyroAngleZ; // yaw ใช้ gyroscope ล้วน ๆ
 
-  // ส่งคืนค่ามุม
   roll = _angleX;
   pitch = _angleY;
   yaw = _angleZ;
 }
+
 
 // อ่านค่ามุมตามแกน ('x' = roll, 'y' = pitch, 'z' = yaw)
 float my_GYRO::gyro(char axis) {
