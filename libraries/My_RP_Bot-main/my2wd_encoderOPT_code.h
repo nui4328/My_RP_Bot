@@ -1062,7 +1062,83 @@ void fw_distance(int spl, int spr, float kps, int dis, int positions)
   sett_f = false;
   set_bb = false;
 }
+void fw_distancess(int spl, int spr, float kps, int targetDistanceCm) 
+{  
+    my_GYRO::resetAngles(); // รีเซ็ต Gyro
 
+    // รีเซตมอเตอร์
+    Motor(-1, -1); 
+    delay(10);
+
+    // เริ่มต้นตัวแปรสำหรับ PID
+    _integral = 0;
+    _prevErr = 0;
+    prevT = millis();
+
+    // กำหนดความเร็ว
+    int maxLeftSpeed = spl;
+    int maxRightSpeed = spr;
+    int slowDownDistance = 40; // ลดความเร็วเมื่อเหลือ 10 ซม. (100 มม.)
+
+
+    while (true) {
+        // อ่านระยะจากเซ็นเซอร์ VL6180X (I2C0)
+        int currentDistanceMm = analogRead(26);
+                // คำนวณระยะที่เหลือ
+        float remainingDistanceMm =  targetDistanceCm - currentDistanceMm ;
+
+        // ดีบัก: พิมพ์ระยะปัจจุบันและระยะที่เหลือ
+        Serial.print("Current Distance (mm): ");
+        Serial.print(currentDistanceMm);
+        Serial.print(" | Remaining Distance (mm): ");
+        Serial.println(remainingDistanceMm);
+
+        // อ่านเวลา
+        unsigned long now = millis();
+        float dt = (now - prevT) / 1000.0;
+        if (dt <= 0) dt = 0.001; // ป้องกันการหารด้วยศูนย์
+        prevT = now;
+
+        // อ่าน Gyro และคำนวณ Error
+        float err = my_GYRO::gyro('z');
+        Serial.print("Gyro Error: ");
+        Serial.println(err);
+
+        // คำนวณ PID
+        _integral += err * dt;
+        float deriv = (err - _prevErr) / dt;
+        _prevErr = err;
+        float corr = kps * err + Kii * _integral + Kdd * deriv;
+
+        // คำนวณความเร็วพื้นฐาน
+        int baseLeftSpeed = maxLeftSpeed;
+        int baseRightSpeed = maxRightSpeed;
+
+        // ลดความเร็วเป็น 10 เมื่อเหลือระยะ 10 ซม.
+        if (remainingDistanceMm <= slowDownDistance) {
+            baseLeftSpeed = 8;
+            baseRightSpeed = 8;
+        }
+
+        // สั่งมอเตอร์ โดยชดเชย PID correction
+        int leftSpeed = constrain(baseLeftSpeed - corr, -100, 100);
+        int rightSpeed = constrain(baseRightSpeed + corr, -100, 100);
+        
+        Motor(leftSpeed, rightSpeed);
+
+        // ตรวจสอบว่าเข้าใกล้ระยะเป้าหมายหรือไม่
+        if (remainingDistanceMm <= 0) { // หยุดเมื่อระยะที่เหลือ <= 0
+            break;
+        }
+    }
+
+    // หยุดมอเตอร์เมื่อถึงเป้าหมาย
+    delay(600);
+    Motor(-10, -10); 
+    delay(10);
+    Motor(-1, -1);
+    delay(10); 
+}
 void fw_distance(int spl, int spr, float kps, int dis) 
   {  
     int targetDistanceCm = 10;
