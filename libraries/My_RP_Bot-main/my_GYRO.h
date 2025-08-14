@@ -47,6 +47,7 @@ private:
   static void writeRegister(uint8_t reg, uint8_t value);
   static void readAccelGyro(int16_t *ax, int16_t *ay, int16_t *az, int16_t *gx, int16_t *gy, int16_t *gz);
   static bool calibrateGyro();
+  void reset_gyro(void);
 };
 
 // สร้างออบเจกต์ my_GYRO ด้วยที่อยู่ 0x69
