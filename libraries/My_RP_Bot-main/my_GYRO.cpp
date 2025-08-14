@@ -213,3 +213,8 @@ bool my_GYRO::calibrateGyro() {
   _accelZ_prev = sumAZ / CALIBRATION_SAMPLES;
   return true;
 }
+
+void reset_gyro() // รีเซ็ตมุมก่อนเริ่ม
+  {
+    my_GYRO::resetAngles();
+  }
