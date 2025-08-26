@@ -50,8 +50,27 @@ const float I_MIN = -1000.0; // ขีดจำกัดล่างของ in
 int rgb[] = {24, 25, 28};
 bool pid_error = true;
 
+const int ramp_delay = 6; // ms
+int slmotor = 20, srmotor = 20; // PWM
+int clml = -90, clmr = 90; // เลี้ยวซ้าย center
+int crml = 90, crmr = -90; // เลี้ยวขวา center
+int flml = -10, flmr = 100; // เลี้ยวซ้าย front
+int frml = 100, frmr = -10; // เลี้ยวขวา front
+int llmotor = 100, lrmotor = 50, ldelaymotor = 50; // เลี้ยวซ้าย speed
+int rlmotor = 50, rrmotor = 100, rdelaymotor = 50; // เลี้ยวขวา speed
+int break_ff = 5, break_fc = 30, break_bf = 10, break_bc = 20; // การหน่วง
+int delay_f = 15; // การหน่วงก่อนเลี้ยว
+float kd_f = 0.75, kd_b = 0.025; // Kd PID
+float kp_slow = 0.2, ki_slow = 0.0001; // PID ช้า
+float redius_wheel = 3.0; // รัศมีล้อ (cm)
+int ch_p = 0;
+bool _fw = true;
+float new_encoder = 0;
+
 
 //___--------------------------------------------->>
+void get_EEP_Program(void);
+void read_sensorA_program(void);
 
 void setup_rp2350_pro() 
   {
@@ -79,14 +98,14 @@ void setup_rp2350_pro()
         for(int i = 0; i<3; i++)
           {
             digitalWrite(rgb[i],1);
-            delay(150);
+            delay(50);
               digitalWrite(rgb[i],0);
-              delay(150);
+              delay(50);
             }
         }
       digitalWrite(rgb[2],1);     
-      //get_EEP_Program();
-      //read_sensorA_program();
+      get_EEP_Program();
+      read_sensorA_program();
    
   }
 
@@ -693,6 +712,7 @@ void servo(int servo,int angle)
 
 //-------------------------------------------------------------------------------------->>ควบคุม PID
 
+
 int position_A()  
    {        
       int min_sensor_values_A[] = { sensorMin_A[1], sensorMin_A[2], sensorMin_A[3], sensorMin_A[4], sensorMin_A[5], sensorMin_A[6] }; // ค่าที่อ่านได้น้อยสุดหรือ สีดำ
@@ -810,7 +830,7 @@ int position_B()
       long sum = 0;
       for (uint8_t i = 0; i < 6 ; i++) 
           {              
-              long value = map( read_sensorA(sensor_pin_A[i]), min_sensor_values_A[i], max_sensor_values_A[i], 1000, 0);                                                                         // จากนั้นก็เก็บเข้าไปยังตัวแป value
+              long value = map( read_sensorB(sensor_pin_A[i]), min_sensor_values_A[i], max_sensor_values_A[i], 1000, 0);                                                                         // จากนั้นก็เก็บเข้าไปยังตัวแป value
 
               if (value > 200) 
                  { 
@@ -895,6 +915,28 @@ float error_B()
           return errors;
         }                            
     }
+
+float error_BB()
+    {
+      
+          present_position = position_B()  / ((numSensor - 1) * 10) ;
+          setpoint = 50.0;
+          errors = setpoint - present_position;
+          return errors;
+                                
+    }
+
+float error_BN()
+    {
+      
+          present_position = position_B_none()  / ((numSensor - 1) * 10) ;
+          setpoint = 50.0;
+          errors = setpoint - present_position;
+          return errors;
+                                 
+    }
+
+
 
 //------------------------------------------------------------------------------------------------------------------------>>>คำสั่งเดินตามเส้น
 void fw(int sl, int sr, float kp)
@@ -1030,22 +1072,7 @@ void fws(int sl, int sr, float kp, float distance)
 
 }
 
-const int ramp_delay = 6; // ms
-int slmotor = 20, srmotor = 20; // PWM
-int clml = -90, clmr = 90; // เลี้ยวซ้าย center
-int crml = 90, crmr = -90; // เลี้ยวขวา center
-int flml = -10, flmr = 100; // เลี้ยวซ้าย front
-int frml = 100, frmr = -10; // เลี้ยวขวา front
-int llmotor = 100, lrmotor = 50, ldelaymotor = 50; // เลี้ยวซ้าย speed
-int rlmotor = 50, rrmotor = 100, rdelaymotor = 50; // เลี้ยวขวา speed
-int break_ff = 5, break_fc = 30, break_bf = 10, break_bc = 20; // การหน่วง
-int delay_f = 15; // การหน่วงก่อนเลี้ยว
-float kd_f = 0.75, kd_b = 0.025; // Kd PID
-float kp_slow = 0.2, ki_slow = 0.0001; // PID ช้า
-float redius_wheel = 3.0; // รัศมีล้อ (cm)
-int ch_p = 0;
-bool _fw = true;
-float new_encoder = 0;
+
 
 void wheel_redius(float rediuss) {
     redius_wheel = rediuss;
@@ -2292,17 +2319,27 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
       {
         goto _line;
       }
+ 
     if (!ch_p) {
         while (current_speed < target_speed) {
+            if(kp <= 0.65)
+          {
             if (read_sensorB(2) > md_sensorB(2) && read_sensorB(3) > md_sensorB(3) && read_sensorB(4) > md_sensorB(4) && read_sensorB(5) > md_sensorB(5)) {
-                errors = 0;
+            errors = 0;
             } else if (read_sensorB(5) < md_sensorB(5) && read_sensorB(6) < md_sensorB(6) && read_sensorB(7) < md_sensorB(7)) {
+             
                 errors = 10;
             } else if (read_sensorB(2) < md_sensorB(2) && read_sensorB(1) < md_sensorB(1) && read_sensorB(0) < md_sensorB(0)) {
                 errors = -10;
             } else {
                 errors = error_B();
             }
+            
+          }
+        else 
+          {
+            errors = error_BB();
+          }
             P = errors;
             I += errors * (ramp_delay / 1000.0);
             if (I > 1000) I = 1000;
@@ -2330,15 +2367,27 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
 
     // วิ่งปกติ
     while (1) {
-        if (read_sensorB(2) > md_sensorB(2) && read_sensorB(3) > md_sensorB(3) && read_sensorB(4) > md_sensorB(4) && read_sensorB(5) > md_sensorB(5)) {
+      
+        if(kp <= 0.65)
+          {
+            if (read_sensorB(2) > md_sensorB(2) && read_sensorB(3) > md_sensorB(3) && read_sensorB(4) > md_sensorB(4) && read_sensorB(5) > md_sensorB(5)) {
             errors = 0;
-        } else if (read_sensorB(5) < md_sensorB(5) && read_sensorB(6) < md_sensorB(6) && read_sensorB(7) < md_sensorB(7)) {
-            errors = 10;
-        } else if (read_sensorB(2) < md_sensorB(2) && read_sensorB(1) < md_sensorB(1) && read_sensorB(0) < md_sensorB(0)) {
-            errors = -10;
-        } else {
-            errors = error_B();
-        }
+            } else if (read_sensorB(5) < md_sensorB(5) && read_sensorB(6) < md_sensorB(6) && read_sensorB(7) < md_sensorB(7)) {
+             
+                errors = 10;
+            } else if (read_sensorB(2) < md_sensorB(2) && read_sensorB(1) < md_sensorB(1) && read_sensorB(0) < md_sensorB(0)) {
+                errors = -10;
+            } else {
+                errors = error_B();
+            }
+            
+          }
+        else 
+          {
+            errors = error_BB();
+          }
+        
+        
         P = errors;
         I += errors * 0.00005;
         if (I > 1000) I = 1000;
@@ -2348,7 +2397,8 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
         PID_output = (kp * P) + (0.00005 * I) + (kd_f * D);
         Motor(-(spl + PID_output), -(spr - PID_output)); // ถอยหลัง
         
-        if (distance > 0) {
+        if (distance > 0) 
+          {
             unsigned long current_time = millis();
             float delta_time = (current_time - last_time) / 1000.0;
             traveled_distance += (target_speed * speed_scale) * delta_time;
@@ -2357,17 +2407,34 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                 Motor(0, 0);
                 break;
             }
-        }
+          }
         else
           {
-              if ((read_sensorB(0) < md_sensorB(0) && read_sensorB(1) < md_sensorB(1)) ||
-            (read_sensorB(7) < md_sensorB(7) && read_sensorB(6) < md_sensorB(6) )) {
-            break;
-        }
+            if(kp >= 6.5 && kp < 1.0)
+              {
+                 if ((read_sensorB(0) < md_sensorB(0) && read_sensorB(1) < md_sensorB(1)&& read_sensorB(2) < md_sensorB(2)) ||
+                    (read_sensorB(7) < md_sensorB(7) && read_sensorB(6) < md_sensorB(6) && read_sensorB(5) < md_sensorB(5))) 
+                      {
+                        break;
+                      }
+              }
+            else if(kp < 6.5)
+              {
+                if ((read_sensorB(0) < md_sensorB(0) && read_sensorB(1) < md_sensorB(1)) ||
+                    (read_sensorB(7) < md_sensorB(7) && read_sensorB(6) < md_sensorB(6) )) 
+                      {
+                        break;
+                      }
+              }
+            else {}
+
           }
         delayMicroseconds(100);
         Serial.println(errors);
+
+        
     }
+    
     _line:
     ch_p = 0;
 
@@ -2375,15 +2442,24 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
         if (splr == 'p') {
             ch_p = 1;
             while (1) {
-                if (read_sensorB(2) > md_sensorB(2) && read_sensorB(3) > md_sensorB(3) && read_sensorB(4) > md_sensorB(4) && read_sensorB(5) > md_sensorB(5)) {
+                if(kp <= 0.65)
+                  {
+                    if (read_sensorB(2) > md_sensorB(2) && read_sensorB(3) > md_sensorB(3) && read_sensorB(4) > md_sensorB(4) && read_sensorB(5) > md_sensorB(5)) {
                     errors = 0;
-                } else if (read_sensorB(5) < md_sensorB(5) && read_sensorB(6) < md_sensorB(6) && read_sensorB(7) < md_sensorB(7)) {
-                    errors = 10;
-                } else if (read_sensorB(2) < md_sensorB(2) && read_sensorB(1) < md_sensorB(1) && read_sensorB(0) < md_sensorB(0)) {
-                    errors = -10;
-                } else {
-                    errors = error_B();
-                }
+                    } else if (read_sensorB(5) < md_sensorB(5) && read_sensorB(6) < md_sensorB(6) && read_sensorB(7) < md_sensorB(7)) {
+                    
+                        errors = 10;
+                    } else if (read_sensorB(2) < md_sensorB(2) && read_sensorB(1) < md_sensorB(1) && read_sensorB(0) < md_sensorB(0)) {
+                        errors = -10;
+                    } else {
+                        errors = error_B();
+                    }
+                    
+                  }
+                else 
+                  {
+                    errors = error_BB();
+                  }
                 P = errors;
                 I += errors * 0.00005;
                 if (I > 1000) I = 1000;
@@ -2410,15 +2486,22 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
     } else if (nfc == 'f') {
         if (distance > 0 || spl == 0) {
             while (1) {
-                if (read_sensorB(2) > md_sensorB(2) && read_sensorB(3) > md_sensorB(3) && read_sensorB(4) > md_sensorB(4) && read_sensorB(5) > md_sensorB(5)) {
-                    errors = 0;
-                } else if (read_sensorB(5) < md_sensorB(5) && read_sensorB(6) < md_sensorB(6) && read_sensorB(7) < md_sensorB(7)) {
-                    errors = 10;
-                } else if (read_sensorB(2) < md_sensorB(2) && read_sensorB(1) < md_sensorB(1) && read_sensorB(0) < md_sensorB(0)) {
-                    errors = -10;
-                } else {
-                    errors = error_B();
-                }
+                  if(kp <= 0.65)
+                    {
+                      if (read_sensorB(2) > md_sensorB(2) && read_sensorB(3) > md_sensorB(3) && read_sensorB(4) > md_sensorB(4) && read_sensorB(5) > md_sensorB(5)) {
+                      errors = 0;
+                      } else if (read_sensorB(5) < md_sensorB(5) && read_sensorB(6) < md_sensorB(6) && read_sensorB(7) < md_sensorB(7)) {
+                          errors = 10;
+                      } else if (read_sensorB(2) < md_sensorB(2) && read_sensorB(1) < md_sensorB(1) && read_sensorB(0) < md_sensorB(0)) {
+                          errors = -10;
+                      } else {
+                          errors = error_B();
+                      }
+                    }
+                  else
+                    {
+                      errors = error_B();
+                    }
                 P = errors;
                 I += errors * 0.00005;
                 if (I > 1000) I = 1000;
@@ -2490,14 +2573,21 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
             {
               while (1) 
                 {
-                  if (read_sensorB(2) > md_sensorB(2) && read_sensorB(3) > md_sensorB(3) && read_sensorB(4) > md_sensorB(4) && read_sensorB(5) > md_sensorB(5)) {
-                      errors = 0;
-                  } else if (read_sensorB(5) < md_sensorB(5) && read_sensorB(6) < md_sensorB(6) && read_sensorB(7) < md_sensorB(7)) {
-                      errors = 10;
-                  } else if (read_sensorB(2) < md_sensorB(2) && read_sensorB(1) < md_sensorB(1) && read_sensorB(0) < md_sensorB(0)) {
-                      errors = -10;
-                  } else {
-                      errors = error_B();
+                  if(kp <= 0.65)
+                  {
+                    if (read_sensorB(2) > md_sensorB(2) && read_sensorB(3) > md_sensorB(3) && read_sensorB(4) > md_sensorB(4) && read_sensorB(5) > md_sensorB(5)) {
+                    errors = 0;
+                    } else if (read_sensorB(5) < md_sensorB(5) && read_sensorB(6) < md_sensorB(6) && read_sensorB(7) < md_sensorB(7)) {
+                        errors = 10;
+                    } else if (read_sensorB(2) < md_sensorB(2) && read_sensorB(1) < md_sensorB(1) && read_sensorB(0) < md_sensorB(0)) {
+                        errors = -10;
+                    } else {
+                        errors = error_B();
+                    }
+                  }
+                else
+                  {
+                    errors = error_B();
                   }
                   P = errors;
                   D = errors - previous_error;
@@ -2614,6 +2704,374 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
 }
 
 
+void bline(int spl, int spr, float kp, String distance, char nfc, char splr, int power, String sensor, int endt) {
+    _fw = false; // โหมดถอยหลัง
+    char sensors[4];
+    sensor.toCharArray(sensors, sizeof(sensors));
+    int sensor_f = atoi(&sensors[1]); // เช่น "b5" -> sensor_f = 5
+    int target_speed = min(spl, spr); // PWM
+    const int ramp_step = 2;
+    float traveled_distance = 0;
+    unsigned long last_time = millis();
+    float speed_scale = 1.25; // จากการสอบเทียบก่อนหน้า
+
+    if (kp == 0) {
+        I = kp_slow = ki_slow = 0;
+    }
+    if (kp < 6.5) {
+        pid_error = true;
+    } else {
+        pid_error = false;
+    }
+
+    int current_speed = 0; // PWM
+    // Soft start
+    if(spl == 0)
+      {
+        goto _line;
+      }
+ 
+    // วิ่งปกติ
+    while (1) {
+      
+        if(kp <= 0.65)
+          {
+            if (read_sensorB(2) > md_sensorB(2) && read_sensorB(3) > md_sensorB(3) && read_sensorB(4) > md_sensorB(4) && read_sensorB(5) > md_sensorB(5)) {
+            errors = 0;
+            } else if (read_sensorB(5) < md_sensorB(5) && read_sensorB(6) < md_sensorB(6) && read_sensorB(7) < md_sensorB(7)) {
+             
+                errors = 10;
+            } else if (read_sensorB(2) < md_sensorB(2) && read_sensorB(1) < md_sensorB(1) && read_sensorB(0) < md_sensorB(0)) {
+                errors = -10;
+            } else {
+                errors = error_B();
+            }
+            
+          }
+        else 
+          {
+            errors = error_BB();
+          }
+        
+        
+        P = errors;
+        I += errors * 0.00005;
+        if (I > 1000) I = 1000;
+        if (I < -1000) I = -1000;
+        D = errors - previous_error;
+        previous_error = errors;
+        PID_output = (kp * P) + (0.00005 * I) + (kd_f * D);
+        Motor(-(spl + PID_output), -(spr - PID_output)); // ถอยหลัง
+        
+        if (distance == "b0") 
+          {
+            if(read_sensorB(0) < md_sensorB(0))
+              {
+                break;
+              }
+          }
+        else if (distance == "b1") 
+          {
+            if(read_sensorB(1) < md_sensorB(1))
+              {
+                break;
+              }
+          }
+        else if (distance == "b6") 
+          {
+            if(read_sensorB(6) < md_sensorB(6))
+              {
+                break;
+              }
+          }
+        else if (distance == "b7") 
+          {
+            if(read_sensorB(7) < md_sensorB(7))
+              {
+                break;
+              }
+          }
+        else if (distance == "b07" || distance == "b70") 
+          {
+            if(read_sensorB(7) < md_sensorB(7) && read_sensorB(0) < md_sensorB(0))
+              {
+                break;
+              }
+          }
+        delayMicroseconds(100);
+        Serial.println(errors);
+
+        
+    }
+    
+    _line:
+    ch_p = 0;
+
+    if (nfc == 'n') {
+        if (splr == 'p') {
+            ch_p = 1;
+            while (1) {
+                if(kp <= 0.65)
+                  {
+                    if (read_sensorB(2) > md_sensorB(2) && read_sensorB(3) > md_sensorB(3) && read_sensorB(4) > md_sensorB(4) && read_sensorB(5) > md_sensorB(5)) {
+                    errors = 0;
+                    } else if (read_sensorB(5) < md_sensorB(5) && read_sensorB(6) < md_sensorB(6) && read_sensorB(7) < md_sensorB(7)) {
+                    
+                        errors = 10;
+                    } else if (read_sensorB(2) < md_sensorB(2) && read_sensorB(1) < md_sensorB(1) && read_sensorB(0) < md_sensorB(0)) {
+                        errors = -10;
+                    } else {
+                        errors = error_B();
+                    }
+                    
+                  }
+                else 
+                  {
+                    errors = error_BB();
+                  }
+                P = errors;
+                I += errors * 0.00005;
+                if (I > 1000) I = 1000;
+                if (I < -1000) I = -1000;
+                D = errors - previous_error;
+                previous_error = errors;
+                PID_output = (kp_slow * P) + (ki_slow * D);
+                Motor(-(slmotor + PID_output), -(srmotor - PID_output)); // ถอยหลัง
+                delayMicroseconds(50);
+                if ((read_sensorB(0) < md_sensorB(0) && read_sensorB(1) < md_sensorB(1) ) ||
+                    (read_sensorB(7) < md_sensorB(7) && read_sensorB(6) < md_sensorB(6) )) {
+                    break;
+                }
+            }
+        } else if (splr == 's') {
+            if (endt > 0) {
+                Motor(spl, spr); // เบรก
+                delay(endt);
+                Motor(-1, -1);
+                delay(10);
+            }
+            goto _entN;
+        }
+    } else if (nfc == 'f') {
+        if (distance > 0 || spl == 0) {
+            while (1) {
+                  if(kp <= 0.65)
+                    {
+                      if (read_sensorB(2) > md_sensorB(2) && read_sensorB(3) > md_sensorB(3) && read_sensorB(4) > md_sensorB(4) && read_sensorB(5) > md_sensorB(5)) {
+                      errors = 0;
+                      } else if (read_sensorB(5) < md_sensorB(5) && read_sensorB(6) < md_sensorB(6) && read_sensorB(7) < md_sensorB(7)) {
+                          errors = 10;
+                      } else if (read_sensorB(2) < md_sensorB(2) && read_sensorB(1) < md_sensorB(1) && read_sensorB(0) < md_sensorB(0)) {
+                          errors = -10;
+                      } else {
+                          errors = error_B();
+                      }
+                    }
+                  else
+                    {
+                      errors = error_B();
+                    }
+                P = errors;
+                I += errors * 0.00005;
+                if (I > 1000) I = 1000;
+                if (I < -1000) I = -1000;
+                D = errors - previous_error;
+                previous_error = errors;
+                PID_output = (kp_slow * P) + (ki_slow * D);
+                Motor(-(slmotor + PID_output), -(srmotor - PID_output)); // ถอยหลัง
+                delayMicroseconds(50);
+                if ((read_sensorB(0) < md_sensorB(0) && read_sensorB(1) < md_sensorB(1) ) ||
+                    (read_sensorB(7) < md_sensorB(7) && read_sensorB(6) < md_sensorB(6) )) {
+                    break;
+                }
+            }
+        }
+        if (splr == 'p') {
+            ch_p = 1;
+            while (1) {
+                Motor(-spl, -spr); // ถอยหลัง
+                delayMicroseconds(50);
+                if (read_sensorB(0) > md_sensorB(0) && read_sensorB(7) > md_sensorB(7)) {
+                    break;
+                }
+            }
+            delay(10);
+        } else if (splr == 's') {
+            Motor(spl, spr); // เบรก
+            delay(endt);
+            Motor(0, 0);
+            delay(2);
+        }
+    } else if (nfc == 'c') 
+        {
+            
+          if (splr == 'p') 
+            {
+                ch_p = 1;
+                while (1) 
+                  {
+                    float error_L = map(read_sensorB(3), sensorMin_B[3], sensorMax_B[3], 0, 20);
+                    float error_R = map(read_sensorB(4), sensorMin_B[4], sensorMax_B[4], 0, 20);
+                    errors = error_L - error_R;
+                    P = errors;
+                    I += errors * 0.00005;
+                    if (I > 1000) I = 1000;
+                    if (I < -1000) I = -1000;
+                    D = errors - previous_error;
+                    previous_error = errors;
+                    PID_output = (kp_slow * P) + (ki_slow * D);
+                    Motor(-(spl + PID_output), -(spr - PID_output)); // ถอยหลัง
+                    delayMicroseconds(50);
+                    if (analogRead(46) < md_sensorC(0) || analogRead(47) < md_sensorC(1)) {
+                        break;
+                    }
+                  }
+                if (endt > 0) 
+                  {
+                    Motor(spl, spr);
+                    delay(endt);
+                    Motor(1, 1);
+                    delay(10);
+                  } 
+                else 
+                  {
+                    Motor(0, 0);
+                  }
+            }
+          else
+            {
+              while (1) 
+                {
+                  if(kp <= 0.65)
+                  {
+                    if (read_sensorB(2) > md_sensorB(2) && read_sensorB(3) > md_sensorB(3) && read_sensorB(4) > md_sensorB(4) && read_sensorB(5) > md_sensorB(5)) {
+                    errors = 0;
+                    } else if (read_sensorB(5) < md_sensorB(5) && read_sensorB(6) < md_sensorB(6) && read_sensorB(7) < md_sensorB(7)) {
+                        errors = 10;
+                    } else if (read_sensorB(2) < md_sensorB(2) && read_sensorB(1) < md_sensorB(1) && read_sensorB(0) < md_sensorB(0)) {
+                        errors = -10;
+                    } else {
+                        errors = error_B();
+                    }
+                  }
+                else
+                  {
+                    errors = error_B();
+                  }
+                  P = errors;
+                  D = errors - previous_error;
+                  previous_error = errors;
+                  PID_output = (kp / 2.5 * P) + (0.0000001 * I) + (0.0125 * D);
+                  Motor(-(slmotor + PID_output), -(slmotor - PID_output)); // ถอยหลัง
+                  delayMicroseconds(50);
+                  if (analogRead(46) < md_sensorC(0)-50 || analogRead(47) < md_sensorC(1)-50) {
+                      break;
+                  }
+                }
+
+            }
+          if (splr == 's') {
+              Motor(spl, spr); // เบรก
+              delay(endt);
+              Motor(0, 0);
+              delay(2);
+          }
+    }
+
+  if (splr == 'l') 
+    {
+        if (nfc == 'f' || (nfc == 'n' && spl > 0 && distance == 0)) 
+          {
+            while (1) {
+                Motor(-slmotor, -srmotor);
+                if (read_sensorB(0) > md_sensorB(0) && read_sensorB(7) > md_sensorB(7)) {
+                    delay(delay_f);
+                    break;
+                }
+            }
+            Motor(slmotor + 10, srmotor + 10);
+            delay(break_bf);                             //---------------------------------------------------------------------------------->>>
+            for (int i = 0; i <= sensor_f; i++) {
+                do {
+                    Motor(-((flmr*power)/100), -((flml*power)/100)); 
+                    delayMicroseconds(50);
+                } while (read_sensorB(i) > md_sensorB(i) - 50);
+                delayMicroseconds(50);
+            }
+          }
+        else 
+          {
+            Motor(nfc == 'n' ? 0 : slmotor, nfc == 'n' ? 0 : srmotor);
+            delay(nfc == 'n' ? 2 : break_bc);
+            int start_i = (sensor[0] == 'a' && sensor_f >= 5) ? 5 : 0;
+            int end_i = start_i ? sensor_f : sensor_f;
+            for (int i = start_i; i <= end_i; i++) {
+                do {
+                    Motor((clml * power) / 100, (clmr * power) / 100);
+                    delayMicroseconds(50);
+                } while ((sensor[0] == 'a' ? read_sensorA(i) : read_sensorB(i)) > (sensor[0] == 'a' ? md_sensorA(i) : md_sensorB(i)));
+                delayMicroseconds(50);
+            }
+          }
+        if (endt == 0) {
+            turn_speed_fl();
+        } else {
+            Motor(-((clml * power) / 100), -((clmr * power) / 100));
+            delay(endt);
+            Motor(-1, -1);
+            delay(10);
+        }
+      } 
+    else if (splr == 'r') 
+      {
+        if (nfc == 'f') {
+            while (1) {
+                Motor(-slmotor, -srmotor);
+                delayMicroseconds(50);
+                if (read_sensorB(0) >= md_sensorB(0) && read_sensorB(7) >= md_sensorB(7)) {
+                    break;
+                }
+            }
+            delay(delay_f);
+            Motor(slmotor, srmotor);
+            delay(break_bf);
+            for (int i = 7; i >= sensor_f; i--) {
+                do {
+                    Motor(-((frmr*power)/100), -((frml*power)/100));
+                    delayMicroseconds(50);
+                } while (read_sensorB(i) > md_sensorB(i) - 50);
+                delayMicroseconds(50);
+            }
+        } else {
+            Motor(nfc == 'n' ? 0 : slmotor, nfc == 'n' ? 0 : srmotor);
+            delay(nfc == 'n' ? 2 : break_bc);
+            int start_i = (sensor[0] == 'a' && sensor_f <= 2) ? 5 : 0;
+            for (int i = 7; i >= (sensor[0] == 'a' ? sensor_f - start_i : sensor_f); i--) {
+                do {
+                    Motor((crml * power) / 100, (crmr * power) / 100);
+                    delayMicroseconds(50);
+                } while ((sensor[0] == 'a' ? read_sensorA(i - start_i) : read_sensorB(i)) > (sensor[0] == 'a' ? md_sensorA(i - start_i) : md_sensorB(i)));
+                delayMicroseconds(50);
+            }
+        }
+        if (endt == 0) {
+            turn_speed_fr();
+        } else {
+            Motor(-((crml * power) / 100), -((crmr * power) / 100));
+            delay(endt);
+            Motor(-1, -1);
+            delay(10);
+        }
+    }
+
+    if (!(nfc == 'n' && splr == 's' && endt == 0)) {
+        Motor(-1, -1); // หยุด
+        delay(endt / 2);
+    }
+
+    _entN: delay(5);
+}
+///--------------------------------------------------------------------------------------------->>>จบ bline
 
 ///-------------------------------------------------------------------->>> หมุนตัวเพื่อวาง
 void place_left_out(int speed, int degree, int offset) 
