@@ -521,6 +521,8 @@ void get_EEP_Program()
 
 //-------------------------------------------------------------------------------------->>ควบคุมมอเตอร์
 
+
+
 void sw()
   {
     tone(32, 3000, 100);
@@ -536,40 +538,15 @@ void sw()
       {       
         if(digitalRead(19) == 0)
             {
-              tone(32, 950, 100);              
-               digitalWrite(rgb[2],0);
-               digitalWrite(rgb[1],1);
-               delay(200); // รอ 1 วินาที
+              tone(32, 950, 100);
+              delay(200); // รอ 1 วินาที
               get_maxmin_A();
-              for(int i = 0; i<2; i++)
-                {
-                  digitalWrite(rgb[1],1);
-                  delay(100);
-                  digitalWrite(rgb[1],0);
-                  delay(100);
-                }
-              digitalWrite(rgb[1],0);
-              digitalWrite(rgb[2],1);
-              delay(50);
-
             }
         if(digitalRead(12) == 0)
             {
               tone(32, 950, 100);
-              digitalWrite(rgb[2],0);
-               digitalWrite(rgb[1],1);
-               delay(200); // รอ 1 วินาที
+              delay(200); // รอ 1 วินาที
               get_maxmin_B();
-              for(int i = 0; i<2; i++)
-                {
-                  digitalWrite(rgb[1],1);
-                  delay(100);
-                  digitalWrite(rgb[1],0);
-                  delay(100);
-                }
-              digitalWrite(rgb[1],0);
-              digitalWrite(rgb[2],1);
-              delay(50);
             }
         Serial.print("From A ");
           for (int i = 0; i < 8; i++) {
@@ -608,20 +585,7 @@ void sw()
                     tone(32, 950, 200);
                     delay(200); // รอ 1 วินาที
                     Serial.println("Entering Mode A");
-                    digitalWrite(rgb[2],0);
-               digitalWrite(rgb[1],1);
-               delay(200); // รอ 1 วินาที
-              get_maxmin_C();
-              for(int i = 0; i<2; i++)
-                {
-                  digitalWrite(rgb[1],1);
-                  delay(100);
-                  digitalWrite(rgb[1],0);
-                  delay(100);
-                }
-              digitalWrite(rgb[1],0);
-              digitalWrite(rgb[2],1);
-              delay(50);
+                    get_maxmin_C();
                     while (digitalRead(33) == LOW);  // รอให้ปล่อยปุ่ม
                     delay(200);  // ป้องกันการเด้งของปุ่ม
                   }
@@ -645,9 +609,6 @@ void sw()
     tone(32, 3000, 400);
     delay(500);
   }
-
-
-///---------------------------------------------------------------------->>>
 int sl, sr; // ตัวแปรความเร็วสำหรับมอเตอร์ซ้ายและขวา
 
 // ฟังก์ชันควบคุมมอเตอร์ซ้าย/ขวา
@@ -3448,5 +3409,126 @@ void place_right_out(int speed, int degree, int offset)
         Motor(-1, -1);
         delay(10);
   }
-#endif
 
+void fw_gyro(int spl, int spr, float kp,  float distance, int offset) 
+{     
+    int target_speed = min(spl, spr); 
+    float traveled_distance = 0;
+    unsigned long last_time = millis();
+    
+    float speed_scale = 1.5;  // <-- ใช้ค่าที่คำนวณจากการวัดจริง
+
+    my_GYRO::resetAngles();
+    float yaw_offset = my.gyro('z'); 
+    float _integral = 0;
+    float _prevErr = 0;
+    unsigned long prevT = millis();   
+
+    int maxLeftSpeed = spl;
+    int maxRightSpeed = spr; 
+
+    while (1) 
+    {
+        unsigned long now = millis();
+        float dt = (now - prevT) / 1000.0;
+        if (dt <= 0) dt = 0.001; 
+        prevT = now;
+
+        float yaw = my.gyro('z') - yaw_offset;
+        float err = yaw;
+
+        _integral += err * dt;
+        float deriv = (err - _prevErr) / dt;
+        _prevErr = err;
+        float corr = kp * err + 0.0001 * _integral + 0.05 * deriv;
+
+        int leftSpeed  = constrain(spl - corr, -100, 100);
+        int rightSpeed = constrain(spr + corr, -100, 100);
+        Motor(leftSpeed, rightSpeed);
+
+        if (distance > 0) 
+        {
+            unsigned long current_time = millis();
+            float delta_time = (current_time - last_time) / 1000.0;
+            traveled_distance += (target_speed * speed_scale) * delta_time;
+            last_time = current_time;
+
+            if (traveled_distance >= distance) break;
+        }
+
+        delayMicroseconds(50);
+    }
+
+    // soft stop
+    if(offset >0)
+      {
+        Motor(-15, -15); delay(offset);
+        Motor(-1, -1);   delay(10);
+        Motor(0, 0);     delay(10);
+      }
+    else{Motor(0, 0);delay(5);}
+    
+}
+
+// ===========================
+// ฟังก์ชันวิ่งถอยหลัง ใช้ Gyro + PID
+// ===========================
+void bw_gyro(int spl, int spr, float kp,  float distance, int offset) 
+ {     
+    int target_speed = min(spl, spr); 
+    float traveled_distance = 0;
+    unsigned long last_time = millis();
+    
+    float speed_scale = 1.6;  // ใช้ค่าที่คาลิเบรตจาก fw()
+
+    my_GYRO::resetAngles();
+    float yaw_offset = my.gyro('z'); 
+    float _integral = 0;
+    float _prevErr = 0;
+    unsigned long prevT = millis();   
+
+    int maxLeftSpeed = spl;
+    int maxRightSpeed = spr; 
+
+    while (1) 
+    {
+        unsigned long now = millis();
+        float dt = (now - prevT) / 1000.0;
+        if (dt <= 0) dt = 0.001; 
+        prevT = now;
+
+        float yaw = my.gyro('z') - yaw_offset;
+        float err = -yaw;
+
+        _integral += err * dt;
+        float deriv = (err - _prevErr) / dt;
+        _prevErr = err;
+        float corr = kp * err + 0.0001 * _integral + 0.05 * deriv;
+
+        // สปีดถอยหลัง
+        int leftSpeed  = constrain(-(spl - corr), -100, 100);
+        int rightSpeed = constrain(-(spr + corr), -100, 100);
+        Motor(leftSpeed, rightSpeed);
+
+        if (distance > 0) 
+        {
+            unsigned long current_time = millis();
+            float delta_time = (current_time - last_time) / 1000.0;
+            traveled_distance += (target_speed * speed_scale) * delta_time;
+            last_time = current_time;
+
+            if (traveled_distance >= distance) break;
+        }
+
+        delayMicroseconds(50);
+    }
+
+    if(offset >0)
+      {
+        Motor(-15, -15); delay(offset);
+        Motor(-1, -1);   delay(10);
+        Motor(0, 0);     delay(10);
+      }
+    else{Motor(0, 0);delay(5);}
+  }
+#endif
