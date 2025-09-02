@@ -2302,7 +2302,7 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
     const int ramp_step = 2;
     float traveled_distance = 0;
     unsigned long last_time = millis();
-    float speed_scale = 1.25; // จากการสอบเทียบก่อนหน้า
+    float speed_scale = 1.0; // จากการสอบเทียบก่อนหน้า
 
     if (kp == 0) {
         I = kp_slow = ki_slow = 0;
@@ -2713,7 +2713,7 @@ void bline(int spl, int spr, float kp, String distance, char nfc, char splr, int
     const int ramp_step = 2;
     float traveled_distance = 0;
     unsigned long last_time = millis();
-    float speed_scale = 1.25; // จากการสอบเทียบก่อนหน้า
+    float speed_scale = 1.0; // จากการสอบเทียบก่อนหน้า
 
     if (kp == 0) {
         I = kp_slow = ki_slow = 0;
