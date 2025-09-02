@@ -1084,6 +1084,61 @@ uint16_t Position()
         return _lastPosition;            //ส่งค่าที่อ่านได้จากการเฉลี่ยแล้วกลับไปยังฟังก์ชั้น readline
     }
 
+uint16_t Position_CC()  
+   {        
+      uint16_t min_sensor_values_F[] = { min_mcp_f(1),min_mcp_f(2),min_mcp_f(3),min_mcp_f(4),min_mcp_f(5),min_mcp_f(6)  }; //ค่าที่อ่านได้น้อยสุดหรือ สีดำ
+      uint16_t max_sensor_values_F[] = { max_mcp_f(1),max_mcp_f(2),max_mcp_f(3),max_mcp_f(4),max_mcp_f(5),max_mcp_f(6)  } ; //ค่าที่อ่านได้มากสุด สีขาว                
+      bool onLine = false;
+      long avg = 0;
+      long sum = 0;
+      for (uint8_t i = 0; i < 6 ; i++) 
+          {              
+              long value = map(mcp_f(sensor_pin_F[i]), min_sensor_values_F[i], max_sensor_values_F[i], 1000, 0);                                                                         // จากนั้นก็เก็บเข้าไปยังตัวแป value
+
+              if (value > 200) 
+                 { 
+                    onLine = true;
+                 }
+              if (value > 50)   
+                 {
+                    avg += (long)value * (i * 1000);  
+                    sum += value;                 
+                 }
+         }
+      if (!onLine)        //เมื่อหุ่นยนต์ไม่อยู่หรือไม่เจอเส้นดำ
+         {
+            if (_lastPosition < (numSensor - 1) * 1000 / 2)  // ถ้าค่าก่อนหน้าที่จะไม่เจอเส้นดำหรือหลุดจะให้ค่านั้นเป็น 0
+               {
+                  return 0;
+               }
+            else                                          //แต่ถ้ามากกว่าแสดงว่าหลุดออกอีกฝั่ง ค่าก็จะเป็น 1000 คุณด้วยจำนวนเซ็นเซอร์
+               {
+                 return 5000;                  
+
+               }
+
+          }
+        _lastPosition = avg / sum;        //นำมาหาค่าเฉลี่ย
+
+        return _lastPosition;            //ส่งค่าที่อ่านได้จากการเฉลี่ยแล้วกลับไปยังฟังก์ชั้น readline
+    }
+float error_C()
+    {
+        present_position = Position() / ((numSensor - 1) * 10) ;
+        setpoint = 50.0;
+        errors = setpoint - present_position;   
+       
+        return errors;                             
+    }
+float error_CC()
+    {
+        present_position = Position_CC() / ((numSensor - 1) * 10) ;
+        setpoint = 50.0;
+        errors = setpoint - present_position;   
+       
+        return errors;                             
+    }
+
 uint16_t Position4()  
    {        
       uint16_t min_sensor_values_F[] = { min_mcp_f(2),min_mcp_f(3),min_mcp_f(4),min_mcp_f(5) }; //ค่าที่อ่านได้น้อยสุดหรือ สีดำ
