@@ -521,8 +521,6 @@ void get_EEP_Program()
 
 //-------------------------------------------------------------------------------------->>ควบคุมมอเตอร์
 
-
-
 void sw()
   {
     tone(32, 3000, 100);
@@ -538,15 +536,40 @@ void sw()
       {       
         if(digitalRead(19) == 0)
             {
-              tone(32, 950, 100);
-              delay(200); // รอ 1 วินาที
+              tone(32, 950, 100);              
+               digitalWrite(rgb[2],0);
+               digitalWrite(rgb[1],1);
+               delay(200); // รอ 1 วินาที
               get_maxmin_A();
+              for(int i = 0; i<2; i++)
+                {
+                  digitalWrite(rgb[1],1);
+                  delay(100);
+                  digitalWrite(rgb[1],0);
+                  delay(100);
+                }
+              digitalWrite(rgb[1],0);
+              digitalWrite(rgb[2],1);
+              delay(50);
+
             }
         if(digitalRead(12) == 0)
             {
               tone(32, 950, 100);
-              delay(200); // รอ 1 วินาที
+              digitalWrite(rgb[2],0);
+               digitalWrite(rgb[1],1);
+               delay(200); // รอ 1 วินาที
               get_maxmin_B();
+              for(int i = 0; i<2; i++)
+                {
+                  digitalWrite(rgb[1],1);
+                  delay(100);
+                  digitalWrite(rgb[1],0);
+                  delay(100);
+                }
+              digitalWrite(rgb[1],0);
+              digitalWrite(rgb[2],1);
+              delay(50);
             }
         Serial.print("From A ");
           for (int i = 0; i < 8; i++) {
@@ -585,7 +608,20 @@ void sw()
                     tone(32, 950, 200);
                     delay(200); // รอ 1 วินาที
                     Serial.println("Entering Mode A");
-                    get_maxmin_C();
+                    digitalWrite(rgb[2],0);
+               digitalWrite(rgb[1],1);
+               delay(200); // รอ 1 วินาที
+              get_maxmin_C();
+              for(int i = 0; i<2; i++)
+                {
+                  digitalWrite(rgb[1],1);
+                  delay(100);
+                  digitalWrite(rgb[1],0);
+                  delay(100);
+                }
+              digitalWrite(rgb[1],0);
+              digitalWrite(rgb[2],1);
+              delay(50);
                     while (digitalRead(33) == LOW);  // รอให้ปล่อยปุ่ม
                     delay(200);  // ป้องกันการเด้งของปุ่ม
                   }
@@ -609,6 +645,9 @@ void sw()
     tone(32, 3000, 400);
     delay(500);
   }
+
+///----------------------------------------------------------------------------------->>>>
+///---------------------------------------------------------------------------------->>>>
 int sl, sr; // ตัวแปรความเร็วสำหรับมอเตอร์ซ้ายและขวา
 
 // ฟังก์ชันควบคุมมอเตอร์ซ้าย/ขวา
@@ -3532,3 +3571,4 @@ void bw_gyro(int spl, int spr, float kp,  float distance, int offset)
     else{Motor(0, 0);delay(5);}
   }
 #endif
+
