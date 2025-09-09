@@ -75,6 +75,7 @@ my_GYRO160 my; // สร้างอ็อบเจ็กต์ด้วยท�
 
 void setup_rp2350_pro() 
   {
+    Wire.begin();
    Wire1.setSDA(26); // กำหนดพิน SDA
    Wire1.setSCL(27); // กำหนดพิน SCL
    if (!my.begin()) {
@@ -3576,4 +3577,5 @@ void bw_gyro(int spl, int spr, float kp,  float distance, int offset)
     else{Motor(0, 0);delay(5);}
   }
 #endif
+
 
