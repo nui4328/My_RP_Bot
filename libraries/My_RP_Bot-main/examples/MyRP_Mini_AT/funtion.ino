@@ -59,5 +59,73 @@ void encoder_poss()
     delay(100);  // Delay for better readability in serial out
   }
 
+void fw_ch_line(int num)
+  {
+    for(int i=0; i< num; i++)
+      {
+        while(1)
+          {
+            delay(5);      
+            if(mcp_f(0) < md_mcp_f(0)-50 && mcp_f(7) > md_mcp_f(7)-50)
+              {
+                Motor(-5 ,20);
+              }
+            else if(mcp_f(0) > md_mcp_f(0)-50 && mcp_f(7) < md_mcp_f(7)-50)
+              {
+                Motor(20 ,-5);
+              }
+            else if(mcp_f(0) > md_mcp_f(0)-50 && mcp_f(7) > md_mcp_f(7)-50)
+              {          
+                Motor(15 ,15);
+              }
+            else 
+              {
+                Motor(-1 ,-1);
+                break;
+              }      
+          }
+        if(num > 1)
+          {
+            Motor(-15 ,-15);
+            delay(50);
+            Motor(-1 ,-1);
+          }
+      }
+    
+  }
 
+void bw_ch_line(int num)
+  {
+    for(int i=0; i< num; i++)
+      {
+        while(1)
+          {
+            delay(5);      
+            if(mcp_b(0) < md_mcp_b(0)-50 && mcp_b(7) > md_mcp_b(7)-50)
+              {
+                Motor(-20 ,5);
+              }
+            else if(mcp_b(0) > md_mcp_b(0)-50 && mcp_b(7) < md_mcp_b(7)-50)
+              {
+                Motor(5 ,-20);
+              }
+            else if(mcp_b(0) > md_mcp_b(0)-50 && mcp_b(7) > md_mcp_b(7)-50)
+              {          
+                Motor(-15 ,-20);
+              }
+            else 
+              {
+                Motor(-1 ,-1);
+                break;
+              }      
+          }
+        if(num > 1)
+          {
+            Motor(10 ,10);
+            delay(50);
+            Motor(-1 ,-1);
+          }
+      }
+    
+  }
 
