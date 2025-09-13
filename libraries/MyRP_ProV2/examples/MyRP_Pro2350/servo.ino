@@ -46,3 +46,72 @@ void arm_big_box()
     servo(35, servoR_open + 70);
   }
 
+void fw_ch_line(int num)
+  {
+    for(int i=0; i< num; i++)
+      {
+        while(1)
+          {
+            delay(5);      
+            if(read_sensorA(0) < md_sensorA(0)-50 && read_sensorA(7) > md_sensorA(7)-50)
+              {
+                Motor(-5 ,20);
+              }
+            else if(read_sensorA(0) > md_sensorA(0)-50 && read_sensorA(7) < md_sensorA(7)-50)
+              {
+                Motor(20 ,-5);
+              }
+            else if(read_sensorA(0) > md_sensorA(0)-50 && read_sensorA(7) > md_sensorA(7)-50)
+              {          
+                Motor(15 ,15);
+              }
+            else 
+              {
+                Motor(-1 ,-1);
+                break;
+              }      
+          }
+        if(num > 1)
+          {
+            Motor(-15 ,-15);
+            delay(50);
+            Motor(-1 ,-1);
+          }
+      }
+    
+  }
+
+void bw_ch_line(int num)
+  {
+    for(int i=0; i< num; i++)
+      {
+        while(1)
+          {
+            delay(5);      
+            if(read_sensorB(0) < md_sensorB(0)-50 && read_sensorB(7) > md_sensorB(7)-50)
+              {
+                Motor(-20 ,5);
+              }
+            else if(read_sensorB(0) > md_sensorB(0)-50 && read_sensorB(7) < md_sensorB(7)-50)
+              {
+                Motor(5 ,-20);
+              }
+            else if(read_sensorB(0) > md_sensorB(0)-50 && read_sensorB(7) > md_sensorB(7)-50)
+              {          
+                Motor(-15 ,-20);
+              }
+            else 
+              {
+                Motor(-1 ,-1);
+                break;
+              }      
+          }
+        if(num > 1)
+          {
+            Motor(10 ,10);
+            delay(50);
+            Motor(-1 ,-1);
+          }
+      }
+    
+  }
