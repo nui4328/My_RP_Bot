@@ -58,3 +58,6 @@ void encoder_poss()
 
     delay(100);  // Delay for better readability in serial out
   }
+
+
+
