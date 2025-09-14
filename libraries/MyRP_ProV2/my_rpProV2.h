@@ -786,6 +786,7 @@ int position_A()
                     avg += (long)value * (i * 1000);  
                     sum += value;                 
                  }
+               delayMicroseconds(50); 
          }
       if (!onLine)        //เมื่อหุ่นยนต์ไม่อยู่หรือไม่เจอเส้นดำ
          {
@@ -1321,7 +1322,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                             } 
                           else 
                             {
-                              errors = error_A();
+                              errors = error_AA();
                             }
                         }
                       else  
@@ -1333,9 +1334,11 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
         D = errors - previous_error;
         previous_error = errors;
         PID_output = (kp * P) + (0.000001 * I) + (kd_f * D);
-        Motor(spl - PID_output, spr + PID_output);       
+        Motor(spl - PID_output, spr + PID_output); 
+        delayMicroseconds(50);      
 
-            if (distance > 0) {
+            if (distance > 0) 
+              {
                 unsigned long current_time = millis();
                 float delta_time = (current_time - last_time) / 1000.0;
                 traveled_distance += (current_speed * speed_scale) * delta_time;
@@ -1344,11 +1347,14 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                     Motor(0, 0);
                     return;
                 }
-            }
+              }
             current_speed += ramp_step;
-            if (current_speed > target_speed) current_speed = target_speed;
-            delay(ramp_delay);
-            Serial.println(errors);
+            if (current_speed > target_speed) 
+              {
+                current_speed = target_speed;
+                delay(ramp_delay);
+              }
+            //Serial.println(errors);
         }
       }
 
@@ -1372,7 +1378,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                             } 
                           else 
                             {
-                              errors = error_A();
+                              errors = error_AA();
                             }
                         }
           else  
@@ -1384,7 +1390,8 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
         D = errors - previous_error;
         previous_error = errors;
         PID_output = (kp * P) + (0.000001 * I) + (kd_f * D);
-        Motor(spl - PID_output, spr + PID_output);       
+        Motor(spl - PID_output, spr + PID_output);    
+        delayMicroseconds(50);   
         if (distance > 0) 
           {
             unsigned long current_time = millis();
@@ -1394,13 +1401,36 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
             if (traveled_distance >= distance) {
                 for(int i=spl; i>slmotor ; i--)
                   {
-                    errors = error_A();
+                    if(kp <= 0.45)
+                        {
+                          if (read_sensorA(2) > md_sensorA(2) && read_sensorA(3) > md_sensorA(3) && read_sensorA(4) > md_sensorA(4) && read_sensorA(5) > md_sensorA(5)) 
+                            {
+                              errors = 0;
+                            } 
+                          else if (read_sensorA(5) < md_sensorA(5) && read_sensorA(6) < md_sensorA(6) && read_sensorA(7) < md_sensorA(7)) 
+                            {
+                                errors = 10;
+                            } 
+                          else if (read_sensorA(2) < md_sensorA(2) && read_sensorA(1) < md_sensorA(1) && read_sensorA(0) < md_sensorA(0)) 
+                            {
+                                errors = -10;
+                            } 
+                          else 
+                            {
+                              errors = error_AA();
+                            }
+                        }
+          else  
+                        {
+                          errors = error_AA();
+                        } 
                     P = errors;
                     I += errors * 0.00005; // สำหรับ 50us
                     D = errors - previous_error;
                     previous_error = errors;
                     PID_output = (kp/2 * P) + (0.000001 * I) + (kd_f * D);
                     Motor(i - PID_output, i + PID_output);
+                    delayMicroseconds(50);
                   }
                 Motor(0, 0);
                 
@@ -1428,7 +1458,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
             else {}
             
           }
-        delayMicroseconds(50);
+        
      }
     _line:
     ch_p = 0;
