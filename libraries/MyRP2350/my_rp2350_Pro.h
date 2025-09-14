@@ -71,13 +71,19 @@ float new_encoder = 0;
 //___--------------------------------------------->>
 void get_EEP_Program(void);
 void read_sensorA_program(void);
+void resetAngles(void);
+float speed_scale = 1.55; // สมมติ 1 PWM = 0.1 cm/s (ต้องปรับตามจริง)
+void distance_scale(float scale)
+  {
+    speed_scale = scale;
+  }
 
 void setup_rp2350_pro() 
   {
     Wire.begin();
     Serial.begin(115200);
     my_GYRO::begin();
-    my_GYRO::resetAngles();
+    resetAngles();
     pinMode(24, OUTPUT);
     pinMode(25, OUTPUT);
     pinMode(28, OUTPUT);
@@ -109,6 +115,10 @@ void setup_rp2350_pro()
    
   }
 
+  void resetAngles()
+      {
+        my_GYRO::resetAngles();
+      }
 
 /*
    get_maxmin_A();
@@ -1258,10 +1268,15 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
     sensor.toCharArray(sensors, sizeof(sensors));
     int sensor_f = atoi(&sensors[1]);
     int target_speed = min(spl, spr); // PWM
-    const int ramp_step = 2;
+    const int ramp_step = 3;
     float traveled_distance = 0;
     unsigned long last_time = millis();
-    float speed_scale = 1.0; // สมมติ 1 PWM = 0.1 cm/s (ต้องปรับตามจริง)
+    
+    float I_max = 1000.0, I_min = -1000.0; // ขีดจำกัด Integral
+    float D_max = 50.0, D_min = -50.0; // ขีดจำกัด Derivative
+    float alpha = 0.1; // ค่ากรอง
+    static float filtered_D = 0.0; // คงสถานะ
+    float output_max = 100.0, output_min = -100.0; // ขีดจำกัด Output
 
     if (kp == 0)
        {
@@ -1286,58 +1301,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
       {
         while (current_speed < target_speed) 
           {
-            if(kp <= 0.65)
-              {
-                          if (read_sensorA(2) > md_sensorA(2) && read_sensorA(3) > md_sensorA(3) && read_sensorA(4) > md_sensorA(4) && read_sensorA(5) > md_sensorA(5)) 
-                            {
-                              errors = 0;
-                            } 
-                          else if (read_sensorA(5) < md_sensorA(5) && read_sensorA(6) < md_sensorA(6) && read_sensorA(7) < md_sensorA(7)) 
-                            {
-                                errors = 10;
-                            } 
-                          else if (read_sensorA(2) < md_sensorA(2) && read_sensorA(1) < md_sensorA(1) && read_sensorA(0) < md_sensorA(0)) 
-                            {
-                                errors = -10;
-                            } 
-                          else 
-                            {
-                              errors = error_A();
-                            }
-              }
-           else  
-              {
-                  errors = error_A();
-              }
-            P = errors;
-            I += errors * (ramp_delay / 1000.0);
-            D = errors - previous_error;
-            previous_error = errors;
-            PID_output = (kp * P) + (0.000001 * I) + (kd_f * D);
-            Motor(current_speed - PID_output, current_speed + PID_output);
-
-            if (distance > 0) {
-                unsigned long current_time = millis();
-                float delta_time = (current_time - last_time) / 1000.0;
-                traveled_distance += (current_speed * speed_scale) * delta_time;
-                last_time = current_time;
-                if (traveled_distance >= distance) {
-                    Motor(0, 0);
-                    return;
-                }
-            }
-            current_speed += ramp_step;
-            if (current_speed > target_speed) current_speed = target_speed;
-            delay(ramp_delay);
-            Serial.println(errors);
-        }
-      }
-
-    // วิ่งปกติ
-    
-    while (1) 
-      {
-        if(kp <= 0.65)
+            if(kp <= 0.45)
                         {
                           if (read_sensorA(2) > md_sensorA(2) && read_sensorA(3) > md_sensorA(3) && read_sensorA(4) > md_sensorA(4) && read_sensorA(5) > md_sensorA(5)) 
                             {
@@ -1353,7 +1317,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                             } 
                           else 
                             {
-                              errors = error_A();
+                              errors = error_AA();
                             }
                         }
                       else  
@@ -1365,7 +1329,64 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
         D = errors - previous_error;
         previous_error = errors;
         PID_output = (kp * P) + (0.000001 * I) + (kd_f * D);
-        Motor(spl - PID_output, spr + PID_output);       
+        Motor(spl - PID_output, spr + PID_output); 
+        delayMicroseconds(50);      
+
+            if (distance > 0) 
+              {
+                unsigned long current_time = millis();
+                float delta_time = (current_time - last_time) / 1000.0;
+                traveled_distance += (current_speed * speed_scale) * delta_time;
+                last_time = current_time;
+                if (traveled_distance >= distance) {
+                    Motor(0, 0);
+                    return;
+                }
+              }
+            current_speed += ramp_step;
+            if (current_speed > target_speed) 
+              {
+                current_speed = target_speed;
+                delay(ramp_delay);
+              }
+            //Serial.println(errors);
+        }
+      }
+
+    // วิ่งปกติ
+    
+    while (1) 
+      {
+        if(kp <= 0.45)
+                        {
+                          if (read_sensorA(2) > md_sensorA(2) && read_sensorA(3) > md_sensorA(3) && read_sensorA(4) > md_sensorA(4) && read_sensorA(5) > md_sensorA(5)) 
+                            {
+                              errors = 0;
+                            } 
+                          else if (read_sensorA(5) < md_sensorA(5) && read_sensorA(6) < md_sensorA(6) && read_sensorA(7) < md_sensorA(7)) 
+                            {
+                                errors = 10;
+                            } 
+                          else if (read_sensorA(2) < md_sensorA(2) && read_sensorA(1) < md_sensorA(1) && read_sensorA(0) < md_sensorA(0)) 
+                            {
+                                errors = -10;
+                            } 
+                          else 
+                            {
+                              errors = error_AA();
+                            }
+                        }
+          else  
+                        {
+                          errors = error_AA();
+                        } 
+        P = errors;
+        I += errors * 0.00005; // สำหรับ 50us
+        D = errors - previous_error;
+        previous_error = errors;
+        PID_output = (kp * P) + (0.000001 * I) + (kd_f * D);
+        Motor(spl - PID_output, spr + PID_output);    
+        delayMicroseconds(50);   
         if (distance > 0) 
           {
             unsigned long current_time = millis();
@@ -1375,13 +1396,36 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
             if (traveled_distance >= distance) {
                 for(int i=spl; i>slmotor ; i--)
                   {
-                    errors = error_A();
+                    if(kp <= 0.45)
+                        {
+                          if (read_sensorA(2) > md_sensorA(2) && read_sensorA(3) > md_sensorA(3) && read_sensorA(4) > md_sensorA(4) && read_sensorA(5) > md_sensorA(5)) 
+                            {
+                              errors = 0;
+                            } 
+                          else if (read_sensorA(5) < md_sensorA(5) && read_sensorA(6) < md_sensorA(6) && read_sensorA(7) < md_sensorA(7)) 
+                            {
+                                errors = 10;
+                            } 
+                          else if (read_sensorA(2) < md_sensorA(2) && read_sensorA(1) < md_sensorA(1) && read_sensorA(0) < md_sensorA(0)) 
+                            {
+                                errors = -10;
+                            } 
+                          else 
+                            {
+                              errors = error_AA();
+                            }
+                        }
+          else  
+                        {
+                          errors = error_AA();
+                        } 
                     P = errors;
                     I += errors * 0.00005; // สำหรับ 50us
                     D = errors - previous_error;
                     previous_error = errors;
                     PID_output = (kp/2 * P) + (0.000001 * I) + (kd_f * D);
                     Motor(i - PID_output, i + PID_output);
+                    delayMicroseconds(50);
                   }
                 Motor(0, 0);
                 
@@ -1390,7 +1434,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
           }
         else
           {
-            if(kp >= 6.5 && kp < 1.5)
+            if(kp >= 6.5 && kp < 1.0)
               {
                  if ((read_sensorA(0) < md_sensorA(0) && read_sensorA(1) < md_sensorA(1)&& read_sensorA(2) < md_sensorA(2)) ||
                     (read_sensorA(7) < md_sensorA(7) && read_sensorA(6) < md_sensorA(6) && read_sensorA(5) < md_sensorA(5))) 
@@ -1409,9 +1453,8 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
             else {}
             
           }
-        delayMicroseconds(50);
+        
      }
-    
     _line:
     ch_p = 0;
     
@@ -1554,6 +1597,10 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
               }
             else
               {
+                if(kp>0.65)
+                  {
+                     kp_slow = kp; 
+                  }
                 for(int i=spl;i>slmotor;i--)
                       {
                         errors = error_A();
@@ -1564,12 +1611,23 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                         PID_output = (kp_slow * P) + (ki_slow * D);
                         Motor(i - PID_output, i + PID_output);
                         delayMicroseconds(50);
-                        if ((read_sensorA(0) < md_sensorA(0)-50 && read_sensorA(1) < md_sensorA(1)-50 )  ||
-                            (read_sensorA(7) < md_sensorA(7)-50  && read_sensorA(6) < md_sensorA(6)-50  )) 
-                            {
-                              goto en_for;
-                            }
-                        delay(3);
+                        if(kp >= 5.5 )
+                          {
+                             if ((read_sensorA(0) < md_sensorA(0) && read_sensorA(1) < md_sensorA(1)&& read_sensorA(2) < md_sensorA(2)) ||
+                                (read_sensorA(7) < md_sensorA(7) && read_sensorA(6) < md_sensorA(6) && read_sensorA(5) < md_sensorA(5))) 
+                                  {
+                                    goto en_for;
+                                  }
+                          }
+                        else if(kp <5.5)
+                          {
+                            if ((read_sensorA(0) < md_sensorA(0) && read_sensorA(1) < md_sensorA(1)) ||
+                                (read_sensorA(7) < md_sensorA(7) && read_sensorA(6) < md_sensorA(6) )) 
+                                  {
+                                    goto en_for;
+                                  }
+                          }
+                        else {}  
                       }
                 while (1) 
                   {  
@@ -1581,11 +1639,23 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                         PID_output = (kp_slow * P) + (ki_slow * D);
                         Motor(slmotor - PID_output, slmotor + PID_output);
                         delayMicroseconds(50);
-                        if ((read_sensorA(0) < md_sensorA(0)-50 && read_sensorA(1) < md_sensorA(1)-50 )  ||
-                            (read_sensorA(7) < md_sensorA(7)-50  && read_sensorA(6) < md_sensorA(6)-50  )) 
-                            {
-                              break;
-                            }                          
+                        if(kp >= 5.5 )
+                          {
+                             if ((read_sensorA(0) < md_sensorA(0) && read_sensorA(1) < md_sensorA(1)&& read_sensorA(2) < md_sensorA(2)) ||
+                                (read_sensorA(7) < md_sensorA(7) && read_sensorA(6) < md_sensorA(6) && read_sensorA(5) < md_sensorA(5))) 
+                                  {
+                                    break;
+                                  }
+                          }
+                        else if(kp <5.5)
+                          {
+                            if ((read_sensorA(0) < md_sensorA(0) && read_sensorA(1) < md_sensorA(1)) ||
+                                (read_sensorA(7) < md_sensorA(7) && read_sensorA(6) < md_sensorA(6) )) 
+                                  {
+                                    break;
+                                  }
+                          }
+                        else {}                       
                   }
                 en_for: delay(10);  
               }
@@ -1723,10 +1793,12 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
 
     if (splr == 'l') 
       {
-        if (nfc == 'f' || (nfc == 'n' && spl > 0 && distance == 0)) {
+        if (nfc == 'f' || (nfc == 'n' && spl > 0 && distance == 0)) 
+          {
             while (1) {
+                delayMicroseconds(50);
                 Motor(slmotor, srmotor);
-                if (read_sensorA(0) > md_sensorA(0) && read_sensorA(7) > md_sensorA(7)) {
+                if ( read_sensorA(7) > md_sensorA(7) && read_sensorA(0) > md_sensorA(0)) {
                     delay(delay_f);
                     break;
                 }
@@ -1734,18 +1806,14 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
             Motor(-(slmotor), -(srmotor));
             delay(break_ff);
             for (int i = 0; i <= sensor_f; i++) {
-                if(sensor_f >= 2)
-                  {
                     do {Motor((flml * power) / 100, (flmr * power) / 100);
-                        delayMicroseconds(50);} while (read_sensorA(i+2) < md_sensorA(i+2) - 50);
-                  }
-                do {
-                    Motor((flml * power) / 100, (flmr * power) / 100);
                     delayMicroseconds(50);
                 } while (read_sensorA(i) > md_sensorA(i) - 50);
                 delayMicroseconds(50);
             }
-        } else {
+          } 
+        else 
+          {
             Motor(nfc == 'n' ? 0 : -slmotor, nfc == 'n' ? 0 : -srmotor);
             delay(nfc == 'n' ? 2 : break_fc);
             int start_i = (sensor[0] == 'a' && sensor_f >= 5) ? 5 : 0;
@@ -1769,24 +1837,19 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
       } 
     else if (splr == 'r') 
       {
-        if (nfc == 'f') {
+        if (nfc == 'f' || (nfc == 'n' && spl > 0 && distance == 0)) 
+          {
             while (1) {
-                Motor(slmotor, srmotor);
                 delayMicroseconds(50);
-                if (read_sensorA(0) >= md_sensorA(0) && read_sensorA(7) >= md_sensorA(7)) {
+                Motor(slmotor, srmotor);
+                if ( read_sensorA(7) > md_sensorA(7) && read_sensorA(0) > md_sensorA(0)) {
+                    delay(delay_f);
                     break;
                 }
             }
-            delay(delay_f);
-            Motor(-slmotor, -srmotor);
+            Motor(-(slmotor), -(srmotor));
             delay(break_ff);
-            for (int i = 7; i >= sensor_f; i--) {
-               if(sensor_f <= 5)
-                  {
-                    do {Motor((frml * power) / 100, (frmr * power) / 100);
-                    delayMicroseconds(50);
-                    } while (read_sensorA(i-2) < md_sensorA(i-2) - 50); 
-                  }
+            for (int i = 7; i >= sensor_f; i--) {               
                 do {
                     Motor((frml * power) / 100, (frmr * power) / 100);
                     delayMicroseconds(50);
@@ -1830,7 +1893,7 @@ void fline(int spl, int spr, float kp, String distance, char nfc, char splr, int
     const int ramp_step = 2;
     float traveled_distance = 0;
     unsigned long last_time = millis();
-    float speed_scale = 1.0; // สมมติ 1 PWM = 0.1 cm/s (ต้องปรับตามจริง)
+    
 
     if (kp == 0)
        {
@@ -2345,7 +2408,7 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
     const int ramp_step = 2;
     float traveled_distance = 0;
     unsigned long last_time = millis();
-    float speed_scale = 1.0; // จากการสอบเทียบก่อนหน้า
+   
 
     if (kp == 0) {
         I = kp_slow = ki_slow = 0;
@@ -2756,7 +2819,7 @@ void bline(int spl, int spr, float kp, String distance, char nfc, char splr, int
     const int ramp_step = 2;
     float traveled_distance = 0;
     unsigned long last_time = millis();
-    float speed_scale = 1.0; // จากการสอบเทียบก่อนหน้า
+   
 
     if (kp == 0) {
         I = kp_slow = ki_slow = 0;
@@ -2848,6 +2911,7 @@ void bline(int spl, int spr, float kp, String distance, char nfc, char splr, int
     }
     
     _line:
+    delay(10);
     ch_p = 0;
 
     if (nfc == 'n') {
@@ -3461,7 +3525,7 @@ void fw_gyro(int spl, int spr, float kp,  float distance, int offset)
     
     float speed_scale = 1.5;  // <-- ใช้ค่าที่คำนวณจากการวัดจริง
 
-    my_GYRO::resetAngles();
+    resetAngles();
     float yaw_offset = my.gyro('z'); 
     float _integral = 0;
     float _prevErr = 0;
@@ -3524,7 +3588,7 @@ void bw_gyro(int spl, int spr, float kp,  float distance, int offset)
     
     float speed_scale = 1.6;  // ใช้ค่าที่คาลิเบรตจาก fw()
 
-    my_GYRO::resetAngles();
+    resetAngles();
     float yaw_offset = my.gyro('z'); 
     float _integral = 0;
     float _prevErr = 0;
