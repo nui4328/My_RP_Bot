@@ -1439,7 +1439,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
           }
         else
           {
-            if(kp >= 5.5 && kp < 1.0)
+            if(kp >= 6.5 && kp < 1.0)
               {
                  if ((read_sensorA(0) < md_sensorA(0) && read_sensorA(1) < md_sensorA(1)&& read_sensorA(2) < md_sensorA(2)) ||
                     (read_sensorA(7) < md_sensorA(7) && read_sensorA(6) < md_sensorA(6) && read_sensorA(5) < md_sensorA(5))) 
@@ -1616,12 +1616,23 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                         PID_output = (kp_slow * P) + (ki_slow * D);
                         Motor(i - PID_output, i + PID_output);
                         delayMicroseconds(50);
-                        if ((read_sensorA(0) < md_sensorA(0)-50 && read_sensorA(1) < md_sensorA(1)-50 )  ||
-                            (read_sensorA(7) < md_sensorA(7)-50  && read_sensorA(6) < md_sensorA(6)-50  )) 
-                            {
-                              goto en_for;
-                            }
-                        delay(3);
+                        if(kp >= 5.5 )
+                          {
+                             if ((read_sensorA(0) < md_sensorA(0) && read_sensorA(1) < md_sensorA(1)&& read_sensorA(2) < md_sensorA(2)) ||
+                                (read_sensorA(7) < md_sensorA(7) && read_sensorA(6) < md_sensorA(6) && read_sensorA(5) < md_sensorA(5))) 
+                                  {
+                                    oto en_for;
+                                  }
+                          }
+                        else if(kp <5.5)
+                          {
+                            if ((read_sensorA(0) < md_sensorA(0) && read_sensorA(1) < md_sensorA(1)) ||
+                                (read_sensorA(7) < md_sensorA(7) && read_sensorA(6) < md_sensorA(6) )) 
+                                  {
+                                    oto en_for;
+                                  }
+                          }
+                        else {}  
                       }
                 while (1) 
                   {  
@@ -1633,11 +1644,23 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                         PID_output = (kp_slow * P) + (ki_slow * D);
                         Motor(slmotor - PID_output, slmotor + PID_output);
                         delayMicroseconds(50);
-                        if ((read_sensorA(0) < md_sensorA(0)-50 && read_sensorA(1) < md_sensorA(1)-50 )  ||
-                            (read_sensorA(7) < md_sensorA(7)-50  && read_sensorA(6) < md_sensorA(6)-50  )) 
-                            {
-                              break;
-                            }                          
+                        if(kp >= 5.5 )
+                          {
+                             if ((read_sensorA(0) < md_sensorA(0) && read_sensorA(1) < md_sensorA(1)&& read_sensorA(2) < md_sensorA(2)) ||
+                                (read_sensorA(7) < md_sensorA(7) && read_sensorA(6) < md_sensorA(6) && read_sensorA(5) < md_sensorA(5))) 
+                                  {
+                                    break;
+                                  }
+                          }
+                        else if(kp <5.5)
+                          {
+                            if ((read_sensorA(0) < md_sensorA(0) && read_sensorA(1) < md_sensorA(1)) ||
+                                (read_sensorA(7) < md_sensorA(7) && read_sensorA(6) < md_sensorA(6) )) 
+                                  {
+                                    break;
+                                  }
+                          }
+                        else {}                       
                   }
                 en_for: delay(10);  
               }
@@ -3621,4 +3644,5 @@ void bw_gyro(int spl, int spr, float kp,  float distance, int offset)
     else{Motor(0, 0);delay(5);}
   }
 #endif
+
 
