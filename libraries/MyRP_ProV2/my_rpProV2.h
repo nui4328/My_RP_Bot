@@ -1621,7 +1621,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                              if ((read_sensorA(0) < md_sensorA(0) && read_sensorA(1) < md_sensorA(1)&& read_sensorA(2) < md_sensorA(2)) ||
                                 (read_sensorA(7) < md_sensorA(7) && read_sensorA(6) < md_sensorA(6) && read_sensorA(5) < md_sensorA(5))) 
                                   {
-                                    oto en_for;
+                                    goto en_for;
                                   }
                           }
                         else if(kp <5.5)
@@ -1629,7 +1629,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                             if ((read_sensorA(0) < md_sensorA(0) && read_sensorA(1) < md_sensorA(1)) ||
                                 (read_sensorA(7) < md_sensorA(7) && read_sensorA(6) < md_sensorA(6) )) 
                                   {
-                                    oto en_for;
+                                    goto en_for;
                                   }
                           }
                         else {}  
@@ -3644,5 +3644,4 @@ void bw_gyro(int spl, int spr, float kp,  float distance, int offset)
     else{Motor(0, 0);delay(5);}
   }
 #endif
-
 
