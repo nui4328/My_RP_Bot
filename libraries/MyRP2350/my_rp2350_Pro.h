@@ -48,6 +48,7 @@ const float I_MIN = -1000.0; // ขีดจำกัดล่างของ in
 
 //-------------------------------------------------------->>fline
 int rgb[] = {24, 25, 28};
+char led = 'b';
 bool pid_error = true;
 
 const int ramp_delay = 6; // ms
@@ -1277,6 +1278,34 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
     float alpha = 0.1; // ค่ากรอง
     static float filtered_D = 0.0; // คงสถานะ
     float output_max = 100.0, output_min = -100.0; // ขีดจำกัด Output
+    if(led == 'b')
+      {
+        digitalWrite(rgb[0],1);
+        digitalWrite(rgb[1],0);
+        digitalWrite(rgb[2],0);
+        led = 'g';
+      }
+    else if(led == 'g')
+      {
+        digitalWrite(rgb[0],0);
+        digitalWrite(rgb[1],1);
+        digitalWrite(rgb[2],0);
+        led = 'r';
+      }
+    else if(led == 'r')
+      {
+        digitalWrite(rgb[0],0);
+        digitalWrite(rgb[1],0);
+        digitalWrite(rgb[2],1);
+        led = 'w';
+      }
+    else if(led == 'w')
+      {
+        digitalWrite(rgb[0],1);
+        digitalWrite(rgb[1],1);
+        digitalWrite(rgb[2],1);
+        led = 'b';
+      }
 
     if (kp == 0)
        {
@@ -1893,8 +1922,35 @@ void fline(int spl, int spr, float kp, String distance, char nfc, char splr, int
     const int ramp_step = 2;
     float traveled_distance = 0;
     unsigned long last_time = millis();
+    if(led == 'b')
+      {
+        digitalWrite(rgb[0],1);
+        digitalWrite(rgb[1],0);
+        digitalWrite(rgb[2],0);
+        led = 'g';
+      }
+    else if(led == 'g')
+      {
+        digitalWrite(rgb[0],0);
+        digitalWrite(rgb[1],1);
+        digitalWrite(rgb[2],0);
+        led = 'r';
+      }
+    else if(led == 'r')
+      {
+        digitalWrite(rgb[0],0);
+        digitalWrite(rgb[1],0);
+        digitalWrite(rgb[2],1);
+        led = 'w';
+      }
+    else if(led == 'w')
+      {
+        digitalWrite(rgb[0],1);
+        digitalWrite(rgb[1],1);
+        digitalWrite(rgb[2],1);
+        led = 'b';
+      }
     
-
     if (kp == 0)
        {
         I = kp_slow = ki_slow = 0;
@@ -2408,7 +2464,34 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
     const int ramp_step = 2;
     float traveled_distance = 0;
     unsigned long last_time = millis();
-   
+    if(led == 'b')
+      {
+        digitalWrite(rgb[0],1);
+        digitalWrite(rgb[1],0);
+        digitalWrite(rgb[2],0);
+        led = 'g';
+      }
+    else if(led == 'g')
+      {
+        digitalWrite(rgb[0],0);
+        digitalWrite(rgb[1],1);
+        digitalWrite(rgb[2],0);
+        led = 'r';
+      }
+    else if(led == 'r')
+      {
+        digitalWrite(rgb[0],0);
+        digitalWrite(rgb[1],0);
+        digitalWrite(rgb[2],1);
+        led = 'w';
+      }
+    else if(led == 'w')
+      {
+        digitalWrite(rgb[0],1);
+        digitalWrite(rgb[1],1);
+        digitalWrite(rgb[2],1);
+        led = 'b';
+      }
 
     if (kp == 0) {
         I = kp_slow = ki_slow = 0;
@@ -3639,5 +3722,6 @@ void bw_gyro(int spl, int spr, float kp,  float distance, int offset)
     else{Motor(0, 0);delay(5);}
   }
 #endif
+
 
 
