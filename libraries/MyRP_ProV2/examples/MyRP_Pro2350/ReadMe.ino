@@ -143,8 +143,10 @@ void readme()
       Motor(-1 ,-1);delay(30);
 
     resetAngles();  // รีเซตไจโรให้เป็น 0
+    my.gyro('z')      ;// อ่่านค่าไจโร
 
     
 
 
   }
+
