@@ -141,8 +141,10 @@ void readme()
       delay(50);
       Motor(-20 ,-20);delay(30);
       Motor(-1 ,-1);delay(30);
-    
+
+    resetAngles();  // รีเซตไจโรให้เป็น 0
 
     
+
 
   }
