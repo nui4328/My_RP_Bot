@@ -1,3 +1,19 @@
+void set_motor()
+  {
+    set_Freq("Coreless_Motors");      // กำหนดความถี่ให้กับมอเตอร์เกาหลีหรือ มอเตอร์ Coreless ("Coreless_Motors")
+      //set_Freq("DC_Motors");          // กำหนดความถี่ให้กับมอเตอร์ธรรมกา(DC_Motors)
+
+    distance_scale(1.55);
+    set_slow_motor(20, 20);     
+    set_turn_center_l(90, 90);
+    set_turn_center_r(90, 90);
+    set_turn_front_l(-15, 100);
+    set_turn_front_r(100, -15);
+    set_brake_fc(5, 20);
+    set_brake_bc(5, 20);
+    set_delay_f(10);
+  }
+
 void readme()
   {
 
@@ -36,7 +52,7 @@ void readme()
 
      // เดินเข้าหาเส้น เลื่อกเซนเซอร์ เพื่อตรวจสอบว่าเป็นแยก  โดย สามารถเลือกได้เป็น "a0", "a7" และ "a07"   "a07"เพื่อเช็คข้างหน้าเป็น 4 แยก
     fline(50, 50, 0.45, "a0", 'f', 'p', 50, "a6", 0);      //
-    fline(50, 50, 0.45, "a0", 'f', 's', 50, "a6", 40);      //
+    fline(50, 50, 0.45, "a0", 'f', 's', 50, "a6", 40);     //
     fline(30, 30, 0.45, "a0", 'f', 'l', 80, "a2", 1);      //
     fline(30, 30, 0.45, "a0", 'f', 'r', 80, "a5", 1);      //
 
