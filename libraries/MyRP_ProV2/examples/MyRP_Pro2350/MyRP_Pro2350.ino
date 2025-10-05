@@ -5,7 +5,7 @@
 void setup() 
   {
     setup_rp2350_pro();
-    distance_scale(1.55);
+    set_motor();
 
     
     //arm_up_close();  //--->> ยกแขนขึ้นหุบฝ่ามือเข้า
