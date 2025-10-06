@@ -5,8 +5,8 @@
 #include "my_GYRO160.h"
 #include <my_MCP3008.h>
 my_MCP3008 adc;
-//#include <EncoderLibrary.h>
-//EncoderLibrary encoder(6, 7, 15, 20);
+#include <EncoderLibrary.h>
+EncoderLibrary encoder(6, 7, 15, 20);
 
 // กำหนดพินควบคุมมอเตอร์
 
@@ -3820,5 +3820,6 @@ void bw_gyro(int spl, int spr, float kp,  float distance, int offset)
     else{Motor(0, 0);delay(5);}
   }
 #endif
+
 
 
