@@ -2,7 +2,7 @@
 #define _my_rp2350_pro_
 
 #include <Wire.h>
-#include "my_GYRO160.h"
+#include <my_GYRO.h>
 #include <my_MCP3008.h>
 my_MCP3008 adc;
 #include <EncoderLibrary.h>
@@ -55,108 +55,36 @@ const int ramp_delay = 6; // ms
 int slmotor = 20, srmotor = 20; // PWM
 int clml = -90, clmr = 90; // เลี้ยวซ้าย center
 int crml = 90, crmr = -90; // เลี้ยวขวา center
-int flml = -10, flmr = 100; // เลี้ยวซ้าย front
-int frml = 100, frmr = -10; // เลี้ยวขวา front
+int flml = -10, flmr = 90; // เลี้ยวซ้าย front
+int frml = 90, frmr = -10; // เลี้ยวขวา front
 int llmotor = 100, lrmotor = 50, ldelaymotor = 50; // เลี้ยวซ้าย speed
 int rlmotor = 50, rrmotor = 100, rdelaymotor = 50; // เลี้ยวขวา speed
 int break_ff = 5, break_fc = 30, break_bf = 10, break_bc = 20; // การหน่วง
-int delay_f = 15; // การหน่วงก่อนเลี้ยว
-float kd_f = 0.55, kd_b = 0.025; // Kd PID
+int delay_f = 9; // การหน่วงก่อนเลี้ยว
+float kd_f = 0.75, kd_b = 0.025; // Kd PID
 float kp_slow = 0.2, ki_slow = 0.0001; // PID ช้า
 float redius_wheel = 3.0; // รัศมีล้อ (cm)
 int ch_p = 0;
 bool _fw = true;
 float new_encoder = 0;
-float speed_scale = 1.55; // สมมติ 1 PWM = 0.1 cm/s (ต้องปรับตามจริง)
-String Freq_motor;
+
+
 //___--------------------------------------------->>
 void get_EEP_Program(void);
 void read_sensorA_program(void);
-my_GYRO160 my; // สร้างอ็อบเจ็กต์ด้วยที่อยู่เริ่มต้น (0x69)
-
-void set_Freq(String fr_motor)
-  {
-    Freq_motor = fr_motor;
-  }  
+void resetAngles(void);
+float speed_scale = 1.55; // สมมติ 1 PWM = 0.1 cm/s (ต้องปรับตามจริง)
 void distance_scale(float scale)
   {
     speed_scale = scale;
   }
-void set_slow_motor(int sl, int sr)
-     {       
-        slmotor = sl;  
-        srmotor = sr;       
-     }
-void set_turn_center_l(int ml,int mr)
-     {       
-        clml = ml;
-        clmr = mr;
-     }
-void set_turn_center_r(int ml,int mr)
-     {       
-        crml = ml;
-        crmr = mr;
-     }
-void set_turn_front_l(int ml,int mr)
-     {       
-        flml = ml;
-        flmr = mr;
-     }
-void set_turn_front_r(int ml,int mr)
-     {       
-        frml = ml;
-        frmr = mr;
-     }
-void set_brake_fc(int ff, int fc)
-     {       
-        break_ff = ff;  
-        break_fc = fc;       
-     }
-void set_brake_bc(int ff, int fc)
-     {       
-        break_bf = ff;  
-        break_bc = fc;       
-     }
-void set_delay_f(int ff)
-     {       
-        delay_f = ff;       
-     }
-void set_speed_turn_fl(int inM, int outM, int delayM )
-     {
-        llmotor = inM;
-        lrmotor = outM;
-        ldelaymotor = delayM;
-     }
-void set_speed_turn_fr(int inM, int outM, int delayM )
-     {
-        rlmotor = inM;
-        rrmotor = outM;
-        rdelaymotor = delayM;
-     }
 
 void setup_rp2350_pro() 
   {
-    Wire.begin(); 
-    Wire1.setSDA(26); // กำหนดพิน SDA
-    Wire1.setSCL(27); // กำหนดพิน SCL
-    analogReadResolution(12);
-     // ตั้งความละเอียด PWM เป็น 12 บิต (0–4095)
-    analogWriteResolution(12);
-    // ตั้งความถี่ PWM เป็น 20kHz (ลดเสียงรบกวนมอเตอร์)
-    if(Freq_motor == "Coreless_Motors")
-      {
-        analogWriteFreq(20000);
-      }
-    else  
-      {
-        analogWriteFreq(1000);
-      }
-    
-   if (!my.begin()) {
-    Serial.println("Failed to initialize GYRO160!");
-    //while (1);
-   }
-  Serial.println("GYRO160 initialized!");
+    Wire.begin();
+    Serial.begin(115200);
+    my_GYRO::begin();
+    resetAngles();
     pinMode(24, OUTPUT);
     pinMode(25, OUTPUT);
     pinMode(28, OUTPUT);
@@ -188,6 +116,10 @@ void setup_rp2350_pro()
    
   }
 
+  void resetAngles()
+      {
+        my_GYRO::resetAngles();
+      }
 
 /*
    get_maxmin_A();
@@ -200,11 +132,6 @@ void setup_rp2350_pro()
    read_eepC();
    read_sensorC_program();
 */
-
-void resetAngles()
-  {
-    reset_gyro160(my);
-  }
 uint16_t read_sensorA(int sensor) 
   {       
      adc.begin(14, 15, 16, 13 );
@@ -736,7 +663,7 @@ int sl, sr; // ตัวแปรความเร็วสำหรับม�
 
 // ฟังก์ชันควบคุมมอเตอร์ซ้าย/ขวา
 void Motor(int pwmL, int pwmR) {
-   delayMicroseconds(50); 
+  delayMicroseconds(50); 
   // ตั้งความละเอียด PWM เป็น 12 บิต (0–4095)
   analogWriteResolution(12);
 
@@ -856,7 +783,6 @@ int position_A()
                     avg += (long)value * (i * 1000);  
                     sum += value;                 
                  }
-               delayMicroseconds(50); 
          }
       if (!onLine)        //เมื่อหุ่นยนต์ไม่อยู่หรือไม่เจอเส้นดำ
          {
@@ -2024,7 +1950,7 @@ void fline(int spl, int spr, float kp, String distance, char nfc, char splr, int
         digitalWrite(rgb[2],1);
         led = 'b';
       }
-
+    
     if (kp == 0)
        {
         I = kp_slow = ki_slow = 0;
@@ -2538,7 +2464,6 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
     const int ramp_step = 2;
     float traveled_distance = 0;
     unsigned long last_time = millis();
-   
     if(led == 'b')
       {
         digitalWrite(rgb[0],1);
@@ -2567,6 +2492,7 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
         digitalWrite(rgb[2],1);
         led = 'b';
       }
+
     if (kp == 0) {
         I = kp_slow = ki_slow = 0;
     }
@@ -2976,34 +2902,7 @@ void bline(int spl, int spr, float kp, String distance, char nfc, char splr, int
     const int ramp_step = 2;
     float traveled_distance = 0;
     unsigned long last_time = millis();
-    if(led == 'b')
-      {
-        digitalWrite(rgb[0],1);
-        digitalWrite(rgb[1],0);
-        digitalWrite(rgb[2],0);
-        led = 'g';
-      }
-    else if(led == 'g')
-      {
-        digitalWrite(rgb[0],0);
-        digitalWrite(rgb[1],1);
-        digitalWrite(rgb[2],0);
-        led = 'r';
-      }
-    else if(led == 'r')
-      {
-        digitalWrite(rgb[0],0);
-        digitalWrite(rgb[1],0);
-        digitalWrite(rgb[2],1);
-        led = 'w';
-      }
-    else if(led == 'w')
-      {
-        digitalWrite(rgb[0],1);
-        digitalWrite(rgb[1],1);
-        digitalWrite(rgb[2],1);
-        led = 'b';
-      }
+   
 
     if (kp == 0) {
         I = kp_slow = ki_slow = 0;
