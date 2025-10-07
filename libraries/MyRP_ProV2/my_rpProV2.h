@@ -68,7 +68,7 @@ int ch_p = 0;
 bool _fw = true;
 float new_encoder = 0;
 float speed_scale = 1.55; // สมมติ 1 PWM = 0.1 cm/s (ต้องปรับตามจริง)
-String Freq_motor;
+String Freq_motor ;
 
 //___--------------------------------------------->>
 void get_EEP_Program(void);
@@ -729,13 +729,13 @@ void Motor(int pwmL, int pwmR) {
    // ตั้งความละเอียด PWM เป็น 12 บิต (0–4095)
     analogWriteResolution(12);
     // ตั้งความถี่ PWM เป็น 20kHz (ลดเสียงรบกวนมอเตอร์)
-    if(Freq_motor == "Coreless_Motors")
+    if(Freq_motor == "DC_Motors")
       {
-        analogWriteFreq(20000);
+        analogWriteFreq(1000);
       }
     else  
       {
-        analogWriteFreq(1000);
+        analogWriteFreq(20000);
       }
      delayMicroseconds(50); 
    
@@ -3820,6 +3820,4 @@ void bw_gyro(int spl, int spr, float kp,  float distance, int offset)
     else{Motor(0, 0);delay(5);}
   }
 #endif
-
-
 
