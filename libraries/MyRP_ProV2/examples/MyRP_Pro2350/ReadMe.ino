@@ -6,8 +6,8 @@ void set_motor()
     distance_scale(1.55);
    
     set_slow_motor(20, 20);     
-    set_turn_center_l(90, 90);
-    set_turn_center_r(90, 90);
+    set_turn_center_l(-90, 90);
+    set_turn_center_r(90, -90);
     set_turn_front_l(-15, 100);
     set_turn_front_r(100, -15);
     set_brake_fc(5, 20);
@@ -166,6 +166,7 @@ void readme()
 
 
   }
+
 
 
 
