@@ -1,9 +1,10 @@
 void set_motor()
   {
     set_Freq("Coreless_Motors");      // กำหนดความถี่ให้กับมอเตอร์เกาหลีหรือ มอเตอร์ Coreless ("Coreless_Motors")
-      //set_Freq("DC_Motors");          // กำหนดความถี่ให้กับมอเตอร์ธรรมกา(DC_Motors)
+      //set_Freq("DC_Motors");        // กำหนดความถี่ให้กับมอเตอร์ธรรมกา(DC_Motors)
 
-    distance_scale(1.55);
+    distance_scale_fw(1.00);       // ปรับค่าเพื่อให้ได้ระยะทางที่เป็นจริงสำหรับเดินหน้า
+    distance_scale_bw(1.10);        // ปรับค่าเพื่อให้ได้ระยะทางที่เป็นจริงสำหรับถอยหลัง
    
     set_slow_motor(20, 20);     
     set_turn_center_l(-90, 90);
