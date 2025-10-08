@@ -67,7 +67,10 @@ float redius_wheel = 3.0; // รัศมีล้อ (cm)
 int ch_p = 0;
 bool _fw = true;
 float new_encoder = 0;
-float speed_scale = 1.55; // สมมติ 1 PWM = 0.1 cm/s (ต้องปรับตามจริง)
+float speed_scale_fw = 1.55; // สมมติ 1 PWM = 0.1 cm/s (ต้องปรับตามจริง)
+
+float speed_scale_bw = 1.55; // สมมติ 1 PWM = 0.1 cm/s (ต้องปรับตามจริง)
+
 String Freq_motor ;
 
 //___--------------------------------------------->>
@@ -79,9 +82,13 @@ void set_Freq(String fr_motor)
   {
     Freq_motor = fr_motor;
   }  
-void distance_scale(float scale)
+void distance_scale_fw(float scale)
   {
-    speed_scale = scale;
+    speed_scale_fw = scale;
+  }
+void distance_scale_bw(float scale)
+  {
+    speed_scale_bw = scale;
   }
 void set_slow_motor(int sl, int sr)
      {       
@@ -1437,7 +1444,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
               {
                 unsigned long current_time = millis();
                 float delta_time = (current_time - last_time) / 1000.0;
-                traveled_distance += (current_speed * speed_scale) * delta_time;
+                traveled_distance += (current_speed * speed_scale_fw) * delta_time;
                 last_time = current_time;
                 if (traveled_distance >= distance) {
                     Motor(0, 0);
@@ -1492,7 +1499,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
           {
             unsigned long current_time = millis();
             float delta_time = (current_time - last_time) / 500.0;
-            traveled_distance += (target_speed * speed_scale) * delta_time;
+            traveled_distance += (target_speed * speed_scale_fw) * delta_time;
             last_time = current_time;
             if (traveled_distance >= distance) {
                 for(int i=spl; i>slmotor ; i--)
@@ -2533,9 +2540,10 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
     sensor.toCharArray(sensors, sizeof(sensors));
     int sensor_f = atoi(&sensors[1]); // เช่น "b5" -> sensor_f = 5
     int target_speed = min(spl, spr); // PWM
-    const int ramp_step = 2;
+    const int ramp_step = 3;
     float traveled_distance = 0;
     unsigned long last_time = millis();
+
    
     if(led == 'b')
       {
@@ -2612,7 +2620,7 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
             if (distance > 0) {
                 unsigned long current_time = millis();
                 float delta_time = (current_time - last_time) / 1000.0;
-                traveled_distance += (current_speed * speed_scale) * delta_time;
+                traveled_distance += (current_speed * (speed_scale_bw+0.55)) * delta_time;
                 last_time = current_time;
                 if (traveled_distance >= distance) {
                     Motor(0, 0);
@@ -2662,7 +2670,7 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
           {
             unsigned long current_time = millis();
             float delta_time = (current_time - last_time) / 1000.0;
-            traveled_distance += (target_speed * speed_scale) * delta_time;
+            traveled_distance += (target_speed * (speed_scale_bw+0.95)) * delta_time;
             last_time = current_time;
             if (traveled_distance >= distance) {
                 Motor(0, 0);
@@ -2971,7 +2979,7 @@ void bline(int spl, int spr, float kp, String distance, char nfc, char splr, int
     sensor.toCharArray(sensors, sizeof(sensors));
     int sensor_f = atoi(&sensors[1]); // เช่น "b5" -> sensor_f = 5
     int target_speed = min(spl, spr); // PWM
-    const int ramp_step = 2;
+    const int ramp_step = 3;
     float traveled_distance = 0;
     unsigned long last_time = millis();
     if(led == 'b')
