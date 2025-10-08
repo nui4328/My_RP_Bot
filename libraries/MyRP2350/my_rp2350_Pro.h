@@ -725,6 +725,7 @@ Servo servo_34;
 
 void servo(int servo,int angle)
 {  
+
   if (servo==39)
     {
         servo_39.attach(servo39, 500, 2500);
@@ -747,12 +748,12 @@ void servo(int servo,int angle)
     }
    else if (servo==35)
     {
-        servo_35.attach(servo35, 500, 2500);
-        servo_35.write(angle);        
+        servo_35.attach(servo35, 400, 2600);
+        servo_35.write(180-angle);        
     }
   else if (servo==34)
     {
-        servo_34.attach(servo34, 500, 2500);
+        servo_34.attach(servo34, 400, 2600);
         servo_34.write(angle);        
     }
 }
@@ -3722,5 +3723,6 @@ void bw_gyro(int spl, int spr, float kp,  float distance, int offset)
     else{Motor(0, 0);delay(5);}
   }
 #endif
+
 
 
