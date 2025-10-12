@@ -79,10 +79,25 @@ void my_GYRO160::readAngles(float &roll, float &pitch, float &yaw) {
   _accelY_prev = accelY;
   _accelZ_prev = accelZ;
 
+  // คำนวณค่า gyro และชดเชย offset
   float gyroX = (gx / 16.4) - _gyroOffsetX;
   float gyroY = (gy / 16.4) - _gyroOffsetY;
   float gyroZ = (gz / 16.4) - _gyroOffsetZ;
 
+  // อัปเดต _gyroOffsetZ เมื่อเซ็นเซอร์อยู่นิ่ง
+  const float GYRO_CALIBRATION_ALPHA = 0.01; // ค่าคงที่สำหรับ moving average
+  const float GYRO_THRESHOLD = 0.1; // ลดจาก 0.5 เป็น 0.1 เพื่อเพิ่มความไว
+  if (abs(gx / 16.4) < GYRO_THRESHOLD) {
+    _gyroOffsetX = GYRO_CALIBRATION_ALPHA * (gx / 16.4) + (1.0 - GYRO_CALIBRATION_ALPHA) * _gyroOffsetX;
+  }
+  if (abs(gy / 16.4) < GYRO_THRESHOLD) {
+    _gyroOffsetY = GYRO_CALIBRATION_ALPHA * (gy / 16.4) + (1.0 - GYRO_CALIBRATION_ALPHA) * _gyroOffsetY;
+  }
+  if (abs(gz / 16.4) < GYRO_THRESHOLD) {
+    _gyroOffsetZ = GYRO_CALIBRATION_ALPHA * (gz / 16.4) + (1.0 - GYRO_CALIBRATION_ALPHA) * _gyroOffsetZ;
+  }
+
+  // ตัด noise เมื่อการเคลื่อนไหวน้อย
   if (abs(gyroX) < GYRO_THRESHOLD) gyroX = 0.0;
   if (abs(gyroY) < GYRO_THRESHOLD) gyroY = 0.0;
   if (abs(gyroZ) < GYRO_THRESHOLD) gyroZ = 0.0;
@@ -92,7 +107,7 @@ void my_GYRO160::readAngles(float &roll, float &pitch, float &yaw) {
 
   unsigned long currentTime = micros();
   float deltaTime = (currentTime - _lastTime) / 1000000.0;
-  if (deltaTime > 0.1) deltaTime = 0.1; // Limit deltaTime
+  if (deltaTime > 0.1) deltaTime = 0.1; // จำกัด deltaTime
   _lastTime = currentTime;
 
   float gyroAngleX = _angleX + gyroX * deltaTime;
@@ -101,7 +116,7 @@ void my_GYRO160::readAngles(float &roll, float &pitch, float &yaw) {
 
   _angleX = ALPHA * gyroAngleX + (1.0 - ALPHA) * accelRoll;
   _angleY = ALPHA * gyroAngleY + (1.0 - ALPHA) * accelPitch;
-  _angleZ = gyroAngleZ; // Yaw uses gyroscope only
+  _angleZ = gyroAngleZ; // Yaw ใช้ gyroscope เท่านั้น
 
   // Wrap yaw to [-180, 180]
   if (_angleZ > 180) _angleZ -= 360;
