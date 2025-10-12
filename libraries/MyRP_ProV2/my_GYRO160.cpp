@@ -86,7 +86,7 @@ void my_GYRO160::readAngles(float &roll, float &pitch, float &yaw) {
 
   // อัปเดต _gyroOffsetZ เมื่อเซ็นเซอร์อยู่นิ่ง
   const float GYRO_CALIBRATION_ALPHA = 0.01; // ค่าคงที่สำหรับ moving average
-  const float GYRO_THRESHOLD = 0.1; // ลดจาก 0.5 เป็น 0.1 เพื่อเพิ่มความไว
+  const float GYRO_THRESHOLD = 0.5; // ลดจาก 0.5 เป็น 0.1 เพื่อเพิ่มความไว
   if (abs(gx / 16.4) < GYRO_THRESHOLD) {
     _gyroOffsetX = GYRO_CALIBRATION_ALPHA * (gx / 16.4) + (1.0 - GYRO_CALIBRATION_ALPHA) * _gyroOffsetX;
   }
@@ -235,4 +235,5 @@ bool my_GYRO160::calibrateGyro() {
 void reset_gyro160(my_GYRO160& gyro) {
   gyro.resetAngles();
 }
+
 
