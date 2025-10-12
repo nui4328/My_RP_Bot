@@ -235,3 +235,4 @@ bool my_GYRO160::calibrateGyro() {
 void reset_gyro160(my_GYRO160& gyro) {
   gyro.resetAngles();
 }
+
