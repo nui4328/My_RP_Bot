@@ -123,6 +123,8 @@ void readme()
     bline(0, 0, 0.45, 0, 'n', 'l', 50, "a2", 40);      //
     bline(0, 0, 0.45, 0, 'n', 'r', 50, "a5", 40);      //
 
+    fw_gyro(30, 30, 1.15,  30, 10) ;   //fw_gyro(int spl, int spr, float kp,  float distance, int offset) 
+    bw_gyro(30, 30, 1.15,  30, 10) ;   //bw_gyro(int spl, int spr, float kp,  float distance, int offset) 
 
     // หมายเหตุ ทั้งเดินหน้าและถอยหลัง การหมุนตัว สามารถใช้เซนเซอร์หน้าและหลัง แตะเส้นดำหยุดได้
     // เช่น  ข้างหน้า ใช้ a0 - a7  ข้างหลัง ใช้ b0 - b7
@@ -157,6 +159,7 @@ void readme()
 
 
   }
+
 
 
 
