@@ -55,8 +55,8 @@ const int ramp_delay = 6; // ms
 int slmotor = 20, srmotor = 20; // PWM
 int clml = -90, clmr = 90; // เลี้ยวซ้าย center
 int crml = 90, crmr = -90; // เลี้ยวขวา center
-int flml = -10, flmr = 100; // เลี้ยวซ้าย front
-int frml = 100, frmr = -10; // เลี้ยวขวา front
+int flml = -15, flmr = 100; // เลี้ยวซ้าย front
+int frml = 100, frmr = -15; // เลี้ยวขวา front
 int llmotor = 100, lrmotor = 50, ldelaymotor = 50; // เลี้ยวซ้าย speed
 int rlmotor = 50, rrmotor = 100, rdelaymotor = 50; // เลี้ยวขวา speed
 int break_ff = 5, break_fc = 30, break_bf = 10, break_bc = 20; // การหน่วง
@@ -1354,6 +1354,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
     const int ramp_step = 3;
     float traveled_distance = 0;
     unsigned long last_time = millis();
+    const int ramp_delay = 10; // หน่วงระหว่างเพิ่มความเร็ว (ms)
     
     float I_max = 1000.0, I_min = -1000.0; // ขีดจำกัด Integral
     float D_max = 50.0, D_min = -50.0; // ขีดจำกัด Derivative
@@ -1534,7 +1535,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                     I += errors * 0.00005; // สำหรับ 50us
                     D = errors - previous_error;
                     previous_error = errors;
-                    PID_output = (kp/2 * P) + (0.000001 * I) + (kd_f * D);
+                    PID_output = ((kp/2) * P) + (0.000001 * I) + (kd_f * D);
                     Motor(i - PID_output, i + PID_output);
                     delayMicroseconds(50);
                   }
@@ -1606,7 +1607,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                             I += errors * 0.00005;
                             D = errors - previous_error;
                             previous_error = errors;
-                            PID_output = (kp_slow * P) + (ki_slow * D);
+                            PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                             Motor(slmotor - PID_output, srmotor + PID_output);
                             delayMicroseconds(50);
                             if ((read_sensorA(0) < md_sensorA(0) && read_sensorA(1) < md_sensorA(1) ) ||
@@ -1645,7 +1646,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                             I += errors * 0.00005;
                             D = errors - previous_error;
                             previous_error = errors;
-                            PID_output = (kp_slow * P) + (ki_slow * D);
+                            PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                             Motor(slmotor - PID_output, srmotor + PID_output);
                             delayMicroseconds(50);
                             if ((read_sensorA(0) < md_sensorA(0) && read_sensorA(1) < md_sensorA(1) ) ||
@@ -1674,7 +1675,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                       I += errors * 0.00005;
                       D = errors - previous_error;
                       previous_error = errors;
-                      PID_output = (kp_slow * P) + (ki_slow * D);
+                      PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                       Motor(slmotor - PID_output, srmotor + PID_output);
                       delayMicroseconds(50);
                     }
@@ -1697,7 +1698,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                     I += errors * 0.00005;
                     D = errors - previous_error;
                     previous_error = errors;
-                    PID_output = (kp_slow * P) + (ki_slow * D);
+                    PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                     Motor(slmotor - PID_output, srmotor + PID_output);
                     delayMicroseconds(50);
                     if ((read_sensorA(0) < md_sensorA(0)-50 && read_sensorA(1) < md_sensorA(1)-50 )  ||
@@ -1719,7 +1720,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                         I += errors * 0.00005;
                         D = errors - previous_error;
                         previous_error = errors;
-                        PID_output = (kp_slow * P) + (ki_slow * D);
+                        PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                         Motor(i - PID_output, i + PID_output);
                         delayMicroseconds(50);
                         if(kp >= 5.5 )
@@ -1747,7 +1748,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                         I += errors * 0.00005;
                         D = errors - previous_error;
                         previous_error = errors;
-                        PID_output = (kp_slow * P) + (ki_slow * D);
+                        PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                         Motor(slmotor - PID_output, slmotor + PID_output);
                         delayMicroseconds(50);
                         if(kp >= 5.5 )
@@ -2167,7 +2168,7 @@ void fline(int spl, int spr, float kp, String distance, char nfc, char splr, int
                             I += errors * 0.00005;
                             D = errors - previous_error;
                             previous_error = errors;
-                            PID_output = (kp_slow * P) + (ki_slow * D);
+                            PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                             Motor(slmotor - PID_output, srmotor + PID_output);
                             delayMicroseconds(50);
                             if ((read_sensorA(0) < md_sensorA(0) && read_sensorA(1) < md_sensorA(1) ) ||
@@ -2206,7 +2207,7 @@ void fline(int spl, int spr, float kp, String distance, char nfc, char splr, int
                             I += errors * 0.00005;
                             D = errors - previous_error;
                             previous_error = errors;
-                            PID_output = (kp_slow * P) + (ki_slow * D);
+                            PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                             Motor(slmotor - PID_output, srmotor + PID_output);
                             delayMicroseconds(50);
                             if ((read_sensorA(0) < md_sensorA(0) && read_sensorA(1) < md_sensorA(1) ) ||
@@ -2235,7 +2236,7 @@ void fline(int spl, int spr, float kp, String distance, char nfc, char splr, int
                       I += errors * 0.00005;
                       D = errors - previous_error;
                       previous_error = errors;
-                      PID_output = (kp_slow * P) + (ki_slow * D);
+                      PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                       Motor(slmotor - PID_output, srmotor + PID_output);
                       delayMicroseconds(50);
                     }
@@ -2258,7 +2259,7 @@ void fline(int spl, int spr, float kp, String distance, char nfc, char splr, int
                     I += errors * 0.00005;
                     D = errors - previous_error;
                     previous_error = errors;
-                    PID_output = (kp_slow * P) + (ki_slow * D);
+                    PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                     Motor(slmotor - PID_output, srmotor + PID_output);
                     delayMicroseconds(50);
                     if ((read_sensorA(0) < md_sensorA(0)-50 && read_sensorA(1) < md_sensorA(1)-50 )  ||
@@ -2276,7 +2277,7 @@ void fline(int spl, int spr, float kp, String distance, char nfc, char splr, int
                         I += errors * 0.00005;
                         D = errors - previous_error;
                         previous_error = errors;
-                        PID_output = (kp_slow * P) + (ki_slow * D);
+                        PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                         Motor(i - PID_output, i + PID_output);
                         delayMicroseconds(50);
                         if ((read_sensorA(0) < md_sensorA(0)-50 && read_sensorA(1) < md_sensorA(1)-50 )  ||
@@ -2293,7 +2294,7 @@ void fline(int spl, int spr, float kp, String distance, char nfc, char splr, int
                         I += errors * 0.00005;
                         D = errors - previous_error;
                         previous_error = errors;
-                        PID_output = (kp_slow * P) + (ki_slow * D);
+                        PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                         Motor(slmotor - PID_output, slmotor + PID_output);
                         delayMicroseconds(50);
                         if ((read_sensorA(0) < md_sensorA(0)-50 && read_sensorA(1) < md_sensorA(1)-50 )  ||
@@ -2546,6 +2547,7 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
     const int ramp_step = 3;
     float traveled_distance = 0;
     unsigned long last_time = millis();
+    const int ramp_delay = 10; // หน่วงระหว่างเพิ่มความเร็ว (ms)
 
    
     if(led == 'b')
@@ -2738,7 +2740,7 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                 if (I < -1000) I = -1000;
                 D = errors - previous_error;
                 previous_error = errors;
-                PID_output = (kp_slow * P) + (ki_slow * D);
+                PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                 Motor(-(slmotor + PID_output), -(srmotor - PID_output)); // ถอยหลัง
                 delayMicroseconds(50);
                 if ((read_sensorB(0) < md_sensorB(0) && read_sensorB(1) < md_sensorB(1) ) ||
@@ -2780,7 +2782,7 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                 if (I < -1000) I = -1000;
                 D = errors - previous_error;
                 previous_error = errors;
-                PID_output = (kp_slow * P) + (ki_slow * D);
+                PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                 Motor(-(slmotor + PID_output), -(srmotor - PID_output)); // ถอยหลัง
                 delayMicroseconds(50);
                 if ((read_sensorB(0) < md_sensorB(0) && read_sensorB(1) < md_sensorB(1) ) ||
@@ -2822,7 +2824,7 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                     if (I < -1000) I = -1000;
                     D = errors - previous_error;
                     previous_error = errors;
-                    PID_output = (kp_slow * P) + (ki_slow * D);
+                    PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                     Motor(-(spl + PID_output), -(spr - PID_output)); // ถอยหลัง
                     delayMicroseconds(50);
                     if (analogRead(46) <  (sensorMin_C[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMin_C[1]+md_sensorC(1))/2) {
@@ -3135,7 +3137,7 @@ void bline(int spl, int spr, float kp, String distance, char nfc, char splr, int
                 if (I < -1000) I = -1000;
                 D = errors - previous_error;
                 previous_error = errors;
-                PID_output = (kp_slow * P) + (ki_slow * D);
+                PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                 Motor(-(slmotor + PID_output), -(srmotor - PID_output)); // ถอยหลัง
                 delayMicroseconds(50);
                 if ((read_sensorB(0) < md_sensorB(0) && read_sensorB(1) < md_sensorB(1) ) ||
@@ -3177,7 +3179,7 @@ void bline(int spl, int spr, float kp, String distance, char nfc, char splr, int
                 if (I < -1000) I = -1000;
                 D = errors - previous_error;
                 previous_error = errors;
-                PID_output = (kp_slow * P) + (ki_slow * D);
+                PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                 Motor(-(slmotor + PID_output), -(srmotor - PID_output)); // ถอยหลัง
                 delayMicroseconds(50);
                 if ((read_sensorB(0) < md_sensorB(0) && read_sensorB(1) < md_sensorB(1) ) ||
@@ -3219,7 +3221,7 @@ void bline(int spl, int spr, float kp, String distance, char nfc, char splr, int
                     if (I < -1000) I = -1000;
                     D = errors - previous_error;
                     previous_error = errors;
-                    PID_output = (kp_slow * P) + (ki_slow * D);
+                    PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                     Motor(-(spl + PID_output), -(spr - PID_output)); // ถอยหลัง
                     delayMicroseconds(50);
                     if (analogRead(46) <  (sensorMin_C[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMin_C[1]+md_sensorC(1))/2) {
