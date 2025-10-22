@@ -67,11 +67,13 @@ float redius_wheel = 3.0; // รัศมีล้อ (cm)
 int ch_p = 0;
 bool _fw = true;
 float new_encoder = 0;
-float speed_scale_fw = 1.55; // สมมติ 1 PWM = 0.1 cm/s (ต้องปรับตามจริง)
+float speed_scale_fw = 1.0; // สมมติ 1 PWM = 0.1 cm/s (ต้องปรับตามจริง)
 
-float speed_scale_bw = 1.55; // สมมติ 1 PWM = 0.1 cm/s (ต้องปรับตามจริง)
+float speed_scale_bw = 1.05; // สมมติ 1 PWM = 0.1 cm/s (ต้องปรับตามจริง)
 
 String Freq_motor ;
+
+
 
 //___--------------------------------------------->>
 void get_EEP_Program(void);
@@ -789,12 +791,16 @@ void Motor(int pwmL, int pwmR) {
 //-------------------------------------------------------------------------------------->>ควบคุมservo
 
 #include <Servo.h>
+
+// กำหนดขาเซอร์โว
 #define servo39 39
 #define servo38 38
 #define servo37 37
 #define servo36 36
 #define servo35 35
 #define servo34 34
+
+// สร้างออบเจ็กต์เซอร์โว
 Servo servo_39;
 Servo servo_38;
 Servo servo_37;
@@ -802,42 +808,80 @@ Servo servo_36;
 Servo servo_35;
 Servo servo_34;
 
+// ตัวแปรสำหรับเก็บค่า trim และมุมก่อนหน้า
+int servo_tim34 = 0;
+int servo_tim35 = 0;
+int servo_tim36 = 0;
+int num_steps = 20;
+float s34_before_deg = 120;
+float s35_before_deg = 120;
+float s36_before_deg = 40;
 
-void servo(int servo,int angle)
-{  
+// ฟังก์ชันตั้งค่า trim
+void s34_trim(int _s34) {
+    servo_tim34 = _s34;
+}
 
-  if (servo==39)
-    {
+void s35_trim(int _s35) {
+    servo_tim35 = _s35; // แก้ไขจาก servo_tim34 เป็น servo_tim35
+}
+
+void s36_trim(int _s36) {
+    servo_tim36 = _s36; // แก้ไขจาก servo_tim34 เป็น servo_tim36
+}
+
+// ฟังก์ชันควบคุมเซอร์โว
+void servo(int servo, int angle) {      
+    if (servo == 39) {
         servo_39.attach(servo39, 500, 2500);
         servo_39.write(angle);        
-    }
-  else if (servo==38)
-    {
+    } else if (servo == 38) {
         servo_38.attach(servo38, 500, 2500);
         servo_38.write(angle);        
-    }  
-  else if (servo==37)
-    {
+    } else if (servo == 37) { 
         servo_37.attach(servo37, 500, 2500);
         servo_37.write(angle);        
-    }
-  else if (servo==36)
-    {
+    } else if (servo == 36) {
         servo_36.attach(servo36, 500, 2500);
-        servo_36.write(angle);        
-    }
-   else if (servo==35)
-    {
+        servo_36.write(angle);      
+    } else if (servo == 35) {
         servo_35.attach(servo35, 400, 2600);
-        servo_35.write(180-angle);        
-    }
-  else if (servo==34)
-    {
+        servo_35.write(180 - angle);     
+    } else if (servo == 34) {
         servo_34.attach(servo34, 400, 2600);
-        servo_34.write(angle);        
+        servo_34.write(angle);   
     }
 }
 
+// ฟังก์ชันควบคุมเซอร์โว 34 และ 35 พร้อมกัน
+void arm_left_right(float sl, float sr, int sp) {
+    float servo34_step = (sl - s34_before_deg) / num_steps;
+    float servo35_step = (sr - s35_before_deg) / num_steps;
+    
+    for (int i = 0; i < num_steps; i++) {
+        float servo34_pos = s34_before_deg + (i * servo34_step); // แก้ไขจาก servo35_step เป็น servo34_step
+        float servo35_pos = s35_before_deg + (i * servo35_step);
+        servo(34, servo34_pos);
+        servo(35, servo35_pos);
+        delay(sp);
+        Serial.print("S34: "); Serial.println(servo34_pos); 
+        Serial.print("S35: "); Serial.println(servo35_pos);  
+    }
+    s34_before_deg = sl;
+    s35_before_deg = sr;
+}
+
+void arm_up_down(float sl, int sp) {
+    float servo36_step = (sl - s36_before_deg) / num_steps;
+    
+    for (int i = 0; i < num_steps; i++) {
+        float servo36_pos = s36_before_deg + (i * servo36_step); // แก้ไขจาก servo35_step เป็น servo34_step6
+        servo(36, servo36_pos);
+        delay(sp);
+        Serial.print("S36: "); Serial.println(servo36_pos); 
+    }
+    s36_before_deg = sl;
+}
 //-------------------------------------------------------------------------------------->>ควบคุมservo
 
 
@@ -1354,7 +1398,6 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
     const int ramp_step = 3;
     float traveled_distance = 0;
     unsigned long last_time = millis();
-    const int ramp_delay = 10; // หน่วงระหว่างเพิ่มความเร็ว (ms)
     
     float I_max = 1000.0, I_min = -1000.0; // ขีดจำกัด Integral
     float D_max = 50.0, D_min = -50.0; // ขีดจำกัด Derivative
@@ -2547,7 +2590,6 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
     const int ramp_step = 3;
     float traveled_distance = 0;
     unsigned long last_time = millis();
-    const int ramp_delay = 10; // หน่วงระหว่างเพิ่มความเร็ว (ms)
 
    
     if(led == 'b')
