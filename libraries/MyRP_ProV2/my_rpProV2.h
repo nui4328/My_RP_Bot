@@ -3922,55 +3922,31 @@ void fw_gyro(int spl, int spr, float kp, int distance, String sensorss, char sp,
           }
         delayMicroseconds(50);
     }
-  if(sp == p)
+  if(sp == 'p')
     {
       if(sensorss == "a0")
           {
-             do{Motor(spl, spr);delayMicroseconds(50);}while(read_sensorA(0) < md_sensorA(0))
-              {
-                delayMicroseconds(50);
-                break;
-              }
+             do{Motor(spl, spr);delayMicroseconds(50);}while(read_sensorA(0) < md_sensorA(0));
           }
         else if(sensorss == "a7")
           {
-             do{Motor(spl, spr);delayMicroseconds(50);}while(read_sensorA(7) < md_sensorA(7))
-              {
-                delayMicroseconds(50);
-                break;
-              }
+             do{Motor(spl, spr);delayMicroseconds(50);}while(read_sensorA(7) < md_sensorA(7));
           }
         else if(sensorss == "b7")
           {
-             do{Motor(spl, spr);delayMicroseconds(50);}while(read_sensorB(0) < md_sensorB(0))
-              {
-                delayMicroseconds(50);
-                break;
-              }
+             do{Motor(spl, spr);delayMicroseconds(50);}while(read_sensorB(0) < md_sensorB(0));
           }
         else if(sensorss == "b0")
           {
-             do{Motor(spl, spr);delayMicroseconds(50);}while(read_sensorB(7) < md_sensorB(7))
-              {
-                delayMicroseconds(50);
-                break;
-              }
+             do{Motor(spl, spr);delayMicroseconds(50);}while(read_sensorB(7) < md_sensorB(7));
           }
         else if(sensorss == "c0")
           {
-            do{Motor(spl, spr);delayMicroseconds(50);}while(analogRead(46)  < (sensorMin_C[0]+sensorMax_C[0])/2)
-              {
-                delayMicroseconds(50);
-                break;
-              }
+            do{Motor(spl, spr);delayMicroseconds(50);}while(analogRead(46)  < (sensorMin_C[0]+sensorMax_C[0])/2);
           }
         else if(sensorss == "c1")
           {
-             do{Motor(spl, spr);delayMicroseconds(50);}while(analogRead(47)  < (sensorMin_C[0]+sensorMax_C[1])/2)
-              {
-                delayMicroseconds(50);
-                break;
-              }
+             do{Motor(spl, spr);delayMicroseconds(50);}while(analogRead(47)  < (sensorMin_C[0]+sensorMax_C[1])/2);
           }
       }
     else{}
@@ -4160,55 +4136,35 @@ void bw_gyro(int spl, int spr, float kp, int distance, String sensorss, char sp,
           }
         delayMicroseconds(50);
     }
-  if(sp == p)
+  if(sp == 'p')
     {
       if(sensorss == "a0")
           {
-             do{Motor(-spl, -spr);delayMicroseconds(50);}while(read_sensorA(0) < md_sensorA(0))
-              {
-                delayMicroseconds(50);
-                break;
-              }
+             do{Motor(-spl, -spr);delayMicroseconds(50);}while(read_sensorA(0) < md_sensorA(0));
+             delay(5);
           }
         else if(sensorss == "a7")
           {
-             do{Motor(-spl, -spr);delayMicroseconds(50);}while(read_sensorA(7) < md_sensorA(7))
-              {
-                delayMicroseconds(50);
-                break;
-              }
-          }
-        else if(sensorss == "b7")
-          {
-             do{Motor(-spl, -spr);delayMicroseconds(50);}while(read_sensorB(0) < md_sensorB(0))
-              {
-                delayMicroseconds(50);
-                break;
-              }
+             do{Motor(-spl, -spr);delayMicroseconds(50);}while(read_sensorA(7) < md_sensorA(7));
+             delay(5);
           }
         else if(sensorss == "b0")
           {
-             do{Motor(-spl, -spr);delayMicroseconds(50);}while(read_sensorB(7) < md_sensorB(7))
-              {
-                delayMicroseconds(50);
-                break;
-              }
+             do{Motor(-spl, -spr);delayMicroseconds(50);}while(read_sensorB(0) < md_sensorB(0));
+             delay(5);
+          }
+        else if(sensorss == "b7")
+          {
+             do{Motor(-spl, -spr);delayMicroseconds(50);}while(read_sensorB(7) < md_sensorB(7));
+             delay(5);
           }
         else if(sensorss == "c0")
           {
-            do{Motor(-spl, -spr);delayMicroseconds(50);}while(analogRead(46)  < (sensorMin_C[0]+sensorMax_C[0])/2)
-              {
-                delayMicroseconds(50);
-                break;
-              }
+            do{Motor(-spl, -spr);delayMicroseconds(50);}while(analogRead(46)  < (sensorMin_C[0]+sensorMax_C[0])/2);
           }
         else if(sensorss == "c1")
           {
-             do{Motor(-spl, -spr);delayMicroseconds(50);}while(analogRead(47)  < (sensorMin_C[0]+sensorMax_C[1])/2)
-              {
-                delayMicroseconds(50);
-                break;
-              }
+             do{Motor(-spl, -spr);delayMicroseconds(50);}while(analogRead(47)  < (sensorMin_C[0]+sensorMax_C[1])/2);
           }
       }
     else{}
