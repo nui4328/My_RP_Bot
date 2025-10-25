@@ -3808,12 +3808,112 @@ void fw_gyro(int spl, int spr, float kp,  float distance, int offset)
       {
         Motor(-15, -15); delay(offset);
         Motor(-1, -1);   delay(10);
-        Motor(0, 0);     delay(10);
       }
     else{Motor(0, 0);delay(5);}
     
 }
 
+void fw_gyro(int spl, int spr, float kp,  String sensorss, int offset) 
+{     
+    int target_speed = min(spl, spr); 
+    float traveled_distance = 0;
+    unsigned long last_time = millis();
+    
+    float speed_scale = 1.5;  // <-- ใช้ค่าที่คำนวณจากการวัดจริง
+
+    resetAngles();
+    float yaw_offset = my.gyro('z'); 
+    float _integral = 0;
+    float _prevErr = 0;
+    unsigned long prevT = millis();   
+
+    int maxLeftSpeed = spl;
+    int maxRightSpeed = spr; 
+
+    while (1) 
+      {
+        unsigned long now = millis();
+        float dt = (now - prevT) / 1000.0;
+        if (dt <= 0) dt = 0.001; 
+        prevT = now;
+
+        float yaw = my.gyro('z') - yaw_offset;
+        float err = yaw;
+
+        _integral += err * dt;
+        float deriv = (err - _prevErr) / dt;
+        _prevErr = err;
+        float corr = kp * err + 0.0001 * _integral + 0.05 * deriv;
+
+        int leftSpeed  = constrain(spl - corr, -100, 100);
+        int rightSpeed = constrain(spr + corr, -100, 100);
+        Motor(leftSpeed, rightSpeed);
+        if(sensorss == "a0")
+          {
+             if(read_sensorA(0) < md_sensorA(0))
+              {
+                break;
+              }
+          }
+        else if(sensorss == "a7")
+          {
+             if(read_sensorA(7) < md_sensorA(7))
+              {
+                break;
+              }
+          }
+        else if(sensorss == "b7")
+          {
+             if(read_sensorB(7) < md_sensorB(7))
+              {
+                break;
+              }
+          }
+        else if(sensorss == "b0")
+          {
+             if(read_sensorB(0) < md_sensorB(0))
+              {
+                break;
+              }
+          }
+        else if(sensorss == "c0")
+          {
+             if(analogRead(46)  < md_sensorC(0))
+              {
+                break;
+              }
+          }
+        else if(sensorss == "c1")
+          {
+             if(analogRead(47)  < md_sensorC(1))
+              {
+                break;
+              }
+          }
+
+/*
+        if (distance > 0) 
+        {
+            unsigned long current_time = millis();
+            float delta_time = (current_time - last_time) / 1000.0;
+            traveled_distance += (target_speed * speed_scale) * delta_time;
+            last_time = current_time;
+
+            if (traveled_distance >= distance) break;
+        }
+*/
+        delayMicroseconds(50);
+    }
+
+    // soft stop
+    if(offset >0)
+      {
+        Motor(-15, -15); delay(offset);
+        Motor(-1, -1);   delay(10);
+      }
+    else{Motor(0, 0);delay(5);}
+    
+}
 // ===========================
 // ฟังก์ชันวิ่งถอยหลัง ใช้ Gyro + PID
 // ===========================
@@ -3870,8 +3970,7 @@ void bw_gyro(int spl, int spr, float kp,  float distance, int offset)
     if(offset >0)
       {
         Motor(-15, -15); delay(offset);
-        Motor(-1, -1);   delay(10);
-        Motor(0, 0);     delay(10);
+        Motor(1, 1);   delay(10);
       }
     else{Motor(0, 0);delay(5);}
   }
