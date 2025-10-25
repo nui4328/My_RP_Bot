@@ -3813,7 +3813,7 @@ void fw_gyro(int spl, int spr, float kp,  float distance, int offset)
     
 }
 
-void fw_gyro(int spl, int spr, float kp,  String sensorss, int offset) 
+void fw_gyro(int spl, int spr, float kp, int distance, String sensorss, int offset) 
 {     
     int target_speed = min(spl, spr); 
     float traveled_distance = 0;
@@ -3878,20 +3878,20 @@ void fw_gyro(int spl, int spr, float kp,  String sensorss, int offset)
           }
         else if(sensorss == "c0")
           {
-             if(analogRead(46)  < md_sensorC(0))
+             if(analogRead(46)  < (sensorMin_C[0]+sensorMax_C[0])/2)
               {
                 break;
               }
           }
         else if(sensorss == "c1")
           {
-             if(analogRead(47)  < md_sensorC(1))
+             if(analogRead(47)  < (sensorMin_C[1]+sensorMax_C[1])/2)
               {
                 break;
               }
           }
 
-/*
+
         if (distance > 0) 
         {
             unsigned long current_time = millis();
@@ -3901,7 +3901,7 @@ void fw_gyro(int spl, int spr, float kp,  String sensorss, int offset)
 
             if (traveled_distance >= distance) break;
         }
-*/
+
         delayMicroseconds(50);
     }
 
