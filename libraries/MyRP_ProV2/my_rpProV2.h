@@ -3848,6 +3848,36 @@ void fw_gyro(int spl, int spr, float kp, int distance, String sensorss, int offs
         int leftSpeed  = constrain(spl - corr, -100, 100);
         int rightSpeed = constrain(spr + corr, -100, 100);
         Motor(leftSpeed, rightSpeed);
+        if (distance > 0) 
+        {
+            unsigned long current_time = millis();
+            float delta_time = (current_time - last_time) / 1000.0;
+            traveled_distance += (target_speed * speed_scale) * delta_time;
+            last_time = current_time;
+
+            if (traveled_distance >= distance) break;
+        }
+
+        delayMicroseconds(50);
+    }
+  while (1) 
+      {
+        unsigned long now = millis();
+        float dt = (now - prevT) / 1000.0;
+        if (dt <= 0) dt = 0.001; 
+        prevT = now;
+
+        float yaw = my.gyro('z') - yaw_offset;
+        float err = yaw;
+
+        _integral += err * dt;
+        float deriv = (err - _prevErr) / dt;
+        _prevErr = err;
+        float corr = kp * err + 0.0001 * _integral + 0.05 * deriv;
+
+        int leftSpeed  = constrain(spl - corr, -100, 100);
+        int rightSpeed = constrain(spr + corr, -100, 100);
+        Motor(leftSpeed, rightSpeed);
         if(sensorss == "a0")
           {
              if(read_sensorA(0) < md_sensorA(0))
@@ -3890,21 +3920,8 @@ void fw_gyro(int spl, int spr, float kp, int distance, String sensorss, int offs
                 break;
               }
           }
-
-
-        if (distance > 0) 
-        {
-            unsigned long current_time = millis();
-            float delta_time = (current_time - last_time) / 1000.0;
-            traveled_distance += (target_speed * speed_scale) * delta_time;
-            last_time = current_time;
-
-            if (traveled_distance >= distance) break;
-        }
-
         delayMicroseconds(50);
     }
-
     // soft stop
     if(offset >0)
       {
