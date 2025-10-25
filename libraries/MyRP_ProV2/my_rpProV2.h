@@ -815,7 +815,7 @@ int servo_tim36 = 0;
 int num_steps = 20;
 float s34_before_deg = 120;
 float s35_before_deg = 120;
-float s36_before_deg = 40;
+float s36_before_deg = 50;
 
 // ฟังก์ชันตั้งค่า trim
 void s34_trim(int _s34) {
@@ -843,13 +843,13 @@ void servo(int servo, int angle) {
         servo_37.write(angle);        
     } else if (servo == 36) {
         servo_36.attach(servo36, 500, 2500);
-        servo_36.write(angle);      
+        servo_36.write(angle+servo_tim36);      
     } else if (servo == 35) {
         servo_35.attach(servo35, 400, 2600);
-        servo_35.write(180 - angle);     
+        servo_35.write((180 - angle)-servo_tim35);     
     } else if (servo == 34) {
         servo_34.attach(servo34, 400, 2600);
-        servo_34.write(angle);   
+        servo_34.write(angle+servo_tim34 );   
     }
 }
 
