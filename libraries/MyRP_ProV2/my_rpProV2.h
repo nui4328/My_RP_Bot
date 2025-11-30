@@ -161,7 +161,7 @@ void setup_rp2350_pro()
    }
     
     resetAngles();
-  Serial.println("GYRO160 initialized!");
+    Serial.println("GYRO160 initialized!");
     pinMode(24, OUTPUT);
     pinMode(25, OUTPUT);
     pinMode(28, OUTPUT);
@@ -422,58 +422,53 @@ void get_maxmin_B() {
 }
 
 void get_maxmin_C() {
-  // อ่านค่าและเก็บไว้สำหรับ analogRead(46) และ analogRead(47)
+  const int PIN_C0 = 46;
+  const int PIN_C1 = 47;
+
+  // อ่านค่าตัวอย่าง
   for (int sample = 0; sample < numSamples; sample++) {
-    sensorValuesC[0][sample] = analogRead(46); // เซนเซอร์ C0 (GPIO 46)
-    sensorValuesC[1][sample] = analogRead(47); // เซนเซอร์ C1 (GPIO 47)
+    sensorValuesC[0][sample] = analogRead(PIN_C0);
+    sensorValuesC[1][sample] = analogRead(PIN_C1);
     delay(5);
   }
 
-  // คำนวณ Max และ Min สำหรับเซนเซอร์ C0 และ C1
+  // คำนวณ Max/Min
   for (int sensor = 0; sensor < 2; sensor++) {
-    sensorMaxC[sensor] = sensorValuesC[sensor][0];
-    sensorMinC[sensor] = sensorValuesC[sensor][0];
-    
-    for (int sample = 1; sample < numSamples; sample++) {
-      int value = sensorValuesC[sensor][sample];
-      if (value > sensorMaxC[sensor]) {
-        sensorMaxC[sensor] = value;
-      }
-      if (value < sensorMinC[sensor]) {
-        sensorMinC[sensor] = value;
-      }
+    sensorMaxC[sensor] = 0;
+    sensorMinC[sensor] = 4095;
+
+    for (int sample = 0; sample < numSamples; sample++) {
+      uint16_t value = sensorValuesC[sensor][sample];
+      if (value > sensorMaxC[sensor]) sensorMaxC[sensor] = value;
+      if (value < sensorMinC[sensor]) sensorMinC[sensor] = value;
     }
   }
 
-  // บันทึก sensorMaxC และ sensorMinC ลง EEPROM
-  byte buffer[4];
+  // บันทึก Max ลง EEPROM (address 64-67)
+  uint8_t buffer[4];
   for (int i = 0; i < 2; i++) {
-    buffer[i * 2] = highByte(sensorMaxC[i]);
-    buffer[i * 2 + 1] = lowByte(sensorMaxC[i]);
+    buffer[i*2]     = highByte(sensorMaxC[i]);
+    buffer[i*2 + 1] = lowByte(sensorMaxC[i]);
   }
-  writeEEPROM(EEPROM_ADDRESS, 64, buffer, 4); // sensorMaxC ที่ที่อยู่ 64
+  writeEEPROM(EEPROM_ADDRESS, 64, buffer, 4);
 
+  // บันทึก Min ลง EEPROM (address 68-71)
   for (int i = 0; i < 2; i++) {
-    buffer[i * 2] = highByte(sensorMinC[i]);
-    buffer[i * 2 + 1] = lowByte(sensorMinC[i]);
+    buffer[i*2]     = highByte(sensorMinC[i]);
+    buffer[i*2 + 1] = lowByte(sensorMinC[i]);
   }
-  writeEEPROM(EEPROM_ADDRESS, 68, buffer, 4); // sensorMinC ที่ที่อยู่ 68
+  writeEEPROM(EEPROM_ADDRESS, 68, buffer, 4);
 
-  tone(32, 950, 100);
-  delay(200);
-  tone(32, 950, 200);
-  delay(200);
+  // เสียงแจ้งเตือน
+  tone(32, 950, 100);  delay(150);
+  tone(32, 950, 200);  delay(200);
+  noTone(32);
 
   // แสดงผล
-  Serial.println("Sensor C Results:");
-  Serial.print("Sensor C0 (Pin 46) => Max: ");
-  Serial.print(sensorMaxC[0]);
-  Serial.print(", Min: ");
-  Serial.println(sensorMinC[0]);
-  Serial.print("Sensor C1 (Pin 47) => Max: ");
-  Serial.print(sensorMaxC[1]);
-  Serial.print(", Min: ");
-  Serial.println(sensorMinC[1]);
+  Serial.println(F("=== Sensor C Calibration Done ==="));
+  Serial.printf("C0 (Pin %d) -> Max: %4u, Min: %4u\n", PIN_C0, sensorMaxC[0], sensorMinC[0]);
+  Serial.printf("C1 (Pin %d) -> Max: %4u, Min: %4u\n", PIN_C1, sensorMaxC[1], sensorMinC[1]);
+  Serial.println();
 }
 
 void read_eepA()
@@ -887,7 +882,41 @@ void arm_up_down(float sl, int sp) {
 
 //-------------------------------------------------------------------------------------->>ควบคุม PID
 
+/*
+int position_A(int *sensor_pins, int *sensor_min_values, int *sensor_max_values, int num_sensors, int *last_position) {
+    bool onLine = false;
+    long avg = 0;
+    long sum = 0;
 
+    for (uint8_t i = 0; i < num_sensors; i++) {
+        // อ่านค่าเซนเซอร์และแปลงด้วย map
+        long value = map(read_sensorA(sensor_pins[i]), sensor_min_values[i], sensor_max_values[i], 1000, 0);
+
+        if (value > 200) {
+            onLine = true;
+        }
+        if (value > 50) {
+            avg += (long)value * (i * 1000);
+            sum += value;
+        }
+        delayMicroseconds(50);
+    }
+
+    if (!onLine) {
+        // ถ้าไม่เจอเส้น ใช้ last_position เพื่อตัดสินใจ
+        if (*last_position < (num_sensors - 1) * 1000 / 2) {
+            return 0;
+        } else {
+            return (num_sensors - 1) * 1000; // คืนค่าสูงสุดตามจำนวนเซนเซอร์
+        }
+    }
+
+    // อัปเดต last_position ผ่านพอยน์เตอร์
+    *last_position = (sum == 0) ? *last_position : avg / sum;
+
+    return *last_position;
+}
+*/
 int position_A()  
    {        
       int min_sensor_values_A[] = { sensorMin_A[1], sensorMin_A[2], sensorMin_A[3], sensorMin_A[4], sensorMin_A[5], sensorMin_A[6] }; // ค่าที่อ่านได้น้อยสุดหรือ สีดำ
@@ -908,7 +937,7 @@ int position_A()
                     avg += (long)value * (i * 1000);  
                     sum += value;                 
                  }
-               delayMicroseconds(50); 
+               //delayMicroseconds(50); 
          }
       if (!onLine)        //เมื่อหุ่นยนต์ไม่อยู่หรือไม่เจอเส้นดำ
          {
@@ -4345,4 +4374,3 @@ void bw_gyro(int spl, int spr, float kp, int distance, String sensorss, char sp,
     else{Motor(0, 0);delay(5);}
   }
 #endif
-
