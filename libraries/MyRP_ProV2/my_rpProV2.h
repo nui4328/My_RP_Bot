@@ -80,6 +80,18 @@ void get_EEP_Program(void);
 void read_sensorA_program(void);
 my_GYRO160 my; // สร้างอ็อบเจ็กต์ด้วยที่อยู่เริ่มต้น (0x69)
 
+void min_center(int adc_7, int adc_6)
+  {
+    sensorMin_C[0] = adc_7;
+    sensorMin_C[1] = adc_6;
+  }
+
+void max_center(int adc_7, int adc_6)
+  {
+    sensorMax_C[0] = adc_7;
+    sensorMax_C[1] = adc_6;
+  }
+
 void resetAngles()
   {
     reset_gyro160(my);
