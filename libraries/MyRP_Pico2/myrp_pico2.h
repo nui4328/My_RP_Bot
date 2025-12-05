@@ -77,6 +77,7 @@ String Freq_motor ;
 //___--------------------------------------------->>
 void get_EEP_Program(void);
 void read_sensorA_program(void);
+int md_sensorC(int sensor) ;
 my_GYRO160 my; // สร้างอ็อบเจ็กต์ด้วยที่อยู่เริ่มต้น (0x69)
 
 void resetAngles()
@@ -163,6 +164,8 @@ void setup_robot()
     pinMode(PWMB, OUTPUT);
     pinMode(BIN1, OUTPUT);
     pinMode(BIN2, OUTPUT);
+    Serial.print( analogRead(26) );   Serial.print( "  " );   Serial.print( analogRead(27) ); Serial.print( "     " );
+    Serial.print(  md_sensorC(0));   Serial.print( "  " );   Serial.println(  md_sensorC(1) ); 
     for(int i = 0; i<2; i++)
       {
         for(int i = 0; i<3; i++)
@@ -407,58 +410,53 @@ void get_maxmin_B() {
 }
 
 void get_maxmin_C() {
-  // อ่านค่าและเก็บไว้สำหรับ analogRead(26) และ analogRead(27)
+  const int PIN_C0 = 26;
+  const int PIN_C1 = 27;
+
+  // อ่านค่าตัวอย่าง
   for (int sample = 0; sample < numSamples; sample++) {
-    sensorValuesC[0][sample] = analogRead(26); // เซนเซอร์ C0 (GPIO 46)
-    sensorValuesC[1][sample] = analogRead(27); // เซนเซอร์ C1 (GPIO 27)
+    sensorValuesC[0][sample] = analogRead(PIN_C0);
+    sensorValuesC[1][sample] = analogRead(PIN_C1);
     delay(5);
   }
 
-  // คำนวณ Max และ Min สำหรับเซนเซอร์ C0 และ C1
+  // คำนวณ Max/Min
   for (int sensor = 0; sensor < 2; sensor++) {
-    sensorMaxC[sensor] = sensorValuesC[sensor][0];
-    sensorMinC[sensor] = sensorValuesC[sensor][0];
-    
-    for (int sample = 1; sample < numSamples; sample++) {
-      int value = sensorValuesC[sensor][sample];
-      if (value > sensorMaxC[sensor]) {
-        sensorMaxC[sensor] = value;
-      }
-      if (value < sensorMinC[sensor]) {
-        sensorMinC[sensor] = value;
-      }
+    sensorMaxC[sensor] = 0;
+    sensorMinC[sensor] = 4095;
+
+    for (int sample = 0; sample < numSamples; sample++) {
+      uint16_t value = sensorValuesC[sensor][sample];
+      if (value > sensorMaxC[sensor]) sensorMaxC[sensor] = value;
+      if (value < sensorMinC[sensor]) sensorMinC[sensor] = value;
     }
   }
 
-  // บันทึก sensorMaxC และ sensorMinC ลง EEPROM
-  byte buffer[4];
+  // บันทึก Max ลง EEPROM (address 64-67)
+  uint8_t buffer[4];
   for (int i = 0; i < 2; i++) {
-    buffer[i * 2] = highByte(sensorMaxC[i]);
-    buffer[i * 2 + 1] = lowByte(sensorMaxC[i]);
+    buffer[i*2]     = highByte(sensorMaxC[i]);
+    buffer[i*2 + 1] = lowByte(sensorMaxC[i]);
   }
-  writeEEPROM(EEPROM_ADDRESS, 64, buffer, 4); // sensorMaxC ที่ที่อยู่ 64
+  writeEEPROM(EEPROM_ADDRESS, 64, buffer, 4);
 
+  // บันทึก Min ลง EEPROM (address 68-71)
   for (int i = 0; i < 2; i++) {
-    buffer[i * 2] = highByte(sensorMinC[i]);
-    buffer[i * 2 + 1] = lowByte(sensorMinC[i]);
+    buffer[i*2]     = highByte(sensorMinC[i]);
+    buffer[i*2 + 1] = lowByte(sensorMinC[i]);
   }
-  writeEEPROM(EEPROM_ADDRESS, 68, buffer, 4); // sensorMinC ที่ที่อยู่ 68
+  writeEEPROM(EEPROM_ADDRESS, 68, buffer, 4);
 
-  tone(32, 950, 100);
-  delay(200);
-  tone(32, 950, 200);
-  delay(200);
+  // เสียงแจ้งเตือน
+  tone(32, 950, 100);  delay(150);
+  tone(32, 950, 200);  delay(200);
+  noTone(32);
 
   // แสดงผล
-  Serial.println("Sensor C Results:");
-  Serial.print("Sensor C0 (Pin 46) => Max: ");
-  Serial.print(sensorMaxC[0]);
-  Serial.print(", Min: ");
-  Serial.println(sensorMinC[0]);
-  Serial.print("Sensor C1 (Pin 27) => Max: ");
-  Serial.print(sensorMaxC[1]);
-  Serial.print(", Min: ");
-  Serial.println(sensorMinC[1]);
+  Serial.println(F("=== Sensor C Calibration Done ==="));
+  Serial.printf("C0 (Pin %d) -> Max: %4u, Min: %4u\n", PIN_C0, sensorMaxC[0], sensorMinC[0]);
+  Serial.printf("C1 (Pin %d) -> Max: %4u, Min: %4u\n", PIN_C1, sensorMaxC[1], sensorMinC[1]);
+  Serial.println();
 }
 
 
@@ -792,16 +790,16 @@ void s28_trim(int _s28) {
 
 // ฟังก์ชันควบคุมเซอร์โว
 void servo(int servo, int angle) {      
-    if (servo == 0) {
+    if (servo == 10) { 
+        servo_10.attach(servo10, 500, 2500);
+        servo_10.write(angle);        
+    }else if(servo == 0) {
         servo_0.attach(servo0, 500, 2500);
-        servo_0.write(angle);        
+        servo_0.write(180 - angle);        
     } else if (servo == 1) {
         servo_1.attach(servo1, 500, 2500);
         servo_1.write(angle);        
-    } else if (servo == 10) { 
-        servo_10.attach(servo10, 500, 2500);
-        servo_10.write(angle);        
-    } else if (servo == 28) {
+    }  else if (servo == 28) {
         servo_28.attach(servo28, 500, 2500);
         servo_28.write(angle+servo_tim28);      
     }
@@ -2384,6 +2382,7 @@ void fline(int spl, int spr, float kp, String distance, char nfc, char splr, int
               }
             while (1) 
               {
+
                 if (read_sensorA(1) > md_sensorA(1) &&read_sensorA(2) > md_sensorA(2) && read_sensorA(3) > md_sensorA(3) && read_sensorA(4) > md_sensorA(4) && read_sensorA(5) > md_sensorA(5) && read_sensorA(6) > md_sensorA(6)) {
                     errors = 0;
                 } else if (read_sensorA(5) < md_sensorA(5) && read_sensorA(6) < md_sensorA(6) && read_sensorA(7) < md_sensorA(7)) {
@@ -2415,7 +2414,8 @@ void fline(int spl, int spr, float kp, String distance, char nfc, char splr, int
 
     if (splr == 'l') 
       {
-        if (nfc == 'f' || (nfc == 'n' && spl > 0 && distance == 0)) {
+        if (nfc == 'f' || (nfc == 'n' && spl > 0 && distance == 0)) 
+          {
             while (1) {
                 Motor(slmotor, srmotor);
                 if (read_sensorA(0) > md_sensorA(0) && read_sensorA(7) > md_sensorA(7)) {
@@ -2437,7 +2437,9 @@ void fline(int spl, int spr, float kp, String distance, char nfc, char splr, int
                 } while (read_sensorA(i) > md_sensorA(i) - 50);
                 delayMicroseconds(50);
             }
-        } else {
+          } 
+        else 
+          {
             Motor(nfc == 'n' ? 0 : -slmotor, nfc == 'n' ? 0 : -srmotor);
             delay(nfc == 'n' ? 2 : break_fc);
             int start_i = (sensor[0] == 'a' && sensor_f >= 5) ? 5 : 0;
