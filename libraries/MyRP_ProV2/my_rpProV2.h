@@ -18,24 +18,21 @@ EncoderLibrary encoder(6, 7, 15, 20);
 #define BIN1 21
 #define BIN2 20
 //___--------------------------------------------->>
-#define EEPROM_ADDRESS 0x50 // ที่อยู่ I2C ของ CAT24C256
+#define EEPROM_ADDRESS 0x50
 const int numSensors = 8;
 const int numSamples = 1000;
-int sensorValuesA[numSensors][numSamples]; // เก็บข้อมูลเซนเซอร์จาก read_sensorA
+
+int sensorValuesA[numSensors][numSamples];
 int sensorMaxA[numSensors];
 int sensorMinA[numSensors];
-int sensorValuesB[numSensors][numSamples]; // เก็บข้อมูลเซนเซอร์จาก read_sensorB
+int sensorValuesB[numSensors][numSamples];
 int sensorMaxB[numSensors];
 int sensorMinB[numSensors];
-int sensorValuesC[2][numSamples]; // เก็บข้อมูลจาก analogRead(46) และ analogRead(47)
-int sensorMaxC[2]; // Max สำหรับพิน 46 และ 47
-int sensorMinC[2]; // Min สำหรับพิน 46 และ 47
-int sensorMax_A[numSensors];
-int sensorMin_A[numSensors];
-int sensorMax_B[numSensors];
-int sensorMin_B[numSensors];
-int sensorMax_C[2]; // Max สำหรับพิน 26 และ 27
-int sensorMin_C[2]; // Min สำหรับพิน 26 และ 27
+int sensorValuesC[2][numSamples];
+int sensorMaxC[2];
+int sensorMinC[2];
+
+
 float P, I, D, previous_I, previous_error,errors, PID_output, present_position, previous_integral; 
 int numSensor = 6; 
 int state_on_Line = 0;
@@ -82,14 +79,14 @@ my_GYRO160 my; // สร้างอ็อบเจ็กต์ด้วยท�
 
 void min_center(int adc_7, int adc_6)
   {
-    sensorMin_C[0] = adc_7;
-    sensorMin_C[1] = adc_6;
+    sensorMinC[0] = adc_7;
+    sensorMinC[1] = adc_6;
   }
 
 void max_center(int adc_7, int adc_6)
   {
-    sensorMax_C[0] = adc_7;
-    sensorMax_C[1] = adc_6;
+    sensorMaxC[0] = adc_7;
+    sensorMaxC[1] = adc_6;
   }
 
 void resetAngles()
@@ -234,183 +231,170 @@ uint16_t read_sensorB(int sensor)
   }
 int md_sensorA(int sensor) 
   {      
-     return (sensorMax_A[sensor]+sensorMin_A[sensor])/2;
+     return (sensorMaxA[sensor]+sensorMinA[sensor])/2;
   }
 
 int md_sensorB(int sensor) 
   {      
-     return (sensorMax_B[sensor]+sensorMin_B[sensor])/2;
+     return (sensorMaxB[sensor]+sensorMinB[sensor])/2;
   }
 int md_sensorC(int sensor) 
   {      
-     return (sensorMax_C[sensor]+sensorMin_C[sensor])/2;
+     return (sensorMaxC[sensor]+sensorMinC[sensor])/2;
   }
 
-// ฟังก์ชันเขียนข้อมูลลง EEPROM
+// EEPROM
 void writeEEPROM(int deviceAddress, unsigned int eeAddress, byte *data, int dataLength) {
   Wire.beginTransmission(deviceAddress);
-  Wire.write((int)(eeAddress >> 8)); // ส่ง MSB ของที่อยู่
-  Wire.write((int)(eeAddress & 0xFF)); // ส่ง LSB ของที่อยู่
-  for (int i = 0; i < dataLength; i++) {
-    Wire.write(data[i]); // ส่งข้อมูลทีละไบต์
-  }
+  Wire.write((int)(eeAddress >> 8));
+  Wire.write((int)(eeAddress & 0xFF));
+  for (int i = 0; i < dataLength; i++) Wire.write(data[i]);
   Wire.endTransmission();
-  delay(5); // รอให้ EEPROM เขียนข้อมูลเสร็จ
+  delay(5);
 }
 
-// ฟังก์ชันอ่านข้อมูลจาก EEPROM
 void readEEPROM(int deviceAddress, unsigned int eeAddress, byte *buffer, int dataLength) {
   Wire.beginTransmission(deviceAddress);
-  Wire.write((int)(eeAddress >> 8)); // ส่ง MSB ของที่อยู่
-  Wire.write((int)(eeAddress & 0xFF)); // ส่ง LSB ของที่อยู่
+  Wire.write((int)(eeAddress >> 8));
+  Wire.write((int)(eeAddress & 0xFF));
   Wire.endTransmission();
-  Wire.requestFrom(deviceAddress, dataLength); // ขอข้อมูล
+  Wire.requestFrom(deviceAddress, dataLength);
   for (int i = 0; i < dataLength; i++) {
-    if (Wire.available()) {
-      buffer[i] = Wire.read(); // อ่านข้อมูลทีละไบต์
-    }
+    if (Wire.available()) buffer[i] = Wire.read();
   }
 }
 
-void get_maxmin_A() 
-  {
-      // อ่านค่าและเก็บไว้สำหรับ read_sensorA
-      for (int sample = 0; sample < numSamples; sample++) 
-        {
-          for (int sensor = 0; sensor < numSensors; sensor++) 
-            {
-              sensorValuesA[sensor][sample] =  read_sensorA(sensor); // สมมติว่ามีฟังก์ชันนี้
-              delay(1);
-            }
-        }
-
-      // คำนวณ Max และ Min ของแต่ละเซนเซอร์
-      for (int sensor = 0; sensor < numSensors; sensor++) 
-        {
-          sensorMaxA[sensor] = sensorValuesA[sensor][0];
-          sensorMinA[sensor] = sensorValuesA[sensor][0];
-          
-          for (int sample = 1; sample < numSamples; sample++) {
-            int value = sensorValuesA[sensor][sample];
-            if (value > sensorMaxA[sensor]) {
-              sensorMaxA[sensor] = value;
-            }
-            if (value < sensorMinA[sensor]) {
-              sensorMinA[sensor] = value;
-            }
-          }
-        }
-
-      // บันทึก sensorMaxA และ sensorMinA ลง EEPROM
-      byte buffer[16];
-      for (int i = 0; i < numSensors; i++) 
-        {
-          buffer[i * 2] = highByte(sensorMaxA[i]);
-          buffer[i * 2 + 1] = lowByte(sensorMaxA[i]);
-        }
-      writeEEPROM(EEPROM_ADDRESS, 0, buffer, 16); // sensorMaxA ที่ที่อยู่ 0
-
-      for (int i = 0; i < numSensors; i++) {
-        buffer[i * 2] = highByte(sensorMinA[i]);
-        buffer[i * 2 + 1] = lowByte(sensorMinA[i]);
-      }
-      writeEEPROM(EEPROM_ADDRESS, 16, buffer, 16); // sensorMinA ที่ที่อยู่ 16
-
-      tone(32, 950, 100);
-      delay(200);
-      tone(32, 950, 200);
-      delay(200);
-
-      // แสดงผล
-      Serial.println("Sensor A Results:");
-      for (int sensor = 0; sensor < numSensors; sensor++) {
-        Serial.print("Sensor ");
-        Serial.print(sensor);
-        Serial.print(" => Max: ");
-        Serial.print(sensorMaxA[sensor]);
-        Serial.print(", Min: ");
-        Serial.println(sensorMinA[sensor]);
-      }
-
-      // อ่านและตรวจสอบจาก EEPROM
-      byte readBuffer[16];
-      int readMaxA[numSensors], readMinA[numSensors];
-      readEEPROM(EEPROM_ADDRESS, 0, readBuffer, 16);
-      for (int i = 0; i < numSensors; i++) {
-        readMaxA[i] = (readBuffer[i * 2] << 8) | readBuffer[i * 2 + 1];
-      }
-      readEEPROM(EEPROM_ADDRESS, 16, readBuffer, 16);
-      for (int i = 0; i < numSensors; i++) {
-        readMinA[i] = (readBuffer[i * 2] << 8) | readBuffer[i * 2 + 1];
-      }
-
-      Serial.println("Sensor A Values read from EEPROM:");
-      for (int sensor = 0; sensor < numSensors; sensor++) {
-        Serial.print("Sensor ");
-        Serial.print(sensor);
-        Serial.print(" => Max: ");
-        Serial.print(readMaxA[sensor]);
-        Serial.print(", Min: ");
-        Serial.println(readMinA[sensor]);
-      }
-  }
-
-void get_maxmin_B() {
-  // อ่านค่าและเก็บไว้สำหรับ read_sensorB
+// ==================== get_maxmin_A (เดิมของคุณ ใช้ได้อยู่แล้ว) ====================
+void get_maxmin_A() {
   for (int sample = 0; sample < numSamples; sample++) {
     for (int sensor = 0; sensor < numSensors; sensor++) {
-      sensorValuesB[sensor][sample] = read_sensorB(sensor); // สมมติว่ามีฟังก์ชันนี้
+      sensorValuesA[sensor][sample] = read_sensorA(sensor);
       delay(1);
     }
   }
+  for (int sensor = 0; sensor < numSensors; sensor++) {
+    sensorMaxA[sensor] = sensorValuesA[sensor][0];
+    sensorMinA[sensor] = sensorValuesA[sensor][0];
+    for (int sample = 1; sample < numSamples; sample++) {
+      int value = sensorValuesA[sensor][sample];
+      if (value > sensorMaxA[sensor]) sensorMaxA[sensor] = value;
+      if (value < sensorMinA[sensor]) sensorMinA[sensor] = value;
+    }
+  }
+  byte buffer[16];
+  for (int i = 0; i < numSensors; i++) {
+    buffer[i * 2] = highByte(sensorMaxA[i]);
+    buffer[i * 2 + 1] = lowByte(sensorMaxA[i]);
+  }
+  writeEEPROM(EEPROM_ADDRESS, 0, buffer, 16);
+  for (int i = 0; i < numSensors; i++) {
+    buffer[i * 2] = highByte(sensorMinA[i]);
+    buffer[i * 2 + 1] = lowByte(sensorMinA[i]);
+  }
+  writeEEPROM(EEPROM_ADDRESS, 16, buffer, 16);
 
-  // คำนวณ Max และ Min ของแต่ละเซนเซอร์
+  tone(32, 950, 100); delay(200);
+  tone(32, 950, 200); delay(200);
+}
+
+// ==================== get_maxmin_B (เหมือน A) ====================
+void get_maxmin_B() {
+  // เหมือน get_maxmin_A แต่ใช้ sensorMaxB/sensorMinB และ address 32, 48
+  for (int sample = 0; sample < numSamples; sample++) {
+    for (int sensor = 0; sensor < numSensors; sensor++) {
+      sensorValuesB[sensor][sample] = read_sensorB(sensor);
+      delay(1);
+    }
+  }
   for (int sensor = 0; sensor < numSensors; sensor++) {
     sensorMaxB[sensor] = sensorValuesB[sensor][0];
     sensorMinB[sensor] = sensorValuesB[sensor][0];
-    
     for (int sample = 1; sample < numSamples; sample++) {
       int value = sensorValuesB[sensor][sample];
-      if (value > sensorMaxB[sensor]) {
-        sensorMaxB[sensor] = value;
-      }
-      if (value < sensorMinB[sensor]) {
-        sensorMinB[sensor] = value;
-      }
+      if (value > sensorMaxB[sensor]) sensorMaxB[sensor] = value;
+      if (value < sensorMinB[sensor]) sensorMinB[sensor] = value;
     }
   }
-
-  // บันทึก sensorMaxB และ sensorMinB ลง EEPROM
   byte buffer[16];
   for (int i = 0; i < numSensors; i++) {
     buffer[i * 2] = highByte(sensorMaxB[i]);
     buffer[i * 2 + 1] = lowByte(sensorMaxB[i]);
   }
-  writeEEPROM(EEPROM_ADDRESS, 32, buffer, 16); // sensorMaxB ที่ที่อยู่ 32
-
+  writeEEPROM(EEPROM_ADDRESS, 32, buffer, 16);
   for (int i = 0; i < numSensors; i++) {
     buffer[i * 2] = highByte(sensorMinB[i]);
     buffer[i * 2 + 1] = lowByte(sensorMinB[i]);
   }
-  writeEEPROM(EEPROM_ADDRESS, 48, buffer, 16); // sensorMinB ที่ที่อยู่ 48
+  writeEEPROM(EEPROM_ADDRESS, 48, buffer, 16);
 
-  tone(32, 950, 100);
-  delay(200);
-  tone(32, 950, 200);
-  delay(200);
+  tone(32, 950, 100); delay(200);
+  tone(32, 950, 200); delay(200);
+}
 
-  // แสดงผล
-  Serial.println("Sensor B Results:");
-  for (int sensor = 0; sensor < numSensors; sensor++) {
-    Serial.print("Sensor ");
-    Serial.print(sensor);
-    Serial.print(" => Max: ");
-    Serial.print(sensorMaxB[sensor]);
-    Serial.print(", Min: ");
-    Serial.println(sensorMinB[sensor]);
+// ==================== get_maxmin_C (ของคุณเดิม + constrain) ====================
+void get_maxmin_C() {
+  const int PIN_C0 = 46;
+  const int PIN_C1 = 47;
+
+  for (int sample = 0; sample < numSamples; sample++) {
+    sensorValuesC[0][sample] = analogRead(PIN_C0);
+    sensorValuesC[1][sample] = analogRead(PIN_C1);
+    delay(5);
   }
 
-  // อ่านและตรวจสอบจาก EEPROM
+  for (int sensor = 0; sensor < 2; sensor++) {
+    sensorMaxC[sensor] = 0;
+    sensorMinC[sensor] = 4095;
+    for (int sample = 0; sample < numSamples; sample++) {
+      uint16_t value = sensorValuesC[sensor][sample];
+      if (value > sensorMaxC[sensor]) sensorMaxC[sensor] = value;
+      if (value < sensorMinC[sensor]) sensorMinC[sensor] = value;
+    }
+    sensorMaxC[sensor] = constrain(sensorMaxC[sensor], 0, 4000);
+    sensorMinC[sensor] = constrain(sensorMinC[sensor], 0, 4000);
+  }
+
+  uint8_t buffer[4];
+  for (int i = 0; i < 2; i++) {
+    buffer[i*2]     = highByte(sensorMaxC[i]);
+    buffer[i*2 + 1] = lowByte(sensorMaxC[i]);
+  }
+  writeEEPROM(EEPROM_ADDRESS, 64, buffer, 4);
+
+  for (int i = 0; i < 2; i++) {
+    buffer[i*2]     = highByte(sensorMinC[i]);
+    buffer[i*2 + 1] = lowByte(sensorMinC[i]);
+  }
+  writeEEPROM(EEPROM_ADDRESS, 68, buffer, 4);
+
+  tone(32, 1200, 150); delay(200);
+  tone(32, 1500, 200); delay(250);
+  noTone(32);
+}
+
+// ==================== read_eepA (แก้ให้โหลดเข้า sensorMaxA/sensorMinA จริง) ====================
+void read_eepA() {
+  byte readBuffer[16];
+  int readMaxA[numSensors], readMinA[numSensors];
+  readEEPROM(EEPROM_ADDRESS, 0, readBuffer, 16);
+  for (int i = 0; i < numSensors; i++) {
+    readMaxA[i] = (readBuffer[i * 2] << 8) | readBuffer[i * 2 + 1];
+  }
+  readEEPROM(EEPROM_ADDRESS, 16, readBuffer, 16);
+  for (int i = 0; i < numSensors; i++) {
+    readMinA[i] = (readBuffer[i * 2] << 8) | readBuffer[i * 2 + 1];
+  }
+
+  Serial.println("Sensor A Values read from EEPROM:");
+  for (int sensor = 0; sensor < numSensors; sensor++) {
+    Serial.print("Sensor "); Serial.print(sensor); Serial.print(" => Max: "); Serial.print(readMaxA[sensor]); Serial.print(", Min: "); Serial.println(readMinA[sensor]);
+    sensorMaxA[sensor] = readMaxA[sensor];   // โหลดเข้า sensorMaxA จริง
+    sensorMinA[sensor] = readMinA[sensor];   // โหลดเข้า sensorMinA จริง
+  }   
+}
+
+// ==================== read_eepB (เหมือนกัน) ====================
+void read_eepB() {
   byte readBuffer[16];
   int readMaxB[numSensors], readMinB[numSensors];
   readEEPROM(EEPROM_ADDRESS, 32, readBuffer, 16);
@@ -424,146 +408,14 @@ void get_maxmin_B() {
 
   Serial.println("Sensor B Values read from EEPROM:");
   for (int sensor = 0; sensor < numSensors; sensor++) {
-    Serial.print("Sensor ");
-    Serial.print(sensor);
-    Serial.print(" => Max: ");
-    Serial.print(readMaxB[sensor]);
-    Serial.print(", Min: ");
-    Serial.println(readMinB[sensor]);
+    Serial.print("Sensor "); Serial.print(sensor); Serial.print(" => Max: "); Serial.print(readMaxB[sensor]); Serial.print(", Min: "); Serial.println(readMinB[sensor]);
+    sensorMaxB[sensor] = readMaxB[sensor];   // โหลดเข้า sensorMaxB จริง
+    sensorMinB[sensor] = readMinB[sensor];   // โหลดเข้า sensorMinB จริง
   }
 }
 
-void get_maxmin_C() {
-  const int PIN_C0 = 46;
-  const int PIN_C1 = 47;
-
-  // อ่านค่าตัวอย่าง
-  for (int sample = 0; sample < numSamples; sample++) {
-    sensorValuesC[0][sample] = analogRead(PIN_C0);
-    sensorValuesC[1][sample] = analogRead(PIN_C1);
-    delay(5);
-  }
-
-  // คำนวณ Max/Min
-  for (int sensor = 0; sensor < 2; sensor++) {
-    sensorMaxC[sensor] = 0;
-    sensorMinC[sensor] = 4095;
-
-    for (int sample = 0; sample < numSamples; sample++) {
-      uint16_t value = sensorValuesC[sensor][sample];
-      if (value > sensorMaxC[sensor]) sensorMaxC[sensor] = value;
-      if (value < sensorMinC[sensor]) sensorMinC[sensor] = value;
-    }
-  }
-
-  // บันทึก Max ลง EEPROM (address 64-67)
-  uint8_t buffer[4];
-  for (int i = 0; i < 2; i++) {
-    buffer[i*2]     = highByte(sensorMaxC[i]);
-    buffer[i*2 + 1] = lowByte(sensorMaxC[i]);
-  }
-  writeEEPROM(EEPROM_ADDRESS, 64, buffer, 4);
-
-  // บันทึก Min ลง EEPROM (address 68-71)
-  for (int i = 0; i < 2; i++) {
-    buffer[i*2]     = highByte(sensorMinC[i]);
-    buffer[i*2 + 1] = lowByte(sensorMinC[i]);
-  }
-  writeEEPROM(EEPROM_ADDRESS, 68, buffer, 4);
-
-  // เสียงแจ้งเตือน
-  tone(32, 950, 100);  delay(150);
-  tone(32, 950, 200);  delay(200);
-  noTone(32);
-
-  // แสดงผล
-  Serial.println(F("=== Sensor C Calibration Done ==="));
-  Serial.printf("C0 (Pin %d) -> Max: %4u, Min: %4u\n", PIN_C0, sensorMaxC[0], sensorMinC[0]);
-  Serial.printf("C1 (Pin %d) -> Max: %4u, Min: %4u\n", PIN_C1, sensorMaxC[1], sensorMinC[1]);
-  Serial.println();
-}
-
-void read_eepA()
-  {      
-      // อ่านและตรวจสอบจาก EEPROM
-      byte readBuffer[16];
-      int readMaxA[numSensors], readMinA[numSensors];
-      readEEPROM(EEPROM_ADDRESS, 0, readBuffer, 16);
-      for (int i = 0; i < numSensors; i++) {
-        readMaxA[i] = (readBuffer[i * 2] << 8) | readBuffer[i * 2 + 1];
-      }
-      readEEPROM(EEPROM_ADDRESS, 16, readBuffer, 16);
-      for (int i = 0; i < numSensors; i++) {
-        readMinA[i] = (readBuffer[i * 2] << 8) | readBuffer[i * 2 + 1];
-      }
-
-      Serial.println("Sensor A Values read from EEPROM:");
-      for (int sensor = 0; sensor < numSensors; sensor++) {
-        Serial.print("Sensor ");
-        Serial.print(sensor);
-        Serial.print(" => Max: ");
-        Serial.print(readMaxA[sensor]);
-        Serial.print(", Min: ");
-        Serial.println(readMinA[sensor]);
-        sensorMax_A[sensor] = readMaxA[sensor];
-        sensorMin_A[sensor] = readMinA[sensor];
-      }   
-  }
-
-
-void read_sensorA_program()
-  { 
-      Serial.println("Sensor MAX A Values read from program:");
-      for (int sensor = 0; sensor < numSensors; sensor++) {
-        Serial.print("Sensor ");
-        Serial.print(sensor);
-        Serial.print(" => Max: ");
-        Serial.print(sensorMax_A[sensor]);
-        Serial.print(", Min: ");
-        Serial.println(sensorMin_A[sensor]);
-      }   
-  }
-void read_eepB()
-  {    
-      // อ่านและตรวจสอบจาก EEPROM
-      byte readBuffer[16];
-      int readMaxB[numSensors], readMinB[numSensors];
-      readEEPROM(EEPROM_ADDRESS, 32, readBuffer, 16);
-      for (int i = 0; i < numSensors; i++) {
-        readMaxB[i] = (readBuffer[i * 2] << 8) | readBuffer[i * 2 + 1];
-      }
-      readEEPROM(EEPROM_ADDRESS, 48, readBuffer, 16);
-      for (int i = 0; i < numSensors; i++) {
-        readMinB[i] = (readBuffer[i * 2] << 8) | readBuffer[i * 2 + 1];
-      }
-
-      Serial.println("Sensor B Values read from EEPROM:");
-      for (int sensor = 0; sensor < numSensors; sensor++) {
-        Serial.print("Sensor ");
-        Serial.print(sensor);
-        Serial.print(" => Max: ");
-        Serial.print(readMaxB[sensor]);
-        Serial.print(", Min: ");
-        Serial.println(readMinB[sensor]);
-        sensorMax_B[sensor] = readMaxB[sensor];
-        sensorMin_B[sensor] = readMinB[sensor];
-      }
-  }
-void read_sensorB_program()
-  { 
-      Serial.println("Sensor MAX B Values read from program:");
-      for (int sensor = 0; sensor < numSensors; sensor++) {
-        Serial.print("Sensor ");
-        Serial.print(sensor);
-        Serial.print(" => Max: ");
-        Serial.print(sensorMax_B[sensor]);
-        Serial.print(", Min: ");
-        Serial.println(sensorMin_B[sensor]);
-      }   
-  }
-
+// ==================== read_eepC (แก้แล้ว) ====================
 void read_eepC() {
-  // อ่านและตรวจสอบจาก EEPROM
   byte readBuffer[4];
   int readMaxC[2], readMinC[2];
   readEEPROM(EEPROM_ADDRESS, 64, readBuffer, 4);
@@ -576,42 +428,42 @@ void read_eepC() {
   }
 
   Serial.println("Sensor C Values read from EEPROM:");
-  Serial.print("Sensor C0 (Pin 46) => Max: ");
-  Serial.print(readMaxC[0]);
-  Serial.print(", Min: ");
-  Serial.println(readMinC[0]);
-  Serial.print("Sensor C1 (Pin 47) => Max: ");
-  Serial.print(readMaxC[1]);
-  Serial.print(", Min: ");
-  Serial.println(readMinC[1]);
-  sensorMax_C[0] = readMaxC[0];
-  sensorMin_C[0] = readMinC[0];
-  sensorMax_C[1] = readMaxC[1];
-  sensorMin_C[1] = readMinC[1];
+  Serial.print("Sensor C0 (Pin 46) => Max: "); Serial.print(readMaxC[0]); Serial.print(", Min: "); Serial.println(readMinC[0]);
+  Serial.print("Sensor C1 (Pin 47) => Max: "); Serial.print(readMaxC[1]); Serial.print(", Min: "); Serial.println(readMinC[1]);
+
+  sensorMaxC[0] = readMaxC[0]; sensorMinC[0] = readMinC[0];   // โหลดเข้า sensorMaxC/sensorMinC จริง
+  sensorMaxC[1] = readMaxC[1]; sensorMinC[1] = readMinC[1];
+}
+
+// ==================== แสดงผล (ใช้ตัวแปรเดียวกัน) ====================
+void read_sensorA_program() {
+  Serial.println("Sensor MAX A Values read from program:");
+  for (int sensor = 0; sensor < numSensors; sensor++) {
+    Serial.print("Sensor "); Serial.print(sensor); Serial.print(" => Max: "); Serial.print(sensorMaxA[sensor]); Serial.print(", Min: "); Serial.println(sensorMinA[sensor]);
+  }   
+}
+
+void read_sensorB_program() {
+  Serial.println("Sensor MAX B Values read from program:");
+  for (int sensor = 0; sensor < numSensors; sensor++) {
+    Serial.print("Sensor "); Serial.print(sensor); Serial.print(" => Max: "); Serial.print(sensorMaxB[sensor]); Serial.print(", Min: "); Serial.println(sensorMinB[sensor]);
+  }   
 }
 
 void read_sensorC_program() {
   Serial.println("Sensor C Values read from program:");
-  Serial.print("Sensor C0 (Pin 46) => Max: ");
-  Serial.print(sensorMax_C[0]);
-  Serial.print(", Min: ");
-  Serial.println(sensorMin_C[0]);
-  Serial.print("Sensor C1 (Pin 47) => Max: ");
-  Serial.print(sensorMax_C[1]);
-  Serial.print(", Min: ");
-  Serial.println(sensorMin_C[1]);
+  Serial.print("Sensor C0 (Pin 46) => Max: "); Serial.print(sensorMaxC[0]); Serial.print(", Min: "); Serial.println(sensorMinC[0]);
+  Serial.print("Sensor C1 (Pin 47) => Max: "); Serial.print(sensorMaxC[1]); Serial.print(", Min: "); Serial.println(sensorMinC[1]);
 }
 
-void get_EEP_Program()
-  {
-    read_eepA();
-    read_eepB();
-    read_eepC();
-    read_sensorA_program();
-    read_sensorB_program();
-    read_sensorC_program();
-  }
-
+void get_EEP_Program() {
+  read_eepA();
+  read_eepB();
+  read_eepC();
+  read_sensorA_program();
+  read_sensorB_program();
+  read_sensorC_program();
+}
 //-------------------------------------------------------------------------------------->>ควบคุมมอเตอร์
 
 void sw()
@@ -931,8 +783,8 @@ int position_A(int *sensor_pins, int *sensor_min_values, int *sensor_max_values,
 */
 int position_A()  
    {        
-      int min_sensor_values_A[] = { sensorMin_A[1], sensorMin_A[2], sensorMin_A[3], sensorMin_A[4], sensorMin_A[5], sensorMin_A[6] }; // ค่าที่อ่านได้น้อยสุดหรือ สีดำ
-      int max_sensor_values_A[] = { sensorMax_A[1], sensorMax_A[2], sensorMax_A[3], sensorMax_A[4], sensorMax_A[5], sensorMax_A[6] }; // ค่าที่อ่านได้มากสุด สีขาว              
+      int min_sensor_values_A[] = { sensorMinA[1], sensorMinA[2], sensorMinA[3], sensorMinA[4], sensorMinA[5], sensorMinA[6] }; // ค่าที่อ่านได้น้อยสุดหรือ สีดำ
+      int max_sensor_values_A[] = { sensorMaxA[1], sensorMaxA[2], sensorMaxA[3], sensorMaxA[4], sensorMaxA[5], sensorMaxA[6] }; // ค่าที่อ่านได้มากสุด สีขาว              
       bool onLine = false;
       long avg = 0;
       long sum = 0;
@@ -970,8 +822,8 @@ int position_A()
     }
 int position_A_none()  
    {        
-      int min_sensor_values_A[] = { sensorMin_A[1], sensorMin_A[2], sensorMin_A[3], sensorMin_A[4], sensorMin_A[5], sensorMin_A[6] }; // ค่าที่อ่านได้น้อยสุดหรือ สีดำ
-      int max_sensor_values_A[] = { sensorMax_A[1], sensorMax_A[2], sensorMax_A[3], sensorMax_A[4], sensorMax_A[5], sensorMax_A[6] }; // ค่าที่อ่านได้มากสุด สีขาว              
+      int min_sensor_values_A[] = { sensorMinA[1], sensorMinA[2], sensorMinA[3], sensorMinA[4], sensorMinA[5], sensorMinA[6] }; // ค่าที่อ่านได้น้อยสุดหรือ สีดำ
+      int max_sensor_values_A[] = { sensorMaxA[1], sensorMaxA[2], sensorMaxA[3], sensorMaxA[4], sensorMaxA[5], sensorMaxA[6] }; // ค่าที่อ่านได้มากสุด สีขาว              
       bool onLine = false;
       long avg = 0;
       long sum = 0;
@@ -1040,8 +892,8 @@ float error_AN()
     }
 int position_B()  
    {        
-      int min_sensor_values_A[] = { sensorMin_B[1], sensorMin_B[2], sensorMin_B[3], sensorMin_B[4], sensorMin_B[5], sensorMin_B[6] }; // ค่าที่อ่านได้น้อยสุดหรือ สีดำ
-      int max_sensor_values_A[] = { sensorMax_B[1], sensorMax_B[2], sensorMax_B[3], sensorMax_B[4], sensorMax_B[5], sensorMax_B[6] }; // ค่าที่อ่านได้มากสุด สีขาว              
+      int min_sensor_values_A[] = { sensorMinB[1], sensorMinB[2], sensorMinB[3], sensorMinB[4], sensorMinB[5], sensorMinB[6] }; // ค่าที่อ่านได้น้อยสุดหรือ สีดำ
+      int max_sensor_values_A[] = { sensorMaxB[1], sensorMaxB[2], sensorMaxB[3], sensorMaxB[4], sensorMaxB[5], sensorMaxB[6] }; // ค่าที่อ่านได้มากสุด สีขาว              
       bool onLine = false;
       long avg = 0;
       long sum = 0;
@@ -1078,8 +930,8 @@ int position_B()
     }
 int position_B_none()  
    {        
-      int min_sensor_values_A[] = { sensorMin_B[1], sensorMin_B[2], sensorMin_B[3], sensorMin_B[4], sensorMin_B[5], sensorMin_B[6] }; // ค่าที่อ่านได้น้อยสุดหรือ สีดำ
-      int max_sensor_values_A[] = { sensorMax_B[1], sensorMax_B[2], sensorMax_B[3], sensorMax_B[4], sensorMax_B[5], sensorMax_B[6] }; // ค่าที่อ่านได้มากสุด สีขาว              
+      int min_sensor_values_A[] = { sensorMinB[1], sensorMinB[2], sensorMinB[3], sensorMinB[4], sensorMinB[5], sensorMinB[6] }; // ค่าที่อ่านได้น้อยสุดหรือ สีดำ
+      int max_sensor_values_A[] = { sensorMaxB[1], sensorMaxB[2], sensorMaxB[3], sensorMaxB[4], sensorMaxB[5], sensorMaxB[6] }; // ค่าที่อ่านได้มากสุด สีขาว              
       bool onLine = false;
       long avg = 0;
       long sum = 0;
@@ -1912,7 +1764,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                 PID_output = (kp / 2.5 * P) + (0.0000001 * I) + (0.0125 * D);
                 Motor(spl - PID_output, spr + PID_output);
                 delayMicroseconds(50);
-                if (analogRead(46) <  (sensorMin_C[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMin_C[1]+md_sensorC(1))/2) {
+                if (analogRead(46) <  (sensorMinC[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMinC[1]+md_sensorC(1))/2) {
                     break;
                 }
               }
@@ -1950,7 +1802,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                         PID_output = (kp * P) + (0.0000001 * I) + (0.0125 * D);
                         Motor(i - PID_output, i + PID_output);
                         delayMicroseconds(50);
-                         if (analogRead(46) <  (sensorMin_C[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMin_C[1]+md_sensorC(1))/2) {
+                         if (analogRead(46) <  (sensorMinC[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMinC[1]+md_sensorC(1))/2) {
                     break;
                 }
                         delay(3);
@@ -1974,7 +1826,7 @@ void fline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                 PID_output = (kp * P) + (0.0000001 * I) + (0.0125 * D);
                 Motor(slmotor - PID_output, slmotor + PID_output);
                 delayMicroseconds(50);
-                 if (analogRead(46) <  (sensorMin_C[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMin_C[1]+md_sensorC(1))/2) {
+                 if (analogRead(46) <  (sensorMinC[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMinC[1]+md_sensorC(1))/2) {
                     break;
                 }
             }
@@ -2446,7 +2298,7 @@ void fline(int spl, int spr, float kp, String distance, char nfc, char splr, int
                 PID_output = (kp / 2.5 * P) + (0.0000001 * I) + (0.0125 * D);
                 Motor(spl - PID_output, spr + PID_output);
                 delayMicroseconds(50);
-                if (analogRead(46) <  (sensorMin_C[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMin_C[1]+md_sensorC(1))/2) {
+                if (analogRead(46) <  (sensorMinC[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMinC[1]+md_sensorC(1))/2) {
                     break;
                 }
               }
@@ -2484,7 +2336,7 @@ void fline(int spl, int spr, float kp, String distance, char nfc, char splr, int
                         PID_output = (kp * P) + (0.0000001 * I) + (0.0125 * D);
                         Motor(i - PID_output, i + PID_output);
                         delayMicroseconds(50);
-                        if (analogRead(46) <  (sensorMin_C[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMin_C[1]+md_sensorC(1))/2) {
+                        if (analogRead(46) <  (sensorMinC[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMinC[1]+md_sensorC(1))/2) {
                     break;
                 }
                         delay(3);
@@ -2508,7 +2360,7 @@ void fline(int spl, int spr, float kp, String distance, char nfc, char splr, int
                 PID_output = (kp * P) + (0.0000001 * I) + (0.0125 * D);
                 Motor(slmotor - PID_output, slmotor + PID_output);
                 delayMicroseconds(50);
-                if (analogRead(46) <  (sensorMin_C[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMin_C[1]+md_sensorC(1))/2) {
+                if (analogRead(46) <  (sensorMinC[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMinC[1]+md_sensorC(1))/2) {
                     break;
                 }
             }
@@ -2898,8 +2750,8 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                 ch_p = 1;
                 while (1) 
                   {
-                    float error_L = map(read_sensorB(3), sensorMin_B[3], sensorMax_B[3], 0, 20);
-                    float error_R = map(read_sensorB(4), sensorMin_B[4], sensorMax_B[4], 0, 20);
+                    float error_L = map(read_sensorB(3), sensorMinB[3], sensorMaxB[3], 0, 20);
+                    float error_R = map(read_sensorB(4), sensorMinB[4], sensorMaxB[4], 0, 20);
                     errors = error_L - error_R;
                     P = errors;
                     I += errors * 0.00005;
@@ -2910,7 +2762,7 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                     PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                     Motor(-(spl + PID_output), -(spr - PID_output)); // ถอยหลัง
                     delayMicroseconds(50);
-                    if (analogRead(46) <  (sensorMin_C[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMin_C[1]+md_sensorC(1))/2) {
+                    if (analogRead(46) <  (sensorMinC[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMinC[1]+md_sensorC(1))/2) {
                     break;
                 }
                   }
@@ -2952,7 +2804,7 @@ void bline(int spl, int spr, float kp, float distance, char nfc, char splr, int 
                   PID_output = (kp / 2.5 * P) + (0.0000001 * I) + (0.0125 * D);
                   Motor(-(slmotor + PID_output), -(slmotor - PID_output)); // ถอยหลัง
                   delayMicroseconds(50);
-                 if (analogRead(46) <  (sensorMin_C[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMin_C[1]+md_sensorC(1))/2) {
+                 if (analogRead(46) <  (sensorMinC[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMinC[1]+md_sensorC(1))/2) {
                     break;
                 }
                 }
@@ -3295,8 +3147,8 @@ void bline(int spl, int spr, float kp, String distance, char nfc, char splr, int
                 ch_p = 1;
                 while (1) 
                   {
-                    float error_L = map(read_sensorB(3), sensorMin_B[3], sensorMax_B[3], 0, 20);
-                    float error_R = map(read_sensorB(4), sensorMin_B[4], sensorMax_B[4], 0, 20);
+                    float error_L = map(read_sensorB(3), sensorMinB[3], sensorMaxB[3], 0, 20);
+                    float error_R = map(read_sensorB(4), sensorMinB[4], sensorMaxB[4], 0, 20);
                     errors = error_L - error_R;
                     P = errors;
                     I += errors * 0.00005;
@@ -3307,7 +3159,7 @@ void bline(int spl, int spr, float kp, String distance, char nfc, char splr, int
                     PID_output = (kp_slow * P) + (0.000001 * I) + (0.025 * D);
                     Motor(-(spl + PID_output), -(spr - PID_output)); // ถอยหลัง
                     delayMicroseconds(50);
-                    if (analogRead(46) <  (sensorMin_C[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMin_C[1]+md_sensorC(1))/2) {
+                    if (analogRead(46) <  (sensorMinC[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMinC[1]+md_sensorC(1))/2) {
                     break;
                 }
                   }
@@ -3349,7 +3201,7 @@ void bline(int spl, int spr, float kp, String distance, char nfc, char splr, int
                   PID_output = (kp / 2.5 * P) + (0.0000001 * I) + (0.0125 * D);
                   Motor(-(slmotor + PID_output), -(slmotor - PID_output)); // ถอยหลัง
                   delayMicroseconds(50);
-                  if (analogRead(46) <  (sensorMin_C[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMin_C[1]+md_sensorC(1))/2) {
+                  if (analogRead(46) <  (sensorMinC[0]+md_sensorC(0))/2 || analogRead(47) < (sensorMinC[1]+md_sensorC(1))/2) {
                     break;
                 }
                 }
@@ -4117,14 +3969,14 @@ void fw_gyro(int spl, int spr, float kp, int distance, String sensorss, char sp,
           }
         else if(sensorss == "c0")
           {
-             if(analogRead(46)  < (sensorMin_C[0]+sensorMax_C[0])/2)
+             if(analogRead(46)  < (sensorMinC[0]+sensorMaxC[0])/2)
               {
                 break;
               }
           }
         else if(sensorss == "c1")
           {
-             if(analogRead(47)  < (sensorMin_C[1]+sensorMax_C[1])/2)
+             if(analogRead(47)  < (sensorMinC[1]+sensorMaxC[1])/2)
               {
                 break;
               }
@@ -4151,11 +4003,11 @@ void fw_gyro(int spl, int spr, float kp, int distance, String sensorss, char sp,
           }
         else if(sensorss == "c0")
           {
-            do{Motor(spl, spr);delayMicroseconds(50);}while(analogRead(46)  < (sensorMin_C[0]+sensorMax_C[0])/2);
+            do{Motor(spl, spr);delayMicroseconds(50);}while(analogRead(46)  < (sensorMinC[0]+sensorMaxC[0])/2);
           }
         else if(sensorss == "c1")
           {
-             do{Motor(spl, spr);delayMicroseconds(50);}while(analogRead(47)  < (sensorMin_C[0]+sensorMax_C[1])/2);
+             do{Motor(spl, spr);delayMicroseconds(50);}while(analogRead(47)  < (sensorMinC[0]+sensorMaxC[1])/2);
           }
       }
     else{}
@@ -4331,14 +4183,14 @@ void bw_gyro(int spl, int spr, float kp, int distance, String sensorss, char sp,
           }
         else if(sensorss == "c0")
           {
-             if(analogRead(46)  < (sensorMin_C[0]+sensorMax_C[0])/2)
+             if(analogRead(46)  < (sensorMinC[0]+sensorMaxC[0])/2)
               {
                 break;
               }
           }
         else if(sensorss == "c1")
           {
-             if(analogRead(47)  < (sensorMin_C[1]+sensorMax_C[1])/2)
+             if(analogRead(47)  < (sensorMinC[1]+sensorMaxC[1])/2)
               {
                 break;
               }
@@ -4369,11 +4221,11 @@ void bw_gyro(int spl, int spr, float kp, int distance, String sensorss, char sp,
           }
         else if(sensorss == "c0")
           {
-            do{Motor(-spl, -spr);delayMicroseconds(50);}while(analogRead(46)  < (sensorMin_C[0]+sensorMax_C[0])/2);
+            do{Motor(-spl, -spr);delayMicroseconds(50);}while(analogRead(46)  < (sensorMinC[0]+sensorMaxC[0])/2);
           }
         else if(sensorss == "c1")
           {
-             do{Motor(-spl, -spr);delayMicroseconds(50);}while(analogRead(47)  < (sensorMin_C[0]+sensorMax_C[1])/2);
+             do{Motor(-spl, -spr);delayMicroseconds(50);}while(analogRead(47)  < (sensorMinC[0]+sensorMaxC[1])/2);
           }
       }
     else{}
