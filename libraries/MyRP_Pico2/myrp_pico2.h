@@ -410,8 +410,8 @@ void read_eepC() {
   }
 
   Serial.println("Sensor C Values read from EEPROM:");
-  Serial.print("Sensor C0 (Pin 46) => Max: "); Serial.print(readMaxC[0]); Serial.print(", Min: "); Serial.println(readMinC[0]);
-  Serial.print("Sensor C1 (Pin 47) => Max: "); Serial.print(readMaxC[1]); Serial.print(", Min: "); Serial.println(readMinC[1]);
+  Serial.print("Sensor C0 (Pin 26) => Max: "); Serial.print(readMaxC[0]); Serial.print(", Min: "); Serial.println(readMinC[0]);
+  Serial.print("Sensor C1 (Pin 27) => Max: "); Serial.print(readMaxC[1]); Serial.print(", Min: "); Serial.println(readMinC[1]);
 
   sensorMaxC[0] = readMaxC[0]; sensorMinC[0] = readMinC[0];   // โหลดเข้า sensorMaxC/sensorMinC จริง
   sensorMaxC[1] = readMaxC[1]; sensorMinC[1] = readMinC[1];
@@ -434,8 +434,8 @@ void read_sensorB_program() {
 
 void read_sensorC_program() {
   Serial.println("Sensor C Values read from program:");
-  Serial.print("Sensor C0 (Pin 46) => Max: "); Serial.print(sensorMaxC[0]); Serial.print(", Min: "); Serial.println(sensorMinC[0]);
-  Serial.print("Sensor C1 (Pin 47) => Max: "); Serial.print(sensorMaxC[1]); Serial.print(", Min: "); Serial.println(sensorMinC[1]);
+  Serial.print("Sensor C0 (Pin 26) => Max: "); Serial.print(sensorMaxC[0]); Serial.print(", Min: "); Serial.println(sensorMinC[0]);
+  Serial.print("Sensor C1 (Pin 27) => Max: "); Serial.print(sensorMaxC[1]); Serial.print(", Min: "); Serial.println(sensorMinC[1]);
 }
 
 void get_EEP_Program() {
@@ -540,7 +540,7 @@ void sw()
           }
           Serial.println("  ");
       }
-    
+    get_EEP_Program();
     tone(9, 3000, 400);
     delay(500);
   }
