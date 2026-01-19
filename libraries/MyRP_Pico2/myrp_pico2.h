@@ -3,7 +3,6 @@
 
 #include <Wire.h>
 #include <my_GYRO1600.h>
-// #include  <my_GYRO1600.h>
 
 #include <my_MCP3008s.h>
 my_MCP3008s adc;
